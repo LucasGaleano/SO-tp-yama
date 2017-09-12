@@ -10,8 +10,20 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <commons/config.h>
 
 int main(void) {
-	puts("!!!Hello World!!!"); /* prints !!!Hello World!!! */
-	return EXIT_SUCCESS;
+
+	char* path = "/home/utnso/workspace/tp-2017-2c-NULL/configuraciones/yama.cfg";
+
+	t_config * config = config_create(path);
+
+	char* ip = config_get_string_value(config, "FS_IP");
+	int puerto = config_get_int_value(config, "FS_PUERTO");
+	int retardo = config_get_int_value(config, "RETARDO_PLANIFICACION");
+	char* algoritmo = config_get_string_value(config, "ALGORITMO_BALANCEO");
+
+	printf("IP: %s - PUERTO: %d - RETARDO: %d - ALGORITMO: %s", ip, puerto, retardo, algoritmo);
+
+	return 0;
 }
