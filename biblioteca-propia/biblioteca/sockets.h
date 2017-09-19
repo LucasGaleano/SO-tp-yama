@@ -13,4 +13,17 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+/*------------------------------Clientes------------------------------*/
+
+int 			conectarCliente				(const char *, const char *);
+void 			enviarMensaje				(int, char *);
+void 			enviarPaquetes				(int);
+
+/*------------------------------Servidor------------------------------*/
+
+int 			crearSocketServer			(const char *);
+void 			gestionarDatosCliente		(int, void *, fd_set *);
+void 			gestionarNuevasConexiones	(int, fd_set *, int *);
+void 			iniciarServer				(const char *);
+
 #endif /* BIBLIOTECA_SOCKETS_H_ */

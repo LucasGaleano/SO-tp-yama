@@ -1,9 +1,6 @@
 #include "sockets.h"
 
 #define MAX_BUFFER_SIZE  200
-#define MYPORT 3200		// Puerto al que conectarán los usuarios
-#define MAXDATASIZE 100 // máximo número de bytes que se pueden leer de una vez
-
 
 /*------------------------------Clientes------------------------------*/
 
@@ -201,4 +198,3 @@ void iniciarServer(const char * puerto) {
 	}
 
 }
-
