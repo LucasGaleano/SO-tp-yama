@@ -50,23 +50,11 @@ void enviarPaquetes(int sockfd) {
 	}
 }
 
-int main(void) {
-
-	int sockfd = conectarCliente("127.0.0.1", "3200");
-
-	enviarPaquetes(sockfd);
-
-	//Cerramos los sockets abiertos
-	close(sockfd);
-
-	return EXIT_SUCCESS;
-}
-
 /*------------------------------Servidor------------------------------*/
 
 #define BACKLOG 10		// Cantidad de conexiones maximas
 
-int crearSocketDeEscucha(const char * puerto) {
+int crearSocketServer(const char * puerto) {
 	//Creo las estructuras
 	struct addrinfo hints;
 	struct addrinfo *serverInfo;
@@ -79,90 +67,138 @@ int crearSocketDeEscucha(const char * puerto) {
 	getaddrinfo(NULL, puerto, &hints, &serverInfo); // Notar que le pasamos NULL como IP, ya que le indicamos que use localhost en AI_PASSIVE
 
 	//Creo el socket
-	int listeningSocket = socket(serverInfo->ai_family, serverInfo->ai_socktype,
+	int server_socket = socket(serverInfo->ai_family, serverInfo->ai_socktype,
 			serverInfo->ai_protocol);
 
-	if (listeningSocket == -1)
+	if (server_socket == -1)
 		perror("socket");
 
 	//No dejo el puerto ocupado
 	int yes = 1;
 
-	int resultado = setsockopt(listeningSocket, SOL_SOCKET, SO_REUSEADDR, &yes,
+	int resultado = setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &yes,
 			sizeof(yes));
 
 	if (resultado == -1)
 		perror("setsockopt");
 
 	//Conecto el puerto con el IP
-	if (bind(listeningSocket, serverInfo->ai_addr, serverInfo->ai_addrlen))
+	if (bind(server_socket, serverInfo->ai_addr, serverInfo->ai_addrlen))
 		perror("bind");
 
 	//Libero memoria
 	freeaddrinfo(serverInfo); // Ya no lo vamos a necesitar
 
 	//Escuchar conexiones de entrada
-	if (listen(listeningSocket, BACKLOG)) {
+	if (listen(server_socket, BACKLOG)) {
 		perror("listen");
 		exit(1);
 	}
 
-	return listeningSocket;
+	return server_socket;
 }
 
-int aceptarConexionDeEntrada(int sockfd, struct sockaddr_in * serverAddress) {
-	int newSockfd;
-	int sin_size;
+void gestionarDatosCliente(int client_socket, void * buffer,
+		fd_set * set_master) {
 
-	sin_size = sizeof(struct sockaddr_in);
+	int recvd = recv(client_socket, buffer, sizeof(int), 0);
 
-	newSockfd = accept(sockfd, (struct sockaddr *) serverAddress,
-			(socklen_t *) &sin_size);
+	//Verifico error o conexión cerrada por el cliente
+	if (recvd <= 0) {
+		if (recvd == -1) {
+			perror("recv");
+		}
+		printf("El socket %d ha producido un error "
+				"y ha sido desconectado.\n", client_socket);
 
-	if (newSockfd == -1) {
-		perror("accept");
-	}
+		//Cierro el socket
+		close(client_socket);
 
-	return newSockfd;
-}
+		//Elimino el socket del conjunto maestro
+		FD_CLR(client_socket, set_master);
 
-void recibirMensaje(int socket, char * buffer, bool * recibir) {
-	int resultado = recv(socket, (void*) buffer, MAX_BUFFER_SIZE, 0);
-
-	if (resultado == -1)
-		perror("recv");
-
-	if (resultado == 0 || !strcmp(buffer, "exit\n")) {
-		perror("cerro conexión");
-		*recibir = false;
+	} else {
+		//Imprimo por pantalla el mensaje
+		printf("Ha recibido del cliente %d el siguiente mensaje: %s  \n",
+				client_socket, (char*) buffer);
 	}
 }
 
-/*
-int main() {
-	char * buffer = malloc(MAX_BUFFER_SIZE);
+void gestionarNuevasConexiones(int server_socket, fd_set * set_master,
+		int * descriptor_mas_alto) {
 
-	int listenningSocket = crearSocketDeEscucha("3200");
+	//Socket del nuevo cliente
+	int client_socket;
 
-	struct sockaddr_in addr; // Esta estructura contendra los datos de la conexion del cliente. IP, puerto, etc.
+	//Esta estructura contendra los datos de la conexion del cliente. IP, puerto, etc.
+	struct sockaddr_in addr;
 	socklen_t addrlen = sizeof(addr);
 
-	int socketCliente = accept(listenningSocket, (struct sockaddr *) &addr,
-			&addrlen);
+	//Acepto la nueva condicion
+	if ((client_socket = accept(server_socket, (struct sockaddr *) &addr,
+			&addrlen)) == -1) {
+		printf("El socket %d ha producido un error"
+				"y ha sido desconectado.\n", client_socket);
+		perror("accept");
+	} else {
+		printf("El socket %d se ha conectado al servidor.\n", client_socket);
 
-	printf("Cliente conectado. Esperando mensajes:\n");
+		//Añado al conjunto maestro
+		FD_SET(client_socket, set_master);
 
-	bool recibir = true;
+		//Actualizo el máximo
+		if (client_socket > *descriptor_mas_alto)
+			*descriptor_mas_alto = client_socket;
+	}
+}
 
-	while (recibir) {
-		recibirMensaje(socketCliente, buffer, &recibir);
-		if (strcmp(buffer, "exit\n"))
-			printf("%s", buffer);
+void iniciarServer(const char * puerto) {
+	fd_set set_master;
+	fd_set set_copia;
+
+	void * buffer = malloc(MAX_BUFFER_SIZE);
+
+	//Creo el socket server
+	int server_socket = crearSocketServer(puerto);
+
+	//Borro el conjunto de descriptores de fichero
+	FD_ZERO(&set_master);
+
+	//Añado fd al conjunto
+	FD_SET(server_socket, &set_master);
+
+	//Setteo el socket mas alto
+	int descriptor_mas_alto = server_socket;
+
+	printf("Servidor listo para escuchar conexiones\n");
+
+	while (true) {
+		set_copia = set_master;
+
+		if (select(descriptor_mas_alto + 1, &set_copia, NULL, NULL, NULL)
+				== -1) {
+			perror("select");
+			break;
+		}
+
+		//Exploro conexiones existentes en busca de datos que leer
+		int n_descriptor = 0;
+
+		while (descriptor_mas_alto >= n_descriptor) {
+
+			if (FD_ISSET(n_descriptor, &set_copia)) {
+				//Si el descriptor es igual al server_socket quiere decir que un nuevo cliente se quiere conectar
+				if (n_descriptor == server_socket) {
+					gestionarNuevasConexiones(server_socket, &set_master,
+							&descriptor_mas_alto);
+				} else {
+					//Si el decriptor pertenece a un socket cliente ya aceptado
+					gestionarDatosCliente(n_descriptor, buffer, &set_master);
+				}
+			}
+			n_descriptor++;
+		}
 	}
 
-	close(listenningSocket);
-	close(socketCliente);
-
-	return 0;
 }
-*/
+
