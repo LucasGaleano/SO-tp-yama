@@ -4,7 +4,7 @@
 
 | BRANCHS       | ¿PARA QUE SIRVE?|
 | ------------- |:-------------:|
-| MASTER      | APROBADO POR LA CATEDRA |
+| MASTER      | APROBADO POR TODOS |
 | RAMA_PROPIA | TRABAJO PROPIO|
 
 Siempre trabajar en una RAMA_PROPIA y cuando se considera cumplida la tarea, hacer el PullRequest (PR) con la rama BASE "MASTER" y la rama a mergear "RAMA_PROPIA".
