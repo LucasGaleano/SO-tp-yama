@@ -12,6 +12,17 @@
 #include <stdlib.h>
 #include <commons/config.h>
 
+struct filaTablaDeEstado
+  {
+      int job;
+      int master;
+      int nodo;
+      int bloque;
+      int etapa;
+	  char * archivoTemporal;
+      int estado;
+  } elemento_tabla_estado;
+
 int main(void) {
 
 	char* path = "/home/utnso/workspace/tp-2017-2c-NULL/configuraciones/yama.cfg";
@@ -23,7 +34,8 @@ int main(void) {
 	int retardo = config_get_int_value(config, "RETARDO_PLANIFICACION");
 	char* algoritmo = config_get_string_value(config, "ALGORITMO_BALANCEO");
 
-	printf("IP: %s - PUERTO: %d - RETARDO: %d - ALGORITMO: %s", ip, puerto, retardo, algoritmo);
+	printf("IP: %s - PUERTO: %d - RETARDO: %d - ALGORITMO: %s\n", ip, puerto, retardo, algoritmo);
 
 	return 0;
 }
+
