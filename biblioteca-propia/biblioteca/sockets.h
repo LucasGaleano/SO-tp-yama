@@ -13,17 +13,34 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-/*------------------------------Clientes------------------------------*/
+/*------------------------------Estructuras------------------------------*/
+typedef struct {
+	int size;
+	void * data;
+} t_stream;
 
-int 			conectarCliente				(const char *, const char *);
-void 			enviarMensaje				(int, char *);
-void 			enviarPaquetes				(int);
+typedef struct {
+	int emisor;
+	int codigoOperacion;
+	t_stream * buffer;
+}t_paquete;
+
+
+/*------------------------------Clientes------------------------------*/
+int		 			conectarCliente					(const char *, const char *);
 
 /*------------------------------Servidor------------------------------*/
+void	 			iniciarServer					(const char *);
+int 				crearSocketServer				(const char *);
+void 				gestionarDatosCliente			(int, fd_set *);
+void 				gestionarNuevasConexiones		(int, fd_set *, int *);
 
-int 			crearSocketServer			(const char *);
-void 			gestionarDatosCliente		(int, void *, fd_set *);
-void 			gestionarNuevasConexiones	(int, fd_set *, int *);
-void 			iniciarServer				(const char *);
+/*------------------------------Paquetes------------------------------*/
+void	 			enviarPaquetes					(int, t_paquete *);
+int 				recibirTamPaquete				(int, fd_set *);
+t_paquete * 		recibirPaquete					(int, fd_set *, int);
+t_paquete * 		crearPaquete					(void *);
+void 				destruirPaquete					(t_paquete *);
+void 				mostrarPaquete					(t_paquete *);
 
 #endif /* BIBLIOTECA_SOCKETS_H_ */
