@@ -5,8 +5,13 @@
 
 /*-------------------------Serializacion-------------------------*/
 void 			serializarMensaje				(t_paquete *, char *);
+void 			serializarArchvivo				(t_paquete *, char *);
 
 /*-------------------------Deserializacion-------------------------*/
-void 			deserializarMensaje				(t_paquete *, void *);
+char * 			deserializarMensaje				(t_stream *);
+void * 			deserializarArchivo				(t_stream *);
+
+/*-------------------------Funciones auxiliares-------------------------*/
+void * 			abrirArchivo					(char *, size_t *);
 
 #endif /* BIBLIOTECA_SERIALIZACION_H_ */

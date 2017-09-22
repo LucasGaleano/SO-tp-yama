@@ -15,6 +15,7 @@ void 				mostrarPaquete					(t_paquete *);
 /*-------------------------Enviar paquetes-------------------------*/
 
 void 				enviarMensaje					(int, int, char *);
+void 				enviarArchivo					(int, int, char *);
 
 /*-------------------------Recibir paquetes-------------------------*/
 

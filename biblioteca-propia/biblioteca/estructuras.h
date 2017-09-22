@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -15,7 +16,7 @@
 
 /*------------------------------Estructuras------------------------------*/
 typedef struct {
-	int size;
+	size_t size;
 	void * data;
 } t_stream;
 
@@ -27,6 +28,7 @@ typedef struct {
 
 enum cod_op{
 	ENVIAR_MENSAJE=0,
+	ENVIAR_ARCHIVO=1,
 };
 
 enum emisor {
