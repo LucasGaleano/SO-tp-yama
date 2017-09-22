@@ -17,10 +17,12 @@
 #include <sys/mman.h>  //mmap()
 #include <unistd.h>  //PROT_READ del mmap()
 
+#define PATHCONFIG "../configuraciones/nodo.cfg"
 #define PATHDATA "./data.bin"
 #define TAMBLOQUE 8
 
-char* getBloque(int);
+char* getBloque(int numBloque);
+void setBloque(int numBloque, char* bloque);
 
 int main(void) {
 
@@ -34,7 +36,7 @@ int main(void) {
 
 	//LEER ARCHIVO DE CONFIGURACION ---------------------------------------------------------
 
-    conf = config_create("../configuraciones/nodo.cfg");                 // path relativo al archivo nodo.cfg
+    conf = config_create(PATHCONFIG);                 // path relativo al archivo nodo.cfg
     char* IP_FILESYSTEM = config_get_string_value(conf,"IP_FILESYSTEM");        // traigo los datos del archivo nodo.cfg
     char* PUERTO_FILESYSTEM = config_get_string_value(conf,"PUERTO_FILESYSTEM");
     int NOMBRE_NODO = config_get_string_value(conf,"NOMBRE_NODO");
@@ -43,11 +45,10 @@ int main(void) {
     char* RUTA_DATABIN = config_get_string_value(conf,"RUTA_DATABIN");
 
 
-    t_log* logger = log_create("dataNode_log", "dataNode", true, logLevel ); //creo archivo log
 
     //log_warning(logger, "algo paso aca!!!!!");
 
-
+    setBloque(1,"10101010");
     bloque = getBloque(2);
 
     //CONECTARSE A FILESYSTEM, QUEDAR A LA ESPERA DE SOLICITUDES --------------------------------
@@ -75,9 +76,9 @@ char* getBloque(int numBloque)
 				0);				//desde donde leer
 
 
-	int i = numBloque*TAMBLOQUE - TAMBLOQUE;
+	int i = numBloque*TAMBLOQUE;
 	int j = 0;
-	for(i; i<(numBloque*TAMBLOQUE); i++ )
+	for(i; i<(numBloque*TAMBLOQUE + TAMBLOQUE); i++ )
 	{
 		bloque[j] = map[i];
 		j++;
@@ -90,4 +91,39 @@ char* getBloque(int numBloque)
     return bloque;
 
 }
+
+void setBloque(int numBloque, char* bloque)
+{
+	struct stat sb;
+	char *map;
+
+	int fd = open(PATHDATA,	O_RDWR); //abrir archivo data.bin
+
+	fstat(fd, &sb);
+
+    map = (char*) mmap(NULL,        //donde comienza a guardar el mapeo, NULL significa "donde quiera el S.O"
+    			sb.st_size,		//el tamaño del file
+				PROT_READ | PROT_WRITE,		//proteccion del file (PROT_READ = solo lectura)
+				MAP_SHARED,		//que comparta el mapeo con otros procesos creo, no se bien que hace
+				fd,				//el file descriptor
+				0);				//desde donde leer
+
+	int i = numBloque*TAMBLOQUE;
+	int j = 0;
+	for(i; i<(numBloque*TAMBLOQUE + TAMBLOQUE); i++ )
+	{
+		map[i] = bloque[j];
+		j++;
+	}
+
+
+    munmap(map,sb.st_size);  //cierro mmap()
+    close(fd);				//cierro archivo
+
+
+
+}
+
+
+
 

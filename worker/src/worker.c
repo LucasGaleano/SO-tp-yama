@@ -23,7 +23,7 @@
 int main(void) {
 
 	t_config *conf;
-	void transformacion(char*);
+	void transformacion(char* bloque);
 
 	//LEER ARCHIVO DE CONFIGURACION ---------------------------------------------------------
 
