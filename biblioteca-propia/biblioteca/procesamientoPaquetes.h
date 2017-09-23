@@ -13,29 +13,12 @@ void 				destruirPaquete					(t_paquete *);
 void 				mostrarPaquete					(t_paquete *);
 
 /*-------------------------Enviar paquetes-------------------------*/
+void 				enviarMensaje					(int, char *);
+void 				enviarArchivo					(int, char *);
 
-void 				enviarMensaje					(int, int, char *);
-void 				enviarArchivo					(int, int, char *);
-
-/*-------------------------Recibir paquetes-------------------------*/
-
-
-
-
-
-
-
-
-
-
-
-
-//Procesamiento de paquetes
-void procesarPaqueteDataNode(t_paquete * unPaquete, int socket);
-void procesarPaqueteFileSystem(t_paquete * unPaquete, int socket);
-void procesarPaqueteMaster(t_paquete * unPaquete, int socket);
-void procesarPaqueteWorker(t_paquete * unPaquete, int socket);
-void procesarPaqueteYama(t_paquete * unPaquete, int socket);
-void procesarPaquete(t_paquete * unPaquete, int socket);
+/*-------------------------Procesamiento paquetes-------------------------*/
+void 				procesarPaquete					(t_paquete *, int);
+void 				recibirMensaje					(t_paquete *);
+void 				recibirArchivo					(t_paquete *);
 
 #endif /* SRC_PROCESAMIENTOPAQUETES_H_ */

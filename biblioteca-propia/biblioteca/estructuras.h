@@ -23,7 +23,6 @@ typedef struct {
 } t_stream;
 
 typedef struct {
-	int emisor;
 	int codigoOperacion;
 	t_stream * buffer;
 }t_paquete;

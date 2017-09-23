@@ -136,16 +136,23 @@ void gestionarNuevasConexiones(int server_socket, fd_set * set_master,
 		printf("El socket %d ha producido un error"
 				"y ha sido desconectado.\n", client_socket);
 		perror("accept");
-	} else {
-		printf("El socket %d se ha conectado al servidor.\n", client_socket);
-
-		//Añado al conjunto maestro
-		FD_SET(client_socket, set_master);
-
-		//Actualizo el máximo
-		if (client_socket > *descriptor_mas_alto)
-			*descriptor_mas_alto = client_socket;
+		return;
 	}
+
+	if (!handshake(client_socket)) {
+		printf("El socket %d no supero el handshake"
+				"y ha sido desconectado.\n", client_socket);
+		return;
+	}
+
+	printf("El socket %d se ha conectado al servidor.\n", client_socket);
+
+	//Añado al conjunto maestro
+	FD_SET(client_socket, set_master);
+
+	//Actualizo el máximo
+	if (client_socket > *descriptor_mas_alto)
+		*descriptor_mas_alto = client_socket;
 }
 
 void gestionarDatosCliente(int client_socket, fd_set * set_master) {
@@ -160,3 +167,68 @@ void gestionarDatosCliente(int client_socket, fd_set * set_master) {
 	}
 }
 
+/*------------------------------Handshake------------------------------*/
+
+void enviarHandshake(int server_socket, int emisor){
+	int resultado = send(server_socket, &emisor, sizeof(int), MSG_NOSIGNAL);
+
+	if (resultado == -1)
+		perror("send");
+}
+
+bool handshake(int client_socket) {
+	void * buffer = malloc(sizeof(int));
+
+	int recvd = recv(client_socket, buffer, sizeof(int), MSG_WAITALL);
+
+	if (recvd <= 0) {
+		if (recvd == -1) {
+			perror("recv");
+		}
+		printf("El socket %d ha producido un error "
+				"y ha sido desconectado.\n", client_socket);
+
+		//Cierro el socket
+		close(client_socket);
+	}
+
+	int tipoCliente;
+
+	memcpy(&tipoCliente, buffer, sizeof(int));
+
+	free(buffer);
+
+	bool respuesta = false;
+
+	switch (tipoCliente) {
+	case DATANODE:
+		contestarHandshakeDataNode();
+		respuesta = true;
+		break;
+
+	case YAMA:
+		contestarHandshakeYama();
+		respuesta = true;
+		break;
+
+	case WORKER:
+		contestarHandshakeWorker();
+		respuesta = true;
+		break;
+
+	case MASTER:
+		contestarHandshakeMaster();
+		respuesta = true;
+		break;
+	}
+
+	return respuesta;
+}
+
+void contestarHandshakeDataNode(){}
+
+void contestarHandshakeYama(){}
+
+void contestarHandshakeWorker(){}
+
+void contestarHandshakeMaster(){}
