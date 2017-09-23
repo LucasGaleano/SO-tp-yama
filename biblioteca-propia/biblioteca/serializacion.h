@@ -12,6 +12,6 @@ char * 			deserializarMensaje				(t_stream *);
 void * 			deserializarArchivo				(t_stream *);
 
 /*-------------------------Funciones auxiliares-------------------------*/
-void * 			abrirArchivo					(char *, size_t *);
+void * 			abrirArchivo					(char *, size_t *, FILE **);
 
 #endif /* BIBLIOTECA_SERIALIZACION_H_ */

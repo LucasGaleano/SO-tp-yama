@@ -17,7 +17,9 @@ void serializarMensaje(t_paquete * unPaquete, char * mensaje) {
 void serializarArchvivo(t_paquete * unPaquete, char * rutaArchivo) {
 	size_t tamArch;
 
-	void * archivo = abrirArchivo(rutaArchivo, &tamArch);
+	FILE * archivofd;
+
+	void * archivo = abrirArchivo(rutaArchivo, &tamArch, &archivofd);
 
 	unPaquete->buffer = malloc(sizeof(t_stream));
 	unPaquete->buffer->data = malloc(tamArch);
@@ -25,7 +27,8 @@ void serializarArchvivo(t_paquete * unPaquete, char * rutaArchivo) {
 	unPaquete->buffer->size = tamArch;
 	memcpy(unPaquete->buffer->data, archivo, tamArch);
 
-	free(archivo);
+	munmap(archivo, tamArch);
+	fclose(archivofd);
 }
 
 /*-------------------------Deserializacion-------------------------*/
@@ -50,7 +53,7 @@ void * deserializarArchivo(t_stream * buffer) {
 
 /*-------------------------Funciones auxiliares-------------------------*/
 
-void * abrirArchivo(char * rutaArchivo, size_t * tamArc) {
+void * abrirArchivo(char * rutaArchivo, size_t * tamArc, FILE ** archivo) {
 	//Copio informacion del archivo
 	struct stat statArch;
 
@@ -60,16 +63,11 @@ void * abrirArchivo(char * rutaArchivo, size_t * tamArc) {
 	*tamArc = statArch.st_size;
 
 	//Abro el archivo
-	FILE * archivo = fopen(rutaArchivo, "r");
-
-	//Reservo lugar para copiar el archivo
-	void * dataArchivo = malloc(*tamArc);
+	*archivo = fopen(rutaArchivo, "r");
 
 	//Leo el total del archivo y lo asigno al buffer
-	fread(dataArchivo, *tamArc, 1, archivo);
-
-	//Cierro el archivo
-	fclose(archivo);
+	int fd = fileno(*archivo);
+	void * dataArchivo = mmap(0, *tamArc, PROT_READ, MAP_SHARED, fd, 0);
 
 	return dataArchivo;
 }
