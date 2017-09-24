@@ -13,11 +13,11 @@ void 				destruirPaquete					(t_paquete *);
 void 				mostrarPaquete					(t_paquete *);
 
 /*-------------------------Enviar paquetes-------------------------*/
+void 				enviarHandshake					(int, int);
 void 				enviarMensaje					(int, char *);
 void 				enviarArchivo					(int, char *);
 
-/*-------------------------Procesamiento paquetes-------------------------*/
-void 				procesarPaquete					(t_paquete *, int);
+/*-------------------------Recibir paquetes-------------------------*/
 void 				recibirMensaje					(t_paquete *);
 void 				recibirArchivo					(t_paquete *);
 

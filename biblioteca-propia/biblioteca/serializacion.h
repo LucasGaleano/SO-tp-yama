@@ -4,6 +4,7 @@
 #include "estructuras.h"
 
 /*-------------------------Serializacion-------------------------*/
+void 			serializarHandshake				(t_paquete *, int);
 void 			serializarMensaje				(t_paquete *, char *);
 void 			serializarArchvivo				(t_paquete *, char *);
 

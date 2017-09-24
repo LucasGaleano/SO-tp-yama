@@ -15,7 +15,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-
 /*------------------------------Estructuras------------------------------*/
 typedef struct {
 	size_t size;
@@ -27,17 +26,18 @@ typedef struct {
 	t_stream * buffer;
 }t_paquete;
 
-enum cod_op{
-	ENVIAR_MENSAJE=0,
-	ENVIAR_ARCHIVO=1,
-};
-
 enum emisor {
 	DATANODE = 900,
 	FILESYSTEM = 901,
 	MASTER = 902,
 	WORKER = 903,
 	YAMA = 904,
+};
+
+enum cod_op{
+	HANDSHAKE=0,
+	ENVIAR_MENSAJE=1,
+	ENVIAR_ARCHIVO=2,
 };
 
 #endif /* BIBLIOTECA_ESTRUCTURAS_H_ */

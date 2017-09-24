@@ -1,6 +1,15 @@
 #include "serializacion.h"
 
 /*-------------------------Serializacion-------------------------*/
+void serializarHandshake(t_paquete * unPaquete, int emisor) {
+	int tamMensaje = sizeof(int);
+
+	unPaquete->buffer = malloc(sizeof(t_stream));
+	unPaquete->buffer->data = malloc(tamMensaje);
+
+	unPaquete->buffer->size = tamMensaje;
+	memcpy(unPaquete->buffer->data, &emisor, tamMensaje);
+}
 
 void serializarMensaje(t_paquete * unPaquete, char * mensaje) {
 	int tamMensaje = strlen(mensaje) + 1;

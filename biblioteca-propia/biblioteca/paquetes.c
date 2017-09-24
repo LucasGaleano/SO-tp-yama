@@ -1,4 +1,4 @@
-#include "procesamientoPaquetes.h"
+#include "paquetes.h"
 
 /*------------------------------Paquetes------------------------------*/
 
@@ -150,6 +150,17 @@ void mostrarPaquete(t_paquete * unPaquete) {
 
 /*-------------------------Enviar-------------------------*/
 
+void enviarHandshake(int server_socket, int emisor){
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = HANDSHAKE;
+
+	serializarHandshake(unPaquete, emisor);
+
+	enviarPaquetes(server_socket, unPaquete);
+
+}
+
 void enviarMensaje(int server_socket, char * mensaje) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
@@ -170,23 +181,7 @@ void enviarArchivo(int server_socket, char * rutaArchivo) {
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-/*-------------------------Procesamiento-------------------------*/
-
-void procesarPaquete(t_paquete * unPaquete, int socket) {
-	switch (unPaquete->codigoOperacion) {
-	case ENVIAR_MENSAJE:
-		recibirMensaje(unPaquete);
-		break;
-
-	case ENVIAR_ARCHIVO:
-		recibirArchivo(unPaquete);
-		break;
-
-	default:
-		break;
-	}
-	destruirPaquete(unPaquete);
-}
+/*-------------------------Recibir-------------------------*/
 
 void recibirMensaje(t_paquete * unPaquete) {
 	char * mensaje = deserializarMensaje(unPaquete->buffer);
