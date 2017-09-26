@@ -1,7 +1,5 @@
 #include "sockets.h"
 
-#define BACKLOG 10		// Cantidad de conexiones maximas
-
 /*------------------------------Clientes------------------------------*/
 
 int conectarCliente(const char * ip, const char * puerto) {
@@ -19,7 +17,6 @@ int conectarCliente(const char * ip, const char * puerto) {
 			serverInfo->ai_protocol);
 	if (connect(socketfd, serverInfo->ai_addr, serverInfo->ai_addrlen)) {
 		perror(NULL);
-		exit(EXIT_FAILURE);
 	}
 
 	freeaddrinfo(serverInfo);
@@ -28,7 +25,7 @@ int conectarCliente(const char * ip, const char * puerto) {
 
 /*------------------------------Servidor------------------------------*/
 
-void iniciarServer(const char * puerto) {
+void iniciarServer(const char * puerto, void(*procesarPaquete)(void*, int*)) {
 	fd_set set_master;
 	fd_set set_copia;
 
@@ -68,7 +65,7 @@ void iniciarServer(const char * puerto) {
 							&descriptor_mas_alto);
 				} else {
 					//Si el decriptor pertenece a un socket cliente ya aceptado
-					gestionarDatosCliente(n_descriptor, &set_master);
+					gestionarDatosCliente(n_descriptor, &set_master, (void *) procesarPaquete);
 				}
 			}
 			n_descriptor++;
@@ -113,9 +110,8 @@ int crearSocketServer(const char * puerto) {
 	freeaddrinfo(serverInfo); // Ya no lo vamos a necesitar
 
 	//Escuchar conexiones de entrada
-	if (listen(server_socket, BACKLOG)) {
+	if (listen(server_socket, SOMAXCONN)) {
 		perror("listen");
-		exit(1);
 	}
 
 	return server_socket;
@@ -136,19 +132,20 @@ void gestionarNuevasConexiones(int server_socket, fd_set * set_master,
 		printf("El socket %d ha producido un error"
 				"y ha sido desconectado.\n", client_socket);
 		perror("accept");
-	} else {
-		printf("El socket %d se ha conectado al servidor.\n", client_socket);
-
-		//Añado al conjunto maestro
-		FD_SET(client_socket, set_master);
-
-		//Actualizo el máximo
-		if (client_socket > *descriptor_mas_alto)
-			*descriptor_mas_alto = client_socket;
+		return;
 	}
+
+	printf("El socket %d se ha conectado al servidor.\n", client_socket);
+
+	//Añado al conjunto maestro
+	FD_SET(client_socket, set_master);
+
+	//Actualizo el máximo
+	if (client_socket > *descriptor_mas_alto)
+		*descriptor_mas_alto = client_socket;
 }
 
-void gestionarDatosCliente(int client_socket, fd_set * set_master) {
+void gestionarDatosCliente(int client_socket, fd_set * set_master, void(*procesarPaquete)(void*, int*)) {
 
 	int tamPaquete = recibirTamPaquete(client_socket, set_master);
 
@@ -156,7 +153,19 @@ void gestionarDatosCliente(int client_socket, fd_set * set_master) {
 		t_paquete * unPaquete = recibirPaquete(client_socket, set_master,
 				tamPaquete);
 
-		procesarPaquete(unPaquete, client_socket);
+		int socketAux = client_socket;
+
+		procesarPaquete(unPaquete, &client_socket);
+
+		if(client_socket == -1){
+			printf("El socket %d no a pasado el handshake "
+					"y ha sido desconectado.\n", socketAux);
+
+			//Cierro el socket
+			close(socketAux);
+
+			//Elimino el socket del conjunto maestro
+			FD_CLR(socketAux, set_master);
+		}
 	}
 }
-

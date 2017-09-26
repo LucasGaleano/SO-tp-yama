@@ -1,17 +1,41 @@
-/*
- ============================================================================
- Name        : fileSystem.c
- Author      : 
- Version     :
- Copyright   : Your copyright notice
- Description : Hello World in C, Ansi-style
- ============================================================================
- */
+#include "fileSystem.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+int main() {
 
-int main(void) {
-	puts("!!!Hello World!!!"); /* prints !!!Hello World!!! */
+	iniciarServer("3200", (void *) procesarPaquete);
+
 	return EXIT_SUCCESS;
+}
+
+/*-------------------------Procesamiento paquetes-------------------------*/
+void recibirHandshake(t_paquete * unPaquete, int * client_socket){
+	int tipoCliente;
+	memcpy(&tipoCliente, unPaquete->buffer->data, sizeof(int));
+
+	switch (tipoCliente) {
+		case DATANODE:
+			break;
+		case YAMA:
+			break;
+		default:
+			*client_socket = -1;
+			break;
+	}
+}
+
+void procesarPaquete(t_paquete * unPaquete, int * client_socket){
+	switch (unPaquete->codigoOperacion) {
+		case HANDSHAKE:
+			recibirHandshake(unPaquete, client_socket);
+			break;
+		case ENVIAR_MENSAJE:
+			recibirMensaje(unPaquete);
+			break;
+		case ENVIAR_ARCHIVO:
+			recibirArchivo(unPaquete);
+			break;
+		default:
+			break;
+	}
+	destruirPaquete(unPaquete);
 }

@@ -1,4 +1,4 @@
-#include "procesamientoPaquetes.h"
+#include "paquetes.h"
 
 /*------------------------------Paquetes------------------------------*/
 
@@ -7,22 +7,17 @@ void enviarPaquetes(int socketfd, t_paquete * unPaquete) {
 	int desplazamiento = 0;
 
 	int tamPaquete = sizeof(int);
-	int tamEmisor = sizeof(int);
 	int tamCodOp = sizeof(int);
 	int tamSize = sizeof(int);
 	int tamData = unPaquete->buffer->size;
 
-	int tamTotal = tamEmisor + tamCodOp + tamSize + tamData;
+	int tamTotal = tamCodOp + tamSize + tamData;
 
 	void * buffer = malloc(tamPaquete + tamTotal);
 
 	//Tamaño del paquete
 	memcpy(buffer + desplazamiento, &tamTotal, tamPaquete);
 	desplazamiento += tamPaquete;
-
-	//Emisor
-	memcpy(buffer + desplazamiento, &unPaquete->emisor, tamEmisor);
-	desplazamiento += tamEmisor;
 
 	//Codigo de operacion
 	memcpy(buffer + desplazamiento, &unPaquete->codigoOperacion, tamCodOp);
@@ -117,13 +112,8 @@ t_paquete * crearPaquete(void * buffer) {
 
 	int desplazamiento = 0;
 
-	int tamEmisor = sizeof(int);
 	int tamCodOp = sizeof(int);
 	int tamSize = sizeof(size_t);
-
-	//Emisor
-	memcpy(&unPaquete->emisor, buffer + desplazamiento, tamEmisor);
-	desplazamiento += tamEmisor;
 
 	//Codigo de operacion
 	memcpy(&unPaquete->codigoOperacion, buffer + desplazamiento, tamCodOp);
@@ -153,7 +143,6 @@ void destruirPaquete(t_paquete * unPaquete) {
 
 void mostrarPaquete(t_paquete * unPaquete) {
 	printf("Muestro el paquete: \n");
-	printf("Emisor: %d \n", unPaquete->emisor);
 	printf("Codigo de operacion: %d \n", unPaquete->codigoOperacion);
 	printf("Tamanio del buffer: %d \n", unPaquete->buffer->size);
 	printf("Buffer: %s \n", (char*) unPaquete->buffer->data);
@@ -161,10 +150,20 @@ void mostrarPaquete(t_paquete * unPaquete) {
 
 /*-------------------------Enviar-------------------------*/
 
-void enviarMensaje(int server_socket, int emisor, char * mensaje) {
+void enviarHandshake(int server_socket, int emisor){
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
-	unPaquete->emisor = emisor;
+	unPaquete->codigoOperacion = HANDSHAKE;
+
+	serializarHandshake(unPaquete, emisor);
+
+	enviarPaquetes(server_socket, unPaquete);
+
+}
+
+void enviarMensaje(int server_socket, char * mensaje) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
 	unPaquete->codigoOperacion = ENVIAR_MENSAJE;
 
 	serializarMensaje(unPaquete, mensaje);
@@ -172,10 +171,9 @@ void enviarMensaje(int server_socket, int emisor, char * mensaje) {
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarArchivo(int server_socket, int emisor, char * rutaArchivo) {
+void enviarArchivo(int server_socket, char * rutaArchivo) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
-	unPaquete->emisor = emisor;
 	unPaquete->codigoOperacion = ENVIAR_ARCHIVO;
 
 	serializarArchvivo(unPaquete, rutaArchivo);
@@ -183,74 +181,28 @@ void enviarArchivo(int server_socket, int emisor, char * rutaArchivo) {
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-/*-------------------------Procesamiento-------------------------*/
+/*-------------------------Recibir-------------------------*/
 
-void procesarPaquete(t_paquete * unPaquete, int socket) {
-	switch (unPaquete->emisor) {
-	case DATANODE:
-		procesarPaqueteDataNode(unPaquete, socket);
-		break;
+void recibirMensaje(t_paquete * unPaquete) {
+	char * mensaje = deserializarMensaje(unPaquete->buffer);
 
-	case FILESYSTEM:
-		procesarPaqueteFileSystem(unPaquete, socket);
-		break;
+	printf("Me llego este mensaje: %s \n", mensaje);
 
-	case MASTER:
-		procesarPaqueteMaster(unPaquete, socket);
-		break;
-
-	case WORKER:
-		procesarPaqueteWorker(unPaquete, socket);
-		break;
-
-	case YAMA:
-		procesarPaqueteYama(unPaquete, socket);
-		break;
-	}
+	//Libero memoria
+	free(mensaje);
 }
 
-void procesarPaqueteDataNode(t_paquete * unPaquete, int socket) {
-	switch (unPaquete->codigoOperacion) {
-	case ENVIAR_MENSAJE:
-		;
-		char * mensaje = deserializarMensaje(unPaquete->buffer);
+void recibirArchivo(t_paquete * unPaquete) {
+	void * archivo = deserializarArchivo(unPaquete->buffer);
 
-		printf("Me llego este mensaje: %s \n", mensaje);
+	printf("Me llego un archivo \n");
 
-		//Libero memoria
-		free(mensaje);
+	FILE* file = fopen("/home/utnso/Escritorio/pruebaFin.txt", "w+b");
 
-		break;
-	case ENVIAR_ARCHIVO:
-		;
-		void * archivo = deserializarArchivo(unPaquete->buffer);
+	fwrite(archivo, unPaquete->buffer->size, 1, file);
 
-		printf("Me llego un archivo \n");
+	fclose(file);
 
-		FILE* file = fopen("/home/utnso/Escritorio/pruebaFin.txt", "w+b");
-
-		fwrite(archivo, unPaquete->buffer->size, 1, file);
-
-		fclose(file);
-
-		//Libero memoria
-		free(archivo);
-		break;
-
-	default:
-		break;
-	}
-	destruirPaquete(unPaquete);
-}
-
-void procesarPaqueteFileSystem(t_paquete * unPaquete, int socket) {
-}
-
-void procesarPaqueteMaster(t_paquete * unPaquete, int socket) {
-}
-
-void procesarPaqueteWorker(t_paquete * unPaquete, int socket) {
-}
-
-void procesarPaqueteYama(t_paquete * unPaquete, int socket) {
+	//Libero memoria
+	free(archivo);
 }
