@@ -2,7 +2,9 @@
 
 int main() {
 
-	iniciarServer("3200", (void *) procesarPaquete);
+	//iniciarServer("3200", (void *) procesarPaquete);
+
+	iniciarConsola();
 
 	return EXIT_SUCCESS;
 }
