@@ -16,6 +16,7 @@ void 				mostrarPaquete					(t_paquete *);
 void 				enviarHandshake					(int, int);
 void 				enviarMensaje					(int, char *);
 void 				enviarArchivo					(int, char *);
+void 				enviarInfoDataNode				(int, char *, int, int);
 
 /*-------------------------Recibir paquetes-------------------------*/
 void 				recibirMensaje					(t_paquete *);

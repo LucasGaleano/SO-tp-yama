@@ -181,6 +181,16 @@ void enviarArchivo(int server_socket, char * rutaArchivo) {
 	enviarPaquetes(server_socket, unPaquete);
 }
 
+void enviarInfoDataNode(int server_socket, char * nombreNodo, int bloquesTotales, int bloquesLibres) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_INFO_DATANODE;
+
+	serializarInfoDataNode(unPaquete, nombreNodo, bloquesTotales, bloquesLibres);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
+
 /*-------------------------Recibir-------------------------*/
 
 void recibirMensaje(t_paquete * unPaquete) {
