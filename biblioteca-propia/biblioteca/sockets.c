@@ -2,7 +2,7 @@
 
 /*------------------------------Clientes------------------------------*/
 
-int conectarCliente(const char * ip, const char * puerto) {
+int conectarCliente(const char * ip, const char * puerto, int cliente) {
 	struct addrinfo hints;
 	struct addrinfo *serverInfo;
 
@@ -20,6 +20,9 @@ int conectarCliente(const char * ip, const char * puerto) {
 	}
 
 	freeaddrinfo(serverInfo);
+
+	enviarHandshake(socketfd, cliente);
+
 	return socketfd;
 }
 
