@@ -9,6 +9,7 @@ void	 			enviarPaquetes					(int, t_paquete *);
 int 				recibirTamPaquete				(int, fd_set *);
 t_paquete * 		recibirPaquete					(int, fd_set *, int);
 t_paquete * 		crearPaquete					(void *);
+t_paquete *			crearPaqueteError				(int client_socket);
 void 				destruirPaquete					(t_paquete *);
 void 				mostrarPaquete					(t_paquete *);
 

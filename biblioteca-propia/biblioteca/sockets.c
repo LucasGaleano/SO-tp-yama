@@ -169,6 +169,16 @@ void gestionarDatosCliente(int client_socket, fd_set * set_master, void(*procesa
 
 			//Elimino el socket del conjunto maestro
 			FD_CLR(socketAux, set_master);
+
+			//El server hace lo que tiene que hacer cuando se desconecta el socket
+			t_paquete * unPaqueteError = crearPaqueteError(client_socket);
+			procesarPaquete(unPaqueteError, &client_socket);
+
 		}
+	}else{
+		//El server hace lo que tiene que hacer cuando se desconecta el socket
+		t_paquete * unPaqueteError = crearPaqueteError(client_socket);
+		procesarPaquete(unPaqueteError, &client_socket);
+
 	}
 }
