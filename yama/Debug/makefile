@@ -25,20 +25,23 @@ endif
 # All Target
 all: yama
 
+dependents:
+	-cd /home/utnso/workspace/tp-2017-2c-NULL/biblioteca-propia/Debug && $(MAKE) all
+
 # Tool invocations
-yama: $(OBJS) $(USER_OBJS)
+yama: $(OBJS) $(USER_OBJS) /home/utnso/workspace/tp-2017-2c-NULL/biblioteca-propia/Debug/libbiblioteca-propia.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc  -o "yama" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -L"/home/utnso/workspace/tp-2017-2c-NULL/biblioteca-propia/Debug" -o "yama" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(OBJS)$(C_DEPS)$(EXECUTABLES) yama
+	-$(RM) $(EXECUTABLES)$(OBJS)$(C_DEPS) yama
 	-@echo ' '
 
 .PHONY: all clean dependents
-.SECONDARY:
+/home/utnso/workspace/tp-2017-2c-NULL/biblioteca-propia/Debug/libbiblioteca-propia.so:
 
 -include ../makefile.targets
