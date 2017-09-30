@@ -27,15 +27,25 @@ typedef struct {
 	char * nomNodo;
 } t_nodoYsocket;
 
-/*---------	---------------Variables globales-------------------------*/
+/*------------------------Variables globales-------------------------*/
 t_log* logFileSystem;
+t_list * listaNodoYSocket;
+t_tabla_nodo * tablaNodos;
 
-/*---------	---------------Procesamiento paquetes-------------------------*/
+/*------------------------Procesamiento paquetes-------------------------*/
 void 				procesarPaquete					(t_paquete *, int *);
 void 				recibirHandshake				(t_paquete *, int *);
 void 				recibirInfoNodo					(t_paquete *, int);
+void 				recibirError					(t_paquete *);
+
+/*-------------------------Modificar tabla de nodos-------------------------*/
+void 				crearTablaDeNodos				(void);
+char * 				buscarNodoXSocketYEliminarlo	(int);
+void 				eliminarNodoDeTablaDeNodos		(char *);
 
 /*-------------------------Funciones auxiliares-------------------------*/
 void 				iniciarServidor					(char*);
+void 				mostrarTablas					(void);
+
 
 #endif /* FILESYSTEM_H_ */
