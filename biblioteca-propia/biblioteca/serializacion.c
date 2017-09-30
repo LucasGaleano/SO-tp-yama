@@ -40,6 +40,27 @@ void serializarArchvivo(t_paquete * unPaquete, char * rutaArchivo) {
 	fclose(archivofd);
 }
 
+void serializarInfoDataNode(t_paquete * unPaquete, char * nombreNodo, int bloquesTotales, int bloquesLibres){
+	int lengthNombre = strlen(nombreNodo) + 1;
+	int tamBloque = sizeof(int);
+	int tamTotal = lengthNombre + tamBloque + tamBloque;
+
+	unPaquete->buffer = malloc(sizeof(t_stream));
+	unPaquete->buffer->size = tamTotal;
+
+	unPaquete->buffer->data = malloc(tamTotal);
+
+	int desplazamiento = 0;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, nombreNodo, lengthNombre);
+	desplazamiento += lengthNombre;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, &bloquesTotales, tamBloque);
+	desplazamiento += tamBloque;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, &bloquesLibres, tamBloque);
+}
+
 /*-------------------------Deserializacion-------------------------*/
 
 char * deserializarMensaje(t_stream * buffer) {
@@ -58,6 +79,25 @@ void * deserializarArchivo(t_stream * buffer) {
 	memcpy(archivo, buffer->data, buffer->size);
 
 	return archivo;
+}
+
+t_nodo_info * deserializarInfoDataNode(t_stream * buffer){
+	t_nodo_info * info = malloc(sizeof(t_nodo_info));
+
+	int desplazamiento = 0;
+
+	info->nombre = strdup(buffer->data);
+
+	desplazamiento += (strlen(info->nombre) + 1);
+
+	int tamBloque = sizeof(int);
+
+	memcpy(&info->total, buffer->data + desplazamiento, tamBloque);
+	desplazamiento += tamBloque;
+
+	memcpy(&info->libre, buffer->data + desplazamiento, tamBloque);
+
+	return info;
 }
 
 /*-------------------------Funciones auxiliares-------------------------*/

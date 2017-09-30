@@ -5,7 +5,7 @@
 #include "paquetes.h"
 
 /*------------------------------Clientes------------------------------*/
-int		 			conectarCliente					(const char *, const char *);
+int		 			conectarCliente					(const char *, const char *, int);
 
 /*------------------------------Servidor------------------------------*/
 void	 			iniciarServer					(const char *,void(*)(void*, int*));
