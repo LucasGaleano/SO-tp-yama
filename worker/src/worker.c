@@ -17,13 +17,13 @@
 #include <sys/stat.h> //fstat()
 #include <sys/mman.h>  //mmap()
 #include <unistd.h>  //PROT_READ del mmap()
+#include "worker.h"
 
 #define PATHCONFIG "../configuraciones/nodo.cfg"
 
 int main(void) {
 
 	t_config *conf;
-	void transformacion(char* bloque);
 
 	//LEER ARCHIVO DE CONFIGURACION ---------------------------------------------------------
 
@@ -34,12 +34,6 @@ int main(void) {
     int PUERTO_WORKER = config_get_int_value(conf,"PUERTO_WORKER");
     int PUERTO_DATANODE = config_get_int_value(conf,"PUERTO_DATANODE");
     char* RUTA_DATABIN = config_get_string_value(conf,"RUTA_DATABIN");
-
-
-    transformacion("011010100101");
-
-
-
 
 
 

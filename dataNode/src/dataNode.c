@@ -16,13 +16,11 @@
 #include <sys/stat.h> //fstat()
 #include <sys/mman.h>  //mmap()
 #include <unistd.h>  //PROT_READ del mmap()
+#include "dataNode.h"
 
 #define PATHCONFIG "../configuraciones/nodo.cfg"
 #define PATHDATA "./data.bin"
 #define TAMBLOQUE 8
-
-char* getBloque(int numBloque);
-void setBloque(int numBloque, char* bloque);
 
 int main(void) {
 
