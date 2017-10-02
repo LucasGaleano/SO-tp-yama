@@ -29,7 +29,7 @@ int main(void) {
 
 
 	t_config* conf;
-	char* bloque;
+	char* bloque = calloc (TAMBLOQUE,1);
 	t_log_level logLevel = LOG_LEVEL_INFO;               //elijo enum de log
     t_log* logger = log_create("dataNode_log", "dataNode", true, logLevel ); //creo archivo log
 
@@ -39,20 +39,20 @@ int main(void) {
     conf = config_create(PATHCONFIG);                 // path relativo al archivo nodo.cfg
     char* IP_FILESYSTEM = config_get_string_value(conf,"IP_FILESYSTEM");        // traigo los datos del archivo nodo.cfg
     char* PUERTO_FILESYSTEM = config_get_string_value(conf,"PUERTO_FILESYSTEM");
-    int NOMBRE_NODO = config_get_string_value(conf,"NOMBRE_NODO");
+    char* NOMBRE_NODO = config_get_string_value(conf,"NOMBRE_NODO");
     int PUERTO_WORKER = config_get_int_value(conf,"PUERTO_WORKER");
     int PUERTO_DATANODE = config_get_int_value(conf,"PUERTO_DATANODE");
     char* RUTA_DATABIN = config_get_string_value(conf,"RUTA_DATABIN");
 
-
-
     //log_warning(logger, "algo paso aca!!!!!");
 
-    setBloque(1,"10101010");
-    bloque = getBloque(2);
+    setBloque(0,"10101010");
+    //bloque = getBloque(2);
+    //puts(bloque);
 
     //CONECTARSE A FILESYSTEM, QUEDAR A LA ESPERA DE SOLICITUDES --------------------------------
 
+    free(bloque);
 	return EXIT_SUCCESS;
 
 }
@@ -62,32 +62,42 @@ char* getBloque(int numBloque)
 {
 	struct stat sb;
 	char *map;
-    char *bloque  = calloc(TAMBLOQUE,1);
+    char *bloque = calloc(TAMBLOQUE,1);
 
 	int fd = open(PATHDATA,	O_RDONLY); //abrir archivo data.bin
 
 	fstat(fd, &sb);
 
-    map = (char*) mmap(NULL,        //donde comienza a guardar el mapeo, NULL significa "donde quiera el S.O"
+    map = mmap(NULL,        //donde comienza a guardar el mapeo, NULL significa "donde quiera el S.O"
     			sb.st_size,		//el tamaño del file
 				PROT_READ,		//proteccion del file (PROT_READ = solo lectura)
 				MAP_SHARED,		//que comparta el mapeo con otros procesos creo, no se bien que hace
 				fd,				//el file descriptor
 				0);				//desde donde leer
 
+    if (map == MAP_FAILED)
+    {
+    	close(fd);
+    	perror("[-] Error mapeando el archivo");
+    	exit(EXIT_FAILURE);
+    }
 
-	int i = numBloque*TAMBLOQUE;
+    int i;
 	int j = 0;
-	for(i; i<(numBloque*TAMBLOQUE + TAMBLOQUE); i++ )
+	for(i = numBloque*TAMBLOQUE; i<(numBloque*TAMBLOQUE + TAMBLOQUE); i++ )
 	{
 		bloque[j] = map[i];
 		j++;
 	}
 
 
-    munmap(map,sb.st_size);  //cierro mmap()
+    if(munmap(map,sb.st_size) == -1) //cierro mmap()
+    {
+    	perror("[-]Error cerrando map");
+    	exit(EXIT_FAILURE);
+    }
+
     close(fd);				//cierro archivo
-    free(bloque);		//libero bloque
     return bloque;
 
 }
