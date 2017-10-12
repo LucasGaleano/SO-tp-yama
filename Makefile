@@ -9,12 +9,16 @@
 
 deploy: dependencias tp
 
-dependencias: so-commons-library
+dependencias: so-commons-library readline
 
 so-commons-library:
 	$(call mostrarTitulo,$@)
 	git clone https://github.com/sisoputnfrba/so-commons-library ../so-commons-library
 	cd ../so-commons-library; sudo make install
+
+readline:
+	$(call mostrarTitulo,$@)
+	sudo apt-get install libreadline6 libreadline6-dev
 
 tp: dataNode fileSystem master worker yama
 
