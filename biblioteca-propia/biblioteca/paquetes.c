@@ -135,6 +135,16 @@ t_paquete * crearPaquete(void * buffer) {
 	return unPaquete;
 }
 
+t_paquete * crearPaqueteError(int client_socket){
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+	unPaquete->codigoOperacion = ENVIAR_ERROR;
+	unPaquete->buffer = malloc(sizeof(t_stream));
+	unPaquete->buffer->size=sizeof(int);
+	unPaquete->buffer->data= malloc(unPaquete->buffer->size);
+	memcpy(unPaquete->buffer->data, &client_socket, unPaquete->buffer->size);
+	return unPaquete;
+}
+
 void destruirPaquete(t_paquete * unPaquete) {
 	free(unPaquete->buffer->data);
 	free(unPaquete->buffer);
@@ -177,6 +187,16 @@ void enviarArchivo(int server_socket, char * rutaArchivo) {
 	unPaquete->codigoOperacion = ENVIAR_ARCHIVO;
 
 	serializarArchvivo(unPaquete, rutaArchivo);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
+
+void enviarInfoDataNode(int server_socket, char * nombreNodo, int bloquesTotales, int bloquesLibres) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_INFO_DATANODE;
+
+	serializarInfoDataNode(unPaquete, nombreNodo, bloquesTotales, bloquesLibres);
 
 	enviarPaquetes(server_socket, unPaquete);
 }
