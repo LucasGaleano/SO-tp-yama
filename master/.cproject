@@ -30,6 +30,11 @@
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1421253622" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1655197466" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug">
+								<option id="gnu.c.link.option.libs.1852638803" superClass="gnu.c.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" value="commons"/>
+									<listOptionValue builtIn="false" value="estructurasWorkerMaster"/>
+									<listOptionValue builtIn="false" value="estructurasMasterYama"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.998787310" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
