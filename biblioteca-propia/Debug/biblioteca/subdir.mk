@@ -4,23 +4,26 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../src/consola.c \
-../src/fileSystem.c 
+../biblioteca/paquetes.c \
+../biblioteca/serializacion.c \
+../biblioteca/sockets.c 
 
 OBJS += \
-./src/consola.o \
-./src/fileSystem.o 
+./biblioteca/paquetes.o \
+./biblioteca/serializacion.o \
+./biblioteca/sockets.o 
 
 C_DEPS += \
-./src/consola.d \
-./src/fileSystem.d 
+./biblioteca/paquetes.d \
+./biblioteca/serializacion.d \
+./biblioteca/sockets.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
-src/%.o: ../src/%.c
+biblioteca/%.o: ../biblioteca/%.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C Compiler'
-	gcc -I"/home/utnso/workspace/tp-2017-2c-NULL/biblioteca-propia" -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	gcc -O0 -g3 -Wall -c -fmessage-length=0 -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/select.h>
 #include <sys/socket.h>
@@ -21,15 +22,9 @@ typedef struct {
 } t_stream;
 
 typedef struct {
-	int emisor;
 	int codigoOperacion;
 	t_stream * buffer;
 }t_paquete;
-
-enum cod_op{
-	ENVIAR_MENSAJE=0,
-	ENVIAR_ARCHIVO=1,
-};
 
 enum emisor {
 	DATANODE = 900,
@@ -39,5 +34,12 @@ enum emisor {
 	YAMA = 904,
 };
 
+enum cod_op{
+	HANDSHAKE=0,
+	ENVIAR_MENSAJE=1,
+	ENVIAR_ARCHIVO=2,
+	ENVIAR_INFO_DATANODE=3,
+	ENVIAR_ERROR=4,
+};
 
 #endif /* BIBLIOTECA_ESTRUCTURAS_H_ */

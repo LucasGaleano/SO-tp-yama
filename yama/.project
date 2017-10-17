@@ -3,6 +3,7 @@
 	<name>yama</name>
 	<comment></comment>
 	<projects>
+		<project>biblioteca-propia</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

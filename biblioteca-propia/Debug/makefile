@@ -8,7 +8,7 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include src/subdir.mk
+-include biblioteca/subdir.mk
 -include subdir.mk
 -include objects.mk
 
@@ -23,25 +23,22 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: yama
-
-dependents:
-	-cd /home/utnso/workspace/tp-2017-2c-NULL/biblioteca-propia/Debug && $(MAKE) all
+all: libbiblioteca-propia.so
 
 # Tool invocations
-yama: $(OBJS) $(USER_OBJS) /home/utnso/workspace/tp-2017-2c-NULL/biblioteca-propia/Debug/libbiblioteca-propia.so
+libbiblioteca-propia.so: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -L"/home/utnso/workspace/tp-2017-2c-NULL/biblioteca-propia/Debug" -o "yama" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -shared -o "libbiblioteca-propia.so" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(EXECUTABLES)$(OBJS)$(C_DEPS) yama
+	-$(RM) $(OBJS)$(C_DEPS)$(LIBRARIES) libbiblioteca-propia.so
 	-@echo ' '
 
 .PHONY: all clean dependents
-/home/utnso/workspace/tp-2017-2c-NULL/biblioteca-propia/Debug/libbiblioteca-propia.so:
+.SECONDARY:
 
 -include ../makefile.targets
