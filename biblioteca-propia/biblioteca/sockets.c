@@ -26,6 +26,35 @@ int conectarCliente(const char * ip, const char * puerto, int cliente) {
 	return socketfd;
 }
 
+void gestionarSolicitudes(int server_socket, void(*procesarPaquete)(void*, int*)) {
+
+	int tamPaquete = recibirTamPaquete(server_socket);
+
+	if (tamPaquete > 0) {
+		t_paquete * unPaquete = recibirPaquete(server_socket, tamPaquete);
+
+		int socketAux = server_socket;
+
+		procesarPaquete(unPaquete, &server_socket);
+
+		if(server_socket == -1){
+			printf("El socket %d no a pasado el handshake "
+					"y ha sido desconectado.\n", socketAux);
+
+			//El server hace lo que tiene que hacer cuando se desconecta el socket
+			t_paquete * unPaqueteError = crearPaqueteError(server_socket);
+			procesarPaquete(unPaqueteError, &server_socket);
+
+		}
+	}else{
+		//El server hace lo que tiene que hacer cuando se desconecta el socket
+		t_paquete * unPaqueteError = crearPaqueteError(server_socket);
+		procesarPaquete(unPaqueteError, &server_socket);
+
+	}
+}
+
+
 /*------------------------------Servidor------------------------------*/
 
 void iniciarServer(const char * puerto, void(*procesarPaquete)(void*, int*)) {
@@ -150,11 +179,10 @@ void gestionarNuevasConexiones(int server_socket, fd_set * set_master,
 
 void gestionarDatosCliente(int client_socket, fd_set * set_master, void(*procesarPaquete)(void*, int*)) {
 
-	int tamPaquete = recibirTamPaquete(client_socket, set_master);
+	int tamPaquete = recibirTamPaquete(client_socket);
 
 	if (tamPaquete > 0) {
-		t_paquete * unPaquete = recibirPaquete(client_socket, set_master,
-				tamPaquete);
+		t_paquete * unPaquete = recibirPaquete(client_socket, tamPaquete);
 
 		int socketAux = client_socket;
 
@@ -179,6 +207,9 @@ void gestionarDatosCliente(int client_socket, fd_set * set_master, void(*procesa
 		//El server hace lo que tiene que hacer cuando se desconecta el socket
 		t_paquete * unPaqueteError = crearPaqueteError(client_socket);
 		procesarPaquete(unPaqueteError, &client_socket);
+
+		//Elimino el socket del conjunto maestro
+		FD_CLR(client_socket, set_master);
 
 	}
 }
