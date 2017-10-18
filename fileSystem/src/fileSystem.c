@@ -200,11 +200,15 @@ void eliminarNodoTablaNodos(char * nomNodo) {
 void persistirTablaNodos() {
 	//Persisto el tamanio de la tabla
 	int tamanio = tablaNodos->tamanio;
-	config_set_value(configTablaNodo, "TAMANIO", string_itoa(tamanio));
+	char * stringTamanio = string_itoa(tamanio);
+	config_set_value(configTablaNodo, "TAMANIO", stringTamanio);
+	free(stringTamanio);
 
 	//Persisto los bloquees libres de la tabla
 	int libres = tablaNodos->libres;
-	config_set_value(configTablaNodo, "LIBRE", string_itoa(libres));
+	char * stringLibres = string_itoa(libres);
+	config_set_value(configTablaNodo, "LIBRE", stringLibres);
+	free(stringLibres);
 
 	//Persisto los nombres de los nodos
 	char* nomNodos = string_new();
@@ -229,6 +233,8 @@ void persistirTablaNodos() {
 
 	config_set_value(configTablaNodo, "NODOS", nomNodos);
 
+	free(nomNodos);
+
 	//Persisto la info de cada nodo
 	for (i = 0; i < tablaNodos->infoDeNodo->elements_count; i++) {
 		t_nodo_info * info = list_get(tablaNodos->infoDeNodo, i);
@@ -248,6 +254,10 @@ void persistirTablaNodos() {
 		config_set_value(configTablaNodo, total, totalNumero);
 		config_set_value(configTablaNodo, libre, totalLibre);
 
+		free(total);
+		free(libre);
+		free(totalNumero);
+		free(totalLibre);
 	}
 
 	config_save(configTablaNodo);
