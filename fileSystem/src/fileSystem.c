@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
 	}
 
 	//Levanto consola
-	iniciarConsola();
+	//iniciarConsola();
 
 	pthread_join(threadServer, NULL);
 
@@ -214,11 +214,11 @@ void persistirTablaNodos() {
 	int i;
 	for (i = 0; i < tablaNodos->nomNodos->elements_count; i++) {
 
+		char * nombre = list_get(tablaNodos->nomNodos, i);
+
 		if (i == 0) {
-			char * nombre = list_get(tablaNodos->nomNodos, i);
 			string_append(&nomNodos, nombre);
 		} else {
-			char * nombre = list_get(tablaNodos->nomNodos, i);
 			string_append(&nomNodos, ", ");
 			string_append(&nomNodos, nombre);
 		}
@@ -228,6 +228,27 @@ void persistirTablaNodos() {
 	string_append(&nomNodos, "]");
 
 	config_set_value(configTablaNodo, "NODOS", nomNodos);
+
+	//Persisto la info de cada nodo
+	for (i = 0; i < tablaNodos->infoDeNodo->elements_count; i++) {
+		t_nodo_info * info = list_get(tablaNodos->infoDeNodo, i);
+
+		char* total = string_new();
+		char* libre = string_new();
+
+		string_append(&total, info->nombre);
+		string_append(&total, "Total");
+
+		string_append(&libre, info->nombre);
+		string_append(&libre, "Libre");
+
+		char * totalNumero = string_itoa(info->total);
+		char * totalLibre = string_itoa(info->libre);
+
+		config_set_value(configTablaNodo, total, totalNumero);
+		config_set_value(configTablaNodo, libre, totalLibre);
+
+	}
 
 	config_save(configTablaNodo);
 }
