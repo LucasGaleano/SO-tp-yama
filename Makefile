@@ -21,10 +21,12 @@ readline:
 	sudo apt-get install libreadline6 libreadline6-dev
 
 biblioteca:
-	$(call mostrarTitulo,$@)
-	cd biblioteca-propia/Debug; make all
-	sudo cp -u ./biblioteca-propia/Debug/libbiblioteca-propia.so /usr/lib/libbiblioteca-propia.so
-	sudo cp -u ./biblioteca-propia/biblioteca/*.h /usr/include
+        $(call mostrarTitulo,$@)
+        cd biblioteca-propia/Debug; make all
+        mkdir /usr/include/biblioteca
+        sudo cp -u ./biblioteca-propia/Debug/libbiblioteca-propia.so /usr/lib/libbiblioteca-propia.so
+        sudo cp -u ./biblioteca-propia/biblioteca/*.h /usr/include/biblioteca
+
 
 tp: dataNode fileSystem master worker yama
 
