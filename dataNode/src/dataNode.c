@@ -12,14 +12,16 @@
 #include <stdlib.h>
 #include <commons/config.h> //config
 #include <commons/log.h> //log
+#include <commons/string.h>
 #include <fcntl.h>  // O_RDONLY modo de abrir para el open()
 #include <sys/stat.h> //fstat()
 #include <sys/mman.h>  //mmap()
 #include <unistd.h>  //PROT_READ del mmap()
 #include "dataNode.h"
+#include <biblioteca/sockets.h>
 
-#define PATHCONFIG "../configuraciones/nodo.cfg"
-#define PATHDATA "./data.bin"
+#define PATHCONFIG "./configuraciones/nodo.cfg"
+
 #define TAMBLOQUE 8
 
 int main(void) {
@@ -44,11 +46,22 @@ int main(void) {
 
     //log_warning(logger, "algo paso aca!!!!!");
 
-    setBloque(0,"10101010");
-    //bloque = getBloque(2);
-    //puts(bloque);
+    //setBloque(2,"11111111",RUTA_DATABIN);
+    //bloque = getBloque(2,RUTA_DATABIN);
+    //printf("bloque: %s \n",bloque );
+
+
 
     //CONECTARSE A FILESYSTEM, QUEDAR A LA ESPERA DE SOLICITUDES --------------------------------
+
+    int socketFileSystem = conectarCliente(IP_FILESYSTEM,PUERTO_FILESYSTEM,DATANODE);
+
+
+    char* msg = string_new();
+    string_append(msg,"hola");
+
+    enviarInfoDataNode(socketFileSystem,msg,100,0);
+
 
     free(bloque);
 	return EXIT_SUCCESS;
@@ -56,13 +69,13 @@ int main(void) {
 }
 
 
-char* getBloque(int numBloque)
+char* getBloque(int numBloque,char* pathFile)
 {
 	struct stat sb;
 	char *map;
-    char *bloque = calloc(TAMBLOQUE,1);
+    char *bloque = malloc(TAMBLOQUE);
 
-	int fd = open(PATHDATA,	O_RDONLY); //abrir archivo data.bin
+	int fd = open(pathFile,	O_RDONLY); //abrir archivo data.bin
 
 	fstat(fd, &sb);
 
@@ -84,7 +97,7 @@ char* getBloque(int numBloque)
 	int j = 0;
 	for(i = numBloque*TAMBLOQUE; i<(numBloque*TAMBLOQUE + TAMBLOQUE); i++ )
 	{
-		bloque[j] = map[i];
+		bloque[j] = map[i]; //leer
 		j++;
 	}
 
@@ -100,12 +113,12 @@ char* getBloque(int numBloque)
 
 }
 
-void setBloque(int numBloque, char* bloque)
+void setBloque(int numBloque, char* bloque,char* pathFile)
 {
 	struct stat sb;
 	char *map;
 
-	int fd = open(PATHDATA,	O_RDWR); //abrir archivo data.bin
+	int fd = open(pathFile,	O_RDWR); //abrir archivo data.bin
 
 	fstat(fd, &sb);
 
@@ -120,7 +133,7 @@ void setBloque(int numBloque, char* bloque)
 	int j = 0;
 	for(i; i<(numBloque*TAMBLOQUE + TAMBLOQUE); i++ )
 	{
-		map[i] = bloque[j];
+		map[i] = bloque[j]; //escribe
 		j++;
 	}
 
