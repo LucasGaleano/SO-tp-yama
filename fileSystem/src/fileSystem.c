@@ -5,6 +5,7 @@ int main(int argc, char **argv) {
 	//Creo tablas administrativas
 	crearTablaNodos("/home/utnso/Escritorio/metadata");
 	crearTablaSockets();
+	crearTablaDirectorios("/home/utnso/Escritorio/metadata");
 
 	//Creo archivo de log
 	logFileSystem = log_create("log_FileSystem.log", "fileSystem", false,
@@ -98,6 +99,120 @@ void recibirError(t_paquete * unPaquete) {
 
 	eliminarNodoTablaNodos(nomNodo);
 
+}
+
+/*-------------------------Tabla de directorios-------------------------*/
+void crearTablaDirectorios(char * rutaTablaDirectorios) {
+	tablaDirectorios = list_create();
+
+	//Creo el primer que es el root
+	t_directory * registro = malloc(sizeof(t_directory));
+
+	strncpy(registro->nombre, "root", sizeof(registro->nombre) - 1);
+	registro->padre = -1;
+
+	list_add(tablaDirectorios, registro);
+
+	crearArchivoTablaDirectorios(rutaTablaDirectorios);
+}
+
+void crearArchivoTablaDirectorios(char * ruta) {
+	//Abro el archivo para usarlo y si no existe lo creo
+	char * rutaArchivo = string_new();
+	string_append(&rutaArchivo, ruta);
+	string_append(&rutaArchivo, "/directorios.dat");
+
+	FILE* file = fopen(rutaArchivo, "r");
+
+	if (file == NULL) {
+		mkdir("/home/utnso/Escritorio/metadata", 0777);
+		file = fopen(rutaArchivo, "w+b");
+
+		//Cierro el archivo
+		fclose(file);
+
+		//Creo la estructura de configuracion
+		configTablaDirectorios = config_create(rutaArchivo);
+
+	} else {
+
+		//Creo la estructura de configuracion
+		configTablaDirectorios = config_create(rutaArchivo);
+
+		//Cierro el archivo
+		fclose(file);
+
+	}
+
+	free(rutaArchivo);
+
+	persistirTablaDirectorios();
+
+}
+
+void agregarDirectorioTabla(t_directory * registro) {
+	//Verifico que haya espacio para agregar directorios
+	if (tablaDirectorios->elements_count == 100) {
+		printf("No se puede agregar un nuevo directorio");
+		return;
+	}
+
+	//Agrego a la tabla el registro del directorio
+	list_add(tablaDirectorios, registro);
+
+	persistirTablaDirectorios();
+}
+
+void eliminarDirectorioTabla(char * nombreDirectorio, int padreDirectorio){
+
+	bool esRegistroBuscado(t_directory * registro) {
+		return string_equals_ignore_case(registro->nombre, nombreDirectorio) && registro->padre == padreDirectorio;
+	}
+
+	t_directory * registro = list_remove_by_condition(tablaDirectorios,
+			(void*) esRegistroBuscado);
+
+	free(registro->nombre);
+	free(registro);
+
+	persistirTablaDirectorios();
+
+}
+
+void persistirTablaDirectorios(){
+	int i;
+	for (i = 0; i < tablaDirectorios->elements_count; ++i) {
+		t_directory * registro = list_get(tablaDirectorios, i);
+
+		char * indexNum = string_itoa(i);
+
+		char * index = string_new();
+		string_append(&index, indexNum);
+		string_append(&index, "_INDEX");
+
+		config_set_value(configTablaDirectorios, index, indexNum);
+
+		char * nombre = string_new();
+		string_append(&nombre, indexNum);
+		string_append(&nombre, "_NOMBRE");
+
+		config_set_value(configTablaDirectorios, nombre, registro->nombre);
+
+		char * padre = string_new();
+		string_append(&padre, indexNum);
+		string_append(&padre, "_PADRE");
+
+		char * padreNum = string_itoa(registro->padre);
+		config_set_value(configTablaDirectorios, padre, padreNum);
+
+		free(indexNum);
+		free(padreNum);
+		free(index);
+		free(nombre);
+		free(padre);
+	}
+
+	config_save(configTablaDirectorios);
 }
 
 /*-------------------------Tabla de nodos-------------------------*/
@@ -326,7 +441,7 @@ void crearArchivoTablaBitmap(t_nodo_info * info) {
 		char * numeroNodo = string_itoa(i);
 		char * estado = string_itoa(0);
 		string_append(&nombre, numeroNodo);
-		config_set_value(configTablaBitmap,nombre,estado);
+		config_set_value(configTablaBitmap, nombre, estado);
 		free(nombre);
 		free(numeroNodo);
 		free(estado);

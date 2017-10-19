@@ -29,11 +29,20 @@ typedef struct {
 	t_list * infoDeNodo; //Lista con cada nodo en particular
 } t_tabla_nodo;
 
+//Registro tabla de Directorios
+typedef struct {
+	int index;
+	char nombre[255];
+	int padre;
+} t_directory;
+
+
 /*------------------------Variables globales-------------------------*/
 t_log* logFileSystem;
 
 t_list * tablaSockets;
 t_tabla_nodo * tablaNodos;
+t_list * tablaDirectorios;
 
 t_config * configTablaDirectorios;
 t_config * configTablaNodo;
@@ -44,6 +53,13 @@ void 				procesarPaquete					(t_paquete *, int *);
 void 				recibirHandshake				(t_paquete *, int *);
 void 				recibirInfoNodo					(t_paquete *, int);
 void 				recibirError					(t_paquete *);
+
+/*-------------------------Tabla de directorios-------------------------*/
+void 				crearTablaDirectorios			(char *);
+void 				crearArchivoTablaDirectorios	(char *);
+void 				agregarDirectorioTabla			(t_directory *);
+void 				eliminarDirectorioTabla			(char *, int);
+void 				persistirTablaDirectorios		(void);
 
 /*-------------------------Tabla de nodos-------------------------*/
 void	 			crearTablaNodos					(char *);
