@@ -31,11 +31,13 @@ typedef struct {
 
 /*------------------------Variables globales-------------------------*/
 t_log* logFileSystem;
+
 t_list * tablaSockets;
 t_tabla_nodo * tablaNodos;
 
 t_config * configTablaDirectorios;
 t_config * configTablaNodo;
+t_config * configTablaBitmap;
 
 /*------------------------Procesamiento paquetes-------------------------*/
 void 				procesarPaquete					(t_paquete *, int *);
@@ -54,6 +56,9 @@ void 				persistirTablaNodos				(void);
 void 				crearTablaSockets				(void);
 void 				agregarNodoTablaSockets			(char *, int);
 char * 				eliminarNodoTablaSockets		(int);
+
+/*-------------------------Tabla de Bitmap-------------------------*/
+void 				crearArchivoTablaBitmap			(t_nodo_info *);
 
 /*-------------------------Funciones auxiliares-------------------------*/
 void 				iniciarServidor					(char*);

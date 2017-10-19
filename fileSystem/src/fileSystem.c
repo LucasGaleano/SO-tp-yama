@@ -84,6 +84,10 @@ void recibirInfoNodo(t_paquete * unPaquete, int client_socket) {
 
 	//Agrego elemento a la tabla de nodos
 	agregarNodoTablaNodos(info);
+
+	//Creo una tabla de Bitmap del nodo
+	crearArchivoTablaBitmap(info);
+
 }
 
 void recibirError(t_paquete * unPaquete) {
@@ -295,6 +299,40 @@ char * eliminarNodoTablaSockets(int cliente_desconectado) {
 	free(registroSocket);
 
 	return nom;
+}
+
+/*-------------------------Tabla de Bitmap-------------------------*/
+void crearArchivoTablaBitmap(t_nodo_info * info) {
+	//Abro el archivo para usarlo
+	char * rutaArchivo = string_new();
+	string_append(&rutaArchivo, "/home/utnso/Escritorio/metadata/bitmaps/");
+	string_append(&rutaArchivo, info->nombre);
+	string_append(&rutaArchivo, ".dat");
+
+	mkdir("/home/utnso/Escritorio/metadata/bitmaps", 0777);
+	FILE* file = fopen(rutaArchivo, "w+b");
+
+	//Cierro el archivo
+	fclose(file);
+
+	//Creo la estructura de configuracion
+	configTablaBitmap = config_create(rutaArchivo);
+
+	//Seteo valores de bitmap en 0
+	int i;
+	for (i = 0; i < info->total; ++i) {
+		char * nombre = string_new();
+		string_append(&nombre, "Bloque");
+		char * numeroNodo = string_itoa(i);
+		string_append(&nombre, numeroNodo);
+		config_set_value(configTablaBitmap,nombre,"0");
+		free(nombre);
+		free(numeroNodo);
+	}
+
+	config_save(configTablaBitmap);
+
+	free(rutaArchivo);
 }
 
 /*-------------------------Funciones auxiliares-------------------------*/
