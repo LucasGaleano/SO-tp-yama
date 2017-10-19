@@ -324,10 +324,12 @@ void crearArchivoTablaBitmap(t_nodo_info * info) {
 		char * nombre = string_new();
 		string_append(&nombre, "Bloque");
 		char * numeroNodo = string_itoa(i);
+		char * estado = string_itoa(0);
 		string_append(&nombre, numeroNodo);
-		config_set_value(configTablaBitmap,nombre,"0");
+		config_set_value(configTablaBitmap,nombre,estado);
 		free(nombre);
 		free(numeroNodo);
+		free(estado);
 	}
 
 	config_save(configTablaBitmap);
