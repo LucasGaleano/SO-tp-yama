@@ -11,6 +11,7 @@
  */
 #include <pthread.h>
 #include <signal.h>
+#include <string.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -18,6 +19,7 @@
 #include <commons/config.h>
 #include <biblioteca/estructurasMasterYama.h>
 #include <biblioteca/estructurasWorkerMaster.h>
+#include <biblioteca/sockets.h>
 
 /*
 
@@ -68,16 +70,16 @@ Señales extraidas de /usr/bin/include/bits/signum.h
 
 */
 
-void leerConfiguracion();
+int leerConfiguracion();
 void mandarRutaInicial(char* ruta);
 void gestionarTransformacion(peticionDeTransformacion pedido[], int tam);
 void pedir_transformacion(peticionDeTransformacion pedido[], int a);
 void gestionarReduccionLocal(peticionDeReduccionLocal pedido[], int tam);
 void gestionarReduccionGlobal(peticionDeReduccionGlobal pedido[], int tam);
 void pedir_reduccion();
-void signal_capturer(int numeroSeñal);
 void dividirPorCero(); //para ejemplo de señales
-
+void signal_capturer(int numeroSenial);
+void crearDatosParaReduccionLocal(peticionDeReduccionLocal pedido[], int tam);
 
 
 // Resultado de operaciones
@@ -91,12 +93,13 @@ struct metricas {
 
 };
 
-
+int cont = 0;
 
 
 int main(void) {
 
-	leerConfiguracion();
+	int conexionYama = leerConfiguracion();
+
 	signal(SIGFPE,signal_capturer);
 
 	peticionDeReduccionLocal reduLo[5];
@@ -113,27 +116,36 @@ int main(void) {
 	pedido[2].direccion= "putoElQueLee";
 	pedido[2].worker="laburante";
 
+	dividirPorCero();
 
 
+	//gestionarTransformacion(pedido, tam);
+	//gestionarReduccionLocal(reduLo, 5);
+	printf("aca llego perfecto");
 
-	gestionarTransformacion(pedido, tam);
-	gestionarReduccionLocal(reduLo, 5);
-
+	while (cont < 1) {}
 
 	return EXIT_SUCCESS;
+
 
 }
 
 
-void leerConfiguracion(){
+int leerConfiguracion(){
 
 	char* ruta = "/home/utnso/workspace/tp-2017-2c-NULL/configuraciones/master.cfg";
 	t_config * config = config_create(ruta);
 
-	int puerto = config_get_int_value(config, "YAMA_PUERTO");
-	printf("%d", puerto);
-	int ip = config_get_int_value(config, "YAMA_IP");
-    printf("%d", ip);
+	char * puerto = config_get_string_value(config, "YAMA_PUERTO");
+	printf("%s", puerto);
+	char * ip = config_get_string_value(config, "YAMA_IP");
+    printf("%s", ip);
+
+    //int socketYama = conectarCliente(ip, puerto, MASTER);
+
+    return 2;
+
+    //enviarMensaje(socketYama, "Hola");
 }
 
 
@@ -163,7 +175,7 @@ void pedir_transformacion(peticionDeTransformacion pedido[], int numeroHilo){
 
 
 
-	printf ("%s",pedido[numeroHilo].archivoTemporal);
+	printf("%s",pedido[numeroHilo].archivoTemporal);
 	printf("%s",pedido[numeroHilo].direccion);
 	printf("%s",pedido[numeroHilo].worker);
 	printf("%d",numeroHilo);
@@ -201,14 +213,19 @@ void pedir_reduccion(){
 
 }
 
-void signal_capturer(int numeroSeñal){
+void signal_capturer(int numeroSenial){
 
-	switch(numeroSeñal){
-	case 8: printf("division por 0");
-	break;
-	}
+	if(numeroSenial == 8){
+	printf("division por 0");
+	} else {printf("llego una señal diferente");}
+	cont++;
+
+	return;
 }
+void crearDatosParaReduccionLocal(peticionDeReduccionLocal pedido[], int tam){}
+
 void dividirPorCero(){
 	int a = 4/0;
+
 	return;
 }
