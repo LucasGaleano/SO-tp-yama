@@ -6,14 +6,14 @@
 * @DESC: Retorna el numero del bloque pedido
 */
 
-char* getBloque (int numBLoque);
+char* getBloque (int numBLoque,char* pathFile);
 
 /**
 * @NAME: setBloque
 * @DESC: escribe el numero del bloque pedido
 */
 
-void setBloque (int numBLoque, char* bloque);
+void setBloque (int numBLoque, char* bloque,char* pathFile);
 
 
 #endif DATANODE_H_

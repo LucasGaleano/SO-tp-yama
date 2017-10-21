@@ -41,7 +41,7 @@ void enviarPaquetes(int socketfd, t_paquete * unPaquete) {
 	free(buffer);
 }
 
-int recibirTamPaquete(int client_socket, fd_set * set_master) {
+int recibirTamPaquete(int client_socket) {
 	int tamBuffer;
 
 	//Creo el buffer
@@ -62,9 +62,6 @@ int recibirTamPaquete(int client_socket, fd_set * set_master) {
 		//Cierro el socket
 		close(client_socket);
 
-		//Elimino el socket del conjunto maestro
-		FD_CLR(client_socket, set_master);
-
 	} else {
 
 		//Copio el buffer en una variable asi despues lo libero
@@ -77,8 +74,7 @@ int recibirTamPaquete(int client_socket, fd_set * set_master) {
 	return tamBuffer;
 }
 
-t_paquete * recibirPaquete(int client_socket, fd_set * set_master,
-		int tamPaquete) {
+t_paquete * recibirPaquete(int client_socket, int tamPaquete) {
 	//Reservo memoria para el buffer
 	void * buffer = malloc(tamPaquete);
 	//memset(buffer, '\0', tamPaquete); // Lo limpio al buffer para que no tenga basura
@@ -97,8 +93,6 @@ t_paquete * recibirPaquete(int client_socket, fd_set * set_master,
 		//Cierro el socket
 		close(client_socket);
 
-		//Elimino el socket del conjunto maestro
-		FD_CLR(client_socket, set_master);
 	}
 
 	//Armo el paquete a partir del buffer
