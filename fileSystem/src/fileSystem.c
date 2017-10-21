@@ -2,7 +2,9 @@
 
 int main(int argc, char **argv) {
 
-	crearTablaDeNodos();
+	//Creo tablas administrativas
+	crearTablaNodos("/home/utnso/Escritorio/metadata");
+	crearTablaSockets();
 
 	//Creo archivo de log
 	logFileSystem = log_create("log_FileSystem.log", "fileSystem", false,
@@ -46,11 +48,9 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		break;
 	case ENVIAR_INFO_DATANODE:
 		recibirInfoNodo(unPaquete, *client_socket);
-		mostrarTablas();
 		break;
 	case ENVIAR_ERROR:
 		recibirError(unPaquete);
-		mostrarTablas();
 		break;
 	default:
 		break;
@@ -80,15 +80,74 @@ void recibirInfoNodo(t_paquete * unPaquete, int client_socket) {
 	t_nodo_info * info = deserializarInfoDataNode(unPaquete->buffer);
 
 	//Agrego elemento a la lista de nodos por sockets
-	t_nodoYsocket * nodoXsocket = malloc(sizeof(t_nodoYsocket));
-	nodoXsocket->nomNodo = malloc(string_length(info->nombre) + 1);
-
-	memcpy(nodoXsocket->nomNodo, info->nombre, string_length(info->nombre) + 1);
-	memcpy(&nodoXsocket->socket, &client_socket, sizeof(int));
-
-	list_add(listaNodoYSocket, nodoXsocket);
+	agregarNodoTablaSockets(info->nombre, client_socket);
 
 	//Agrego elemento a la tabla de nodos
+	agregarNodoTablaNodos(info);
+}
+
+void recibirError(t_paquete * unPaquete) {
+	int cliente_desconectado;
+	memcpy(&cliente_desconectado, unPaquete->buffer->data, sizeof(int));
+
+	char * nomNodo = eliminarNodoTablaSockets(cliente_desconectado);
+
+	eliminarNodoTablaNodos(nomNodo);
+
+}
+
+/*-------------------------Tabla de nodos-------------------------*/
+void crearTablaNodos(char * rutaTablaNodos) {
+	tablaNodos = malloc(sizeof(t_tabla_nodo));
+
+	tablaNodos->tamanio = 0;
+	tablaNodos->libres = 0;
+
+	tablaNodos->infoDeNodo = list_create();
+	tablaNodos->nomNodos = list_create();
+
+	crearArchivoTablaNodos(rutaTablaNodos);
+}
+
+void crearArchivoTablaNodos(char * ruta) {
+	//Abro el archivo para usarlo y si no existe lo creo
+	char * rutaArchivo = string_new();
+	string_append(&rutaArchivo, ruta);
+	string_append(&rutaArchivo, "/nodos.bin");
+
+	FILE* file = fopen(rutaArchivo, "r");
+
+	if (file == NULL) {
+		mkdir("/home/utnso/Escritorio/metadata", 0777);
+		file = fopen(rutaArchivo, "w+b");
+
+		//Cierro el archivo
+		fclose(file);
+
+		//Creo la estructura de configuracion
+		configTablaNodo = config_create(rutaArchivo);
+
+		//Seteo las variables en cero
+		config_set_value(configTablaNodo, "TAMANIO", "0");
+		config_set_value(configTablaNodo, "LIBRE", "0");
+		config_set_value(configTablaNodo, "NODOS", "[]");
+
+		config_save(configTablaNodo);
+
+	} else {
+
+		//Creo la estructura de configuracion
+		configTablaNodo = config_create(rutaArchivo);
+
+		//Cierro el archivo
+		fclose(file);
+
+	}
+
+	free(rutaArchivo);
+}
+
+void agregarNodoTablaNodos(t_nodo_info * info) {
 	int total = tablaNodos->tamanio + info->total;
 	memcpy(&tablaNodos->tamanio, &total, sizeof(int));
 
@@ -98,19 +157,144 @@ void recibirInfoNodo(t_paquete * unPaquete, int client_socket) {
 	list_add(tablaNodos->infoDeNodo, info);
 
 	//Agrego a la tabla de nodos los nombres
-	char * nombre = malloc(string_length(info->nombre)+1);
-	memcpy(nombre, info->nombre, string_length(info->nombre)+1);
+	char * nombre = malloc(string_length(info->nombre) + 1);
+	memcpy(nombre, info->nombre, string_length(info->nombre) + 1);
 	list_add(tablaNodos->nomNodos, nombre);
+
+	persistirTablaNodos();
 }
 
-void recibirError(t_paquete * unPaquete) {
-	int cliente_desconectado;
-	memcpy(&cliente_desconectado, unPaquete->buffer->data, sizeof(int));
+void eliminarNodoTablaNodos(char * nomNodo) {
+	//Elimino de la tabla de nodos de la lista de nombres
+	bool esSocketBuscado(char * socket) {
+		return string_equals_ignore_case(socket, nomNodo);
+	}
 
-	char * nomNodo = buscarNodoXSocketYEliminarlo(cliente_desconectado);
+	char * nombre = list_remove_by_condition(tablaNodos->nomNodos,
+			(void*) esSocketBuscado);
 
-	eliminarNodoDeTablaDeNodos(nomNodo);
+	//Elimino de la tabla de nodos de la lista de info
+	bool esSocketBuscadoInfo(t_nodo_info * socket) {
+		return string_equals_ignore_case(socket->nombre, nomNodo);
+	}
 
+	t_nodo_info * info = list_remove_by_condition(tablaNodos->infoDeNodo,
+			(void*) esSocketBuscadoInfo);
+
+	//Recalculo el tamanio total y tamanio libre
+	int nuevoTamanio = tablaNodos->tamanio - info->total;
+	int nuevoLibres = tablaNodos->libres - info->libre;
+
+	memcpy(&tablaNodos->tamanio, &nuevoTamanio, sizeof(int));
+	memcpy(&tablaNodos->libres, &nuevoLibres, sizeof(int));
+
+	persistirTablaNodos();
+
+	//Libero memoria
+	free(nombre);
+	free(info->nombre);
+	free(info);
+	free(nomNodo);
+}
+
+void persistirTablaNodos() {
+	//Persisto el tamanio de la tabla
+	int tamanio = tablaNodos->tamanio;
+	char * stringTamanio = string_itoa(tamanio);
+	config_set_value(configTablaNodo, "TAMANIO", stringTamanio);
+	free(stringTamanio);
+
+	//Persisto los bloquees libres de la tabla
+	int libres = tablaNodos->libres;
+	char * stringLibres = string_itoa(libres);
+	config_set_value(configTablaNodo, "LIBRE", stringLibres);
+	free(stringLibres);
+
+	//Persisto los nombres de los nodos
+	char* nomNodos = string_new();
+
+	string_append(&nomNodos, "[");
+
+	int i;
+	for (i = 0; i < tablaNodos->nomNodos->elements_count; i++) {
+
+		char * nombre = list_get(tablaNodos->nomNodos, i);
+
+		if (i == 0) {
+			string_append(&nomNodos, nombre);
+		} else {
+			string_append(&nomNodos, ", ");
+			string_append(&nomNodos, nombre);
+		}
+
+	}
+
+	string_append(&nomNodos, "]");
+
+	config_set_value(configTablaNodo, "NODOS", nomNodos);
+
+	free(nomNodos);
+
+	//Persisto la info de cada nodo
+	for (i = 0; i < tablaNodos->infoDeNodo->elements_count; i++) {
+		t_nodo_info * info = list_get(tablaNodos->infoDeNodo, i);
+
+		char* total = string_new();
+		char* libre = string_new();
+
+		string_append(&total, info->nombre);
+		string_append(&total, "Total");
+
+		string_append(&libre, info->nombre);
+		string_append(&libre, "Libre");
+
+		char * totalNumero = string_itoa(info->total);
+		char * totalLibre = string_itoa(info->libre);
+
+		config_set_value(configTablaNodo, total, totalNumero);
+		config_set_value(configTablaNodo, libre, totalLibre);
+
+		free(total);
+		free(libre);
+		free(totalNumero);
+		free(totalLibre);
+	}
+
+	config_save(configTablaNodo);
+}
+
+/*-------------------------Tabla de sockets-------------------------*/
+void crearTablaSockets(void) {
+	tablaSockets = list_create();
+}
+
+void agregarNodoTablaSockets(char * nombreNodo, int client_socket) {
+	t_tabla_sockets * registroSocket = malloc(sizeof(t_tabla_nodo));
+	registroSocket->nombre = malloc(string_length(nombreNodo) + 1);
+
+	memcpy(registroSocket->nombre, nombreNodo, string_length(nombreNodo) + 1);
+	memcpy(&registroSocket->socket, &client_socket, sizeof(int));
+
+	list_add(tablaSockets, registroSocket);
+}
+
+char * eliminarNodoTablaSockets(int cliente_desconectado) {
+
+	bool esSocketBuscado(t_tabla_sockets* nodo) {
+		return (nodo->socket == cliente_desconectado);
+	}
+
+	t_tabla_sockets * registroSocket = list_remove_by_condition(tablaSockets,
+			(void*) esSocketBuscado);
+
+	char * nom = malloc(string_length(registroSocket->nombre) + 1);
+	memcpy(nom, registroSocket->nombre,
+			string_length(registroSocket->nombre) + 1);
+
+	free(registroSocket->nombre);
+	free(registroSocket);
+
+	return nom;
 }
 
 /*-------------------------Funciones auxiliares-------------------------*/
@@ -123,10 +307,10 @@ void mostrarTablas() {
 
 	printf("Verifico la lista de nodos y sockets \n");
 	int i;
-	for (i = 0; i < list_size(listaNodoYSocket); ++i) {
-		t_nodoYsocket* nodoYsocket = list_get(listaNodoYSocket, i);
-		printf("Nombre del nodo: %s\n", nodoYsocket->nomNodo);
-		printf("Socket del nodo: %d\n", nodoYsocket->socket);
+	for (i = 0; i < list_size(tablaSockets); ++i) {
+		t_tabla_sockets * registroSockets = list_get(tablaSockets, i);
+		printf("Nombre del nodo: %s\n", registroSockets->nombre);
+		printf("Socket del nodo: %d\n", registroSockets->socket);
 	}
 	printf("\n");
 
@@ -150,63 +334,3 @@ void mostrarTablas() {
 
 }
 
-char * buscarNodoXSocketYEliminarlo(int cliente_desconectado){
-
-	bool esSocketBuscado(t_nodoYsocket * nodo) {
-		return (nodo->socket == cliente_desconectado);
-	}
-
-	t_nodoYsocket * nodoYsockets = list_remove_by_condition(listaNodoYSocket,
-			(void*) esSocketBuscado);
-
-	char * nom = malloc(string_length(nodoYsockets->nomNodo)+1);
-	memcpy(nom, nodoYsockets->nomNodo, string_length(nodoYsockets->nomNodo)+1);
-
-	free(nodoYsockets->nomNodo);
-	free(nodoYsockets);
-
-	return nom;
-}
-
-void eliminarNodoDeTablaDeNodos(char * nomNodo){
-	//Elimino de la tabla de nodos de la lista de nombres
-	bool esSocketBuscado(char * socket) {
-		return string_equals_ignore_case(socket,nomNodo);
-	}
-
-	char * nombre = list_remove_by_condition(tablaNodos->nomNodos,
-			(void*) esSocketBuscado);
-
-	//Elimino de la tabla de nodos de la lista de info
-	bool esSocketBuscadoInfo(t_nodo_info * socket) {
-		return string_equals_ignore_case(socket->nombre, nomNodo);
-	}
-
-	t_nodo_info * info = list_remove_by_condition(tablaNodos->infoDeNodo,
-			(void*) esSocketBuscadoInfo);
-
-	//Recalculo el tamanio total y tamanio libre
-	int nuevoTamanio = tablaNodos->tamanio - info->total;
-	int nuevoLibres = tablaNodos->libres - info->libre;
-
-	memcpy(&tablaNodos->tamanio, &nuevoTamanio, sizeof(int));
-	memcpy(&tablaNodos->libres, &nuevoLibres, sizeof(int));
-
-	//Libero memoria
-	free(nombre);
-	free(info->nombre);
-	free(info);
-	free(nomNodo);
-}
-
-void crearTablaDeNodos(){
-	listaNodoYSocket = list_create();
-
-		tablaNodos = malloc(sizeof(t_tabla_nodo));
-
-		tablaNodos->tamanio = 0;
-		tablaNodos->libres = 0;
-
-		tablaNodos->infoDeNodo = list_create();
-		tablaNodos->nomNodos = list_create();
-}

@@ -3,6 +3,7 @@
 
 #include <biblioteca/sockets.h>
 #include <commons/log.h>
+#include <commons/config.h>
 #include <commons/collections/list.h>
 #include <pthread.h>
 #include <stdlib.h>
@@ -13,6 +14,13 @@
 /*---------	---------------Estructuras-------------------------*/
 #define PUERTO_FILESYSTEM "3200"
 
+//Tabla de sockets
+typedef struct {
+	int socket;
+	char * nombre;
+} t_tabla_sockets;
+
+
 //Tabla de nodos
 typedef struct {
 	int tamanio;
@@ -21,16 +29,13 @@ typedef struct {
 	t_list * infoDeNodo; //Lista con cada nodo en particular
 } t_tabla_nodo;
 
-//Tabla de nodos y sockets
-typedef struct {
-	int socket;
-	char * nomNodo;
-} t_nodoYsocket;
-
 /*------------------------Variables globales-------------------------*/
 t_log* logFileSystem;
-t_list * listaNodoYSocket;
+t_list * tablaSockets;
 t_tabla_nodo * tablaNodos;
+
+t_config * configTablaDirectorios;
+t_config * configTablaNodo;
 
 /*------------------------Procesamiento paquetes-------------------------*/
 void 				procesarPaquete					(t_paquete *, int *);
@@ -38,10 +43,17 @@ void 				recibirHandshake				(t_paquete *, int *);
 void 				recibirInfoNodo					(t_paquete *, int);
 void 				recibirError					(t_paquete *);
 
-/*-------------------------Modificar tabla de nodos-------------------------*/
-void 				crearTablaDeNodos				(void);
-char * 				buscarNodoXSocketYEliminarlo	(int);
-void 				eliminarNodoDeTablaDeNodos		(char *);
+/*-------------------------Tabla de nodos-------------------------*/
+void	 			crearTablaNodos					(char *);
+void 				crearArchivoTablaNodos			(char *);
+void 				agregarNodoTablaNodos			(t_nodo_info *);
+void 				eliminarNodoTablaNodos			(char *);
+void 				persistirTablaNodos				(void);
+
+/*-------------------------Tabla de sockets-------------------------*/
+void 				crearTablaSockets				(void);
+void 				agregarNodoTablaSockets			(char *, int);
+char * 				eliminarNodoTablaSockets		(int);
 
 /*-------------------------Funciones auxiliares-------------------------*/
 void 				iniciarServidor					(char*);

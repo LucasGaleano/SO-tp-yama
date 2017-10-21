@@ -6,6 +6,7 @@
 
 /*------------------------------Clientes------------------------------*/
 int		 			conectarCliente					(const char *, const char *, int);
+void 				gestionarSolicitudes			(int, void(*)(void*, int*));
 
 /*------------------------------Servidor------------------------------*/
 void	 			iniciarServer					(const char *,void(*)(void*, int*));
