@@ -23,8 +23,10 @@ readline:
 biblioteca:
 	$(call mostrarTitulo,$@)
 	cd biblioteca-propia/Debug; make all
+	mkdir /usr/include/biblioteca
 	sudo cp -u ./biblioteca-propia/Debug/libbiblioteca-propia.so /usr/lib/libbiblioteca-propia.so
-	sudo cp -u ./biblioteca-propia/biblioteca/*.h /usr/include
+	sudo cp -u ./biblioteca-propia/biblioteca/*.h /usr/include/biblioteca
+
 
 tp: dataNode fileSystem master worker yama
 
