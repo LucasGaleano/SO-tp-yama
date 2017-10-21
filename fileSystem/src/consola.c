@@ -291,7 +291,7 @@ void crearDirectorio(char * linea) {
 	}
 
 	if (indexPadre == -1) {
-		printf("No se encontro el directorio padre\n");
+		printf("mkdir: no se puede crear el directorio «./%s»: No existe el archivo o el directorio\n", path_dir);
 		free(path_dir);
 		liberarSeparado(separado);
 		free(registro);
@@ -301,7 +301,7 @@ void crearDirectorio(char * linea) {
 	registro->padre = indexPadre;
 
 	if (verificarDuplicados(registro)){
-		printf("El directorio que se quiere crear ya existe \n");
+		printf("mkdir: no se puede crear el directorio «./%s»: El archivo ya existe \n", path_dir);
 		free(path_dir);
 		liberarSeparado(separado);
 		free(registro);
