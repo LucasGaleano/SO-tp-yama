@@ -9,6 +9,8 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+#include "tablas.h"
+
 /*------------------------------Consola------------------------------*/
 void 				iniciarConsola							(void);
 void 				ejecutarComando							(char *, bool *);
@@ -34,5 +36,7 @@ void 				mostrarInfo								(char *);
 /*------------------------------Auxiliares------------------------------*/
 char * 				obtenerParametro				(char *, int);
 void 				destruirSubstring				(char **);
+int 				obtenerIndexPadre				(char *);
+bool 				verificarDuplicados				(t_directory *);
 
 #endif /* CONSOLA_H_ */
