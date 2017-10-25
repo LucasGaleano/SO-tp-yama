@@ -55,4 +55,4 @@ dkms.conf
 .settings
 settings
 .classpath
-.log
+*.log
