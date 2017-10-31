@@ -29,6 +29,46 @@ void iniciarServidor(char* unPuerto) {
 	iniciarServer(unPuerto, (void *) procesarPaquete);
 }
 
+void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
+	switch (unPaquete->codigoOperacion) {
+	case HANDSHAKE:
+		recibirHandshake(unPaquete, client_socket);
+		break;
+	case ENVIAR_MENSAJE:
+		recibirMensaje(unPaquete);
+		break;
+	case ENVIAR_ARCHIVO:
+		recibirArchivo(unPaquete);
+		break;
+	case ENVIAR_ERROR:
+		recibirError(unPaquete);
+		break;
+	default:
+		break;
+	}
+	destruirPaquete(unPaquete);
+}
+
+void recibirHandshake(t_paquete * unPaquete, int * client_socket) {
+	int tipoCliente;
+	memcpy(&tipoCliente, unPaquete->buffer->data, sizeof(int));
+	switch (tipoCliente) {
+	case MASTER:
+		break;
+	default:
+		*client_socket = -1;
+		break;
+	}
+}
+
+void recibirError(t_paquete * unPaquete) {
+	int cliente_desconectado;
+	memcpy(&cliente_desconectado, unPaquete->buffer->data, sizeof(int));
+
+// HACER ALGO
+
+}
+
 t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 
 	t_config * config = config_create(path);
@@ -54,49 +94,10 @@ t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 	return configuracion;
 }
 
-void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
-	switch (unPaquete->codigoOperacion) {
-	case HANDSHAKE:
-		recibirHandshake(unPaquete, client_socket);
-		break;
-	case ENVIAR_MENSAJE:
-		recibirMensaje(unPaquete);
-		break;
-	case ENVIAR_ARCHIVO:
-		recibirArchivo(unPaquete);
-		break;
-	case ENVIAR_ERROR:
-		recibirError(unPaquete);
-		break;
-	default:
-		break;
-	}
-	destruirPaquete(unPaquete);
-}
+t_list* tabla_de_estados = createList();
 
-int agregarElementoEnTablaDeEstado(t_list* tabla_de_estados,
-		t_elemento_tabla_estado fila_nueva) {
+int actualizarTablaDeEstados(t_list* tabla_de_estados, t_elemento_tabla_estado fila_nueva) {
 	return list_add(tabla_de_estados, &fila_nueva);
-}
-
-void recibirHandshake(t_paquete * unPaquete, int * client_socket) {
-	int tipoCliente;
-	memcpy(&tipoCliente, unPaquete->buffer->data, sizeof(int));
-	switch (tipoCliente) {
-	case MASTER:
-		break;
-	default:
-		*client_socket = -1;
-		break;
-	}
-}
-
-void recibirError(t_paquete * unPaquete) {
-	int cliente_desconectado;
-	memcpy(&cliente_desconectado, unPaquete->buffer->data, sizeof(int));
-
-// HACER ALGO
-
 }
 
 int numeroRandom() {
@@ -107,20 +108,7 @@ int numeroRandom() {
 	return lfsr = (lfsr >> 1) | (bit << 15);
 }
 
-//elemento_tabla_estado elemento;
-//
-//	elemento.job = 1;
-//	elemento.master = 2;
-//	elemento.nodo = 3;s
-//	elemento.bloque = 4;
-//	elemento.etapa = 5;
-//	elemento.archivoTemporal = "/archivo.tmp";
-//	elemento.estado = 6;
-//
-//	agregarElementoEnTablaDeEstado(tabla_de_estados, elemento);
-//
-//	printf("ARCHIVO_TEMPORAL: %s - BLOQUE: %d - MASTER: %d - NODO: %d\n", elem->archivoTemporal, elem->bloque, elem->master, elem->nodo);
-//	elemento_tabla_estado* elem = list_get(tabla_de_estados, 0);
+
 
 //int a = 0;
 //	int num = 1;
