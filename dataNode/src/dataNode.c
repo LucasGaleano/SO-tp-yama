@@ -1,32 +1,6 @@
-/*
- ============================================================================
- Name        : dataNode.c
- Author      : 
- Version     :
- Copyright   : Your copyright notice
- Description : Proceso dataNode
- ============================================================================
- */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <commons/config.h> //config
-#include <commons/log.h> //log
-#include <commons/string.h>
-#include <fcntl.h>  // O_RDONLY modo de abrir para el open()
-#include <sys/stat.h> //fstat()
-#include <sys/mman.h>  //mmap()
-#include <unistd.h>  //PROT_READ del mmap()
 #include "dataNode.h"
-#include <biblioteca/sockets.h>
-
-#define PATHCONFIG "./configuraciones/nodo.cfg"
-
-#define TAMBLOQUE 8
 
 int main(void) {
-
-
 
 	t_config* conf;
 	char* bloque = calloc (TAMBLOQUE,1);
@@ -62,6 +36,12 @@ int main(void) {
 
     enviarInfoDataNode(socketFileSystem,msg,100,0);
 
+    while(true){
+
+    	gestionarSolicitudes(socketFileSystem, (void*) recibirSolicitud);
+
+
+    }
 
     free(bloque);
 	return EXIT_SUCCESS;
@@ -145,6 +125,17 @@ void setBloque(int numBloque, char* bloque,char* pathFile)
 
 }
 
+void recibirSolicitud(t_paquete * unPaquete, int * client_socket){
+	switch (unPaquete->codigoOperacion) {
+		case ENVIAR_SOLICITUD_LECTURA_BLOQUE:
+			recibirSolicitudLecturaBloque(unPaquete);
+			//procesar
 
+			break;
+		case ENVIAR_SOLICITUD_ESCRITURA_BLOQUE:
+			recibirSolicitudEscrituraBloque(unPaquete);
+		default:
+			break;
+	}
 
-
+}
