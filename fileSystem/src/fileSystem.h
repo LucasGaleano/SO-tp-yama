@@ -10,50 +10,19 @@
 #include <stdio.h>
 
 #include "consola.h"
+#include "tablas.h"
 
 /*---------	---------------Estructuras-------------------------*/
 #define PUERTO_FILESYSTEM "3200"
 
-//Tabla de sockets
-typedef struct {
-	int socket;
-	char * nombre;
-} t_tabla_sockets;
-
-
-//Tabla de nodos
-typedef struct {
-	int tamanio;
-	int libres;
-	t_list * nomNodos; //Lista de nombres de los nodos
-	t_list * infoDeNodo; //Lista con cada nodo en particular
-} t_tabla_nodo;
-
 /*------------------------Variables globales-------------------------*/
 t_log* logFileSystem;
-t_list * tablaSockets;
-t_tabla_nodo * tablaNodos;
-
-t_config * configTablaDirectorios;
-t_config * configTablaNodo;
 
 /*------------------------Procesamiento paquetes-------------------------*/
 void 				procesarPaquete					(t_paquete *, int *);
 void 				recibirHandshake				(t_paquete *, int *);
 void 				recibirInfoNodo					(t_paquete *, int);
 void 				recibirError					(t_paquete *);
-
-/*-------------------------Tabla de nodos-------------------------*/
-void	 			crearTablaNodos					(char *);
-void 				crearArchivoTablaNodos			(char *);
-void 				agregarNodoTablaNodos			(t_nodo_info *);
-void 				eliminarNodoTablaNodos			(char *);
-void 				persistirTablaNodos				(void);
-
-/*-------------------------Tabla de sockets-------------------------*/
-void 				crearTablaSockets				(void);
-void 				agregarNodoTablaSockets			(char *, int);
-char * 				eliminarNodoTablaSockets		(int);
 
 /*-------------------------Funciones auxiliares-------------------------*/
 void 				iniciarServidor					(char*);

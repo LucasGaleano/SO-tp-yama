@@ -126,7 +126,7 @@ void ejecutarComando(char * linea, bool * ejecutar) {
 }
 
 /*------------------------------Comandos------------------------------*/
-void ejecutarMan(){
+void ejecutarMan() {
 	printf("NAME \n");
 	printf("	consola \n\n");
 
@@ -136,14 +136,18 @@ void ejecutarMan(){
 	printf("	void format(void) \n");
 	printf("	void rm(char * path_archivo) \n");
 	printf("	void rm -d(char * path_directorio) \n");
-	printf("	void rm -b(char * path_archivo, char * nro_bloque, char * nro_copia) \n");
+	printf(
+			"	void rm -b(char * path_archivo, char * nro_bloque, char * nro_copia) \n");
 	printf("	void rename(char * path_original, char * nombre_final) \n");
 	printf("	void mv(char * path_original, char * path_final) \n");
 	printf("	void cat(char * path_archivo) \n");
 	printf("	void mkdir(char * path_dir) \n");
-	printf("	void cpfrom(char * path_archivo_origen, char * directorio_yamafs) \n");
-	printf("	void cpto(char * path_archivo_yamafs, char * directorio_filesystem) \n");
-	printf("	void cpblock(char * path_archivo, char * nro_bloque, char * id_nodo) \n");
+	printf(
+			"	void cpfrom(char * path_archivo_origen, char * directorio_yamafs) \n");
+	printf(
+			"	void cpto(char * path_archivo_yamafs, char * directorio_filesystem) \n");
+	printf(
+			"	void cpblock(char * path_archivo, char * nro_bloque, char * id_nodo) \n");
 	printf("	void md5(char * path_archivo_yamafs) \n");
 	printf("	void ls(char * path_directorio) \n");
 	printf("	void info(char * path_archivo) \n");
@@ -152,18 +156,24 @@ void ejecutarMan(){
 	printf("DESCRIPTION \n");
 	printf("	format --> Formatear el Filesystem \n");
 	printf("	rm --> Eliminar un Archivo \n");
-	printf("	rm -d --> Eliminar un Directorio. Si un directorio a eliminar no se encuentra vacío, la operación debe fallar \n");
-	printf("	rm -b --> Eliminar un Bloque. Si el bloque a eliminar fuera la última copia del mismo, se abortara la operación informando lo sucedido \n");
+	printf(
+			"	rm -d --> Eliminar un Directorio. Si un directorio a eliminar no se encuentra vacío, la operación debe fallar \n");
+	printf(
+			"	rm -b --> Eliminar un Bloque. Si el bloque a eliminar fuera la última copia del mismo, se abortara la operación informando lo sucedido \n");
 	printf("	rename --> Renombra un Archivo o Directorio \n");
 	printf("	mv --> Mueve un Archivo o Directorio \n");
 	printf("	cat --> Muestra el contenido del archivo como texto plano \n");
-	printf("	mkdir --> Crea un directorio. Si el directorio ya existe, el comando deberá informarlo \n");
-	printf("	cpfrom --> Copiar un archivo local al yamafs, siguiendo los lineamientos en la operaciòn Almacenar Archivo, de la Interfaz del FileSystem \n");
+	printf(
+			"	mkdir --> Crea un directorio. Si el directorio ya existe, el comando deberá informarlo \n");
+	printf(
+			"	cpfrom --> Copiar un archivo local al yamafs, siguiendo los lineamientos en la operaciòn Almacenar Archivo, de la Interfaz del FileSystem \n");
 	printf("	cpto --> Copiar un archivo local al yamafs \n");
-	printf("	cpblock --> Crea una copia de un bloque de un archivo en el nodo dado \n");
+	printf(
+			"	cpblock --> Crea una copia de un bloque de un archivo en el nodo dado \n");
 	printf("	md5 --> Solicitar el MD5 de un archivo en yamafs \n");
 	printf("	ls --> Lista los archivos de un directorio \n");
-	printf("	info --> Muestra toda la información del archivo, incluyendo tamaño, bloques, ubicación de los bloques, etc. \n");
+	printf(
+			"	info --> Muestra toda la información del archivo, incluyendo tamaño, bloques, ubicación de los bloques, etc. \n");
 	printf("	exit --> Cierra la consola \n\n");
 }
 
@@ -246,13 +256,65 @@ void mostrarContenidoArchivo(char * linea) {
 	free(path_archivo);
 }
 
+void liberarSeparado(char ** separado){
+	int i;
+	for (i = 0; separado[i] != NULL; ++i){
+		free(separado[i]);
+	}
+	free(separado[i]);
+	free(separado);
+}
+
 void crearDirectorio(char * linea) {
 	char * path_dir = obtenerParametro(linea, 1);
 
-	printf("Creo el directorio: %s \n", path_dir);
+	//Busco el nombre del directorio
+	char ** separado = string_split(path_dir, "/");
+
+	int posicion;
+
+	for (posicion = 0; separado[posicion] != NULL; ++posicion) {
+	}
+
+	posicion -= 1;
+
+	t_directory * registro = malloc(sizeof(t_directory));
+
+	strncpy(registro->nombre, separado[posicion], sizeof(registro->nombre) - 1);
+
+	int indexPadre;
+
+	if (posicion == 0) {
+		indexPadre = obtenerIndexPadre("root");
+	} else {
+		indexPadre = obtenerIndexPadre(separado[posicion - 1]);
+	}
+
+	if (indexPadre == -1) {
+		printf("mkdir: no se puede crear el directorio «./%s»: No existe el archivo o el directorio\n", path_dir);
+		free(path_dir);
+		liberarSeparado(separado);
+		free(registro);
+		return;
+	}
+
+	registro->padre = indexPadre;
+
+	if (verificarDuplicados(registro)){
+		printf("mkdir: no se puede crear el directorio «./%s»: El archivo ya existe \n", path_dir);
+		free(path_dir);
+		liberarSeparado(separado);
+		free(registro);
+		return;
+	}
+
+		registro->index = tablaDirectorios->elements_count;
+
+	agregarDirectorioTabla(registro);
 
 	//Libero memoria
 	free(path_dir);
+	liberarSeparado(separado);
 }
 
 void copiarArchivoLocalAlYamafsInterfaz(char * linea) {
@@ -262,7 +324,7 @@ void copiarArchivoLocalAlYamafsInterfaz(char * linea) {
 	printf("Me llego el path_archivo_origen: %s \n", path_archivo_origen);
 	printf("Lo copio segun interfaz en: %s \n", directorio_yamafs);
 
-	//Libero memoria
+//Libero memoria
 	free(path_archivo_origen);
 	free(directorio_yamafs);
 }
@@ -274,7 +336,7 @@ void copiarArchivoLocalAlYamafs(char * linea) {
 	printf("Me llego el path_archivo_origen: %s \n", path_archivo_origen);
 	printf("Lo copio en: %s \n", directorio_filesystem);
 
-	//Libero memoria
+//Libero memoria
 	free(path_archivo_origen);
 	free(directorio_filesystem);
 }
@@ -288,7 +350,7 @@ void crearCopiaBloqueEnNodo(char * linea) {
 	printf("Me llego el nro_bloque para copiar: %s \n", nro_bloque);
 	printf("Me llego el id_nodo en donde copiar: %s \n", id_nodo);
 
-	//Libero memoria
+//Libero memoria
 	free(path_archivo);
 	free(nro_bloque);
 	free(id_nodo);
@@ -300,7 +362,7 @@ void solicitarHash(char * linea) {
 	printf("Me llego el path_archivo_yamafs: %s para sacar hash \n",
 			path_archivo_yamafs);
 
-	//Libero memoria
+//Libero memoria
 	free(path_archivo_yamafs);
 }
 
@@ -310,7 +372,7 @@ void listarArchivos(char * linea) {
 	printf("Me llego el path_directorio: %s para listar los archivos \n",
 			path_directorio);
 
-	//Libero memoria
+//Libero memoria
 	free(path_directorio);
 }
 
@@ -320,7 +382,7 @@ void mostrarInfo(char * linea) {
 	printf("Me llego el path_directorio: %s para mostrar su informacion \n",
 			path_archivo);
 
-	//Libero memoria
+//Libero memoria
 	free(path_archivo);
 }
 
@@ -348,4 +410,27 @@ void destruirSubstring(char ** sub) {
 	}
 	free(sub[i]);
 	free(sub);
+}
+
+int obtenerIndexPadre(char * nomPadre) {
+	bool esPadreBuscado(t_directory * registro) {
+		return string_equals_ignore_case(registro->nombre, nomPadre);
+	}
+
+	t_directory *registro = list_find(tablaDirectorios, (void*) esPadreBuscado);
+
+	if (registro == NULL) {
+		return -1;
+	}
+
+	return registro->index;
+}
+
+bool verificarDuplicados(t_directory * duplicado) {
+	bool esDulpicadoBuscado(t_directory * registro) {
+		return string_equals_ignore_case(registro->nombre, duplicado->nombre)
+				&& (registro->padre == duplicado->padre);
+	}
+
+	return list_any_satisfy(tablaDirectorios, (void*) esDulpicadoBuscado);
 }

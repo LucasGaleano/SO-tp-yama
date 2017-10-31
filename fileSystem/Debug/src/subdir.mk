@@ -5,15 +5,18 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../src/consola.c \
-../src/fileSystem.c 
+../src/fileSystem.c \
+../src/tablas.c 
 
 OBJS += \
 ./src/consola.o \
-./src/fileSystem.o 
+./src/fileSystem.o \
+./src/tablas.o 
 
 C_DEPS += \
 ./src/consola.d \
-./src/fileSystem.d 
+./src/fileSystem.d \
+./src/tablas.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
