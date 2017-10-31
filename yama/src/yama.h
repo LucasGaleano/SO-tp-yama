@@ -34,7 +34,7 @@ typedef struct {
 t_configuracion *   leerArchivoDeConfiguracionYAMA     (char* path);
 
 /*------------------------Manejo de tabla-------------------------*/
-int                 agregarElementoEnTablaDeEstado     (t_list* tabla_de_estados, t_elemento_tabla_estado fila_nueva);
+int                 actualizarTablaDeEstados     (t_list* tabla_de_estados, t_elemento_tabla_estado fila_nueva);
 int                 numeroRandom();
 
 /*------------------------Manejo de conexiones-------------------------*/
