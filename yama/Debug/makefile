@@ -26,7 +26,7 @@ endif
 all: yama
 
 dependents:
-	-cd /home/utnso/workspace/tp-2017-2c-NULL/biblioteca-propia/Debug && $(MAKE) all
+	-cd /home/utnso/workspace/tp-2017-2c-NULL/biblioteca-propia/Debug && $(MAKE) clean all
 
 # Tool invocations
 yama: $(OBJS) $(USER_OBJS) /home/utnso/workspace/tp-2017-2c-NULL/biblioteca-propia/Debug/libbiblioteca-propia.so
