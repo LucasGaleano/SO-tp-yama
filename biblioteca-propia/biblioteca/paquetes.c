@@ -129,12 +129,12 @@ t_paquete * crearPaquete(void * buffer) {
 	return unPaquete;
 }
 
-t_paquete * crearPaqueteError(int client_socket){
+t_paquete * crearPaqueteError(int client_socket) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 	unPaquete->codigoOperacion = ENVIAR_ERROR;
 	unPaquete->buffer = malloc(sizeof(t_stream));
-	unPaquete->buffer->size=sizeof(int);
-	unPaquete->buffer->data= malloc(unPaquete->buffer->size);
+	unPaquete->buffer->size = sizeof(int);
+	unPaquete->buffer->data = malloc(unPaquete->buffer->size);
 	memcpy(unPaquete->buffer->data, &client_socket, unPaquete->buffer->size);
 	return unPaquete;
 }
@@ -154,7 +154,7 @@ void mostrarPaquete(t_paquete * unPaquete) {
 
 /*-------------------------Enviar-------------------------*/
 
-void enviarHandshake(int server_socket, int emisor){
+void enviarHandshake(int server_socket, int emisor) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = HANDSHAKE;
@@ -185,12 +185,37 @@ void enviarArchivo(int server_socket, char * rutaArchivo) {
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarInfoDataNode(int server_socket, char * nombreNodo, int bloquesTotales, int bloquesLibres) {
+void enviarBloque(int server_socket, char* bloque) {
+
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_BLOQUE;
+
+	serializarBloque(unPaquete, bloque);
+
+	enviarPaquetes(server_socket, unPaquete);
+
+}
+
+void enviarSolicitudLecturaBloque(int server_socket, int numBloque) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_SOLICITUD_LECTURA_BLOQUE;
+
+	serializarSolicitudBloque(unPaquete, numBloque);
+
+	enviarPaquetes(server_socket, unPaquete);
+
+}
+
+void enviarInfoDataNode(int server_socket, char * nombreNodo,
+		int bloquesTotales, int bloquesLibres) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_INFO_DATANODE;
 
-	serializarInfoDataNode(unPaquete, nombreNodo, bloquesTotales, bloquesLibres);
+	serializarInfoDataNode(unPaquete, nombreNodo, bloquesTotales,
+			bloquesLibres);
 
 	enviarPaquetes(server_socket, unPaquete);
 }
@@ -220,3 +245,25 @@ void recibirArchivo(t_paquete * unPaquete) {
 	//Libero memoria
 	free(archivo);
 }
+
+void* recibirbloque(t_paquete* unPaquete) {
+
+	void* bloque = deserializarBloque(unPaquete->buffer);
+
+	return bloque;
+
+}
+
+
+int recibirSolicitudLecturaBloque(t_paquete* unPaquete) {
+
+	int numBloque = deserializarSolicitudBloque(unPaquete->buffer);
+	return numBloque;
+}
+
+//
+//int recibirSolicitudEscrituraBloque(t_paquete* unPaquete) {
+//
+//	int numBloque = deserializarSolicitudBloque(unPaquete->buffer);
+//	return numBloque;
+//}

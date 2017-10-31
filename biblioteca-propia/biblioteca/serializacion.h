@@ -16,11 +16,15 @@ void 			serializarHandshake				(t_paquete *, int);
 void 			serializarMensaje				(t_paquete *, char *);
 void 			serializarArchvivo				(t_paquete *, char *);
 void 			serializarInfoDataNode			(t_paquete *, char *, int, int);
+void 			serializarBloque				(t_paquete* unPaquete, char* bloque);
+void 			serializarSolicitudBloque		(t_paquete*, int);
 
 /*-------------------------Deserializacion-------------------------*/
 char * 			deserializarMensaje				(t_stream *);
 void * 			deserializarArchivo				(t_stream *);
 t_nodo_info *	deserializarInfoDataNode		(t_stream *);
+void*           deserializarBloque				(t_stream* buffer);
+int 			deserializarSolicitudBloque		(t_stream* buffer);
 
 /*-------------------------Funciones auxiliares-------------------------*/
 void * 			abrirArchivo					(char *, size_t *, FILE **);

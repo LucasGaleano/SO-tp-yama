@@ -40,7 +40,28 @@ void serializarArchvivo(t_paquete * unPaquete, char * rutaArchivo) {
 	fclose(archivofd);
 }
 
-void serializarInfoDataNode(t_paquete * unPaquete, char * nombreNodo, int bloquesTotales, int bloquesLibres){
+void serializarBloque(t_paquete* unPaquete, char* bloque) {
+	int tamBloque = strlen(bloque);
+
+	unPaquete->buffer = malloc(sizeof(t_stream));
+	unPaquete->buffer->size = tamBloque;
+
+	unPaquete->buffer->data = malloc(tamBloque);
+
+	memcpy(unPaquete->buffer->data, bloque, tamBloque);
+}
+
+void serializarSolicitudBloque(t_paquete* unPaquete, int numBloque) {
+
+	int tamNumBloque = sizeof(int);
+	unPaquete->buffer = malloc(sizeof(t_stream));
+	unPaquete->buffer->size = tamNumBloque;
+	unPaquete->buffer->data = malloc(tamNumBloque);
+	memcpy(unPaquete->buffer->data,&numBloque,tamNumBloque);
+}
+
+void serializarInfoDataNode(t_paquete * unPaquete, char * nombreNodo,
+		int bloquesTotales, int bloquesLibres) {
 	int lengthNombre = strlen(nombreNodo) + 1;
 	int tamBloque = sizeof(int);
 	int tamTotal = lengthNombre + tamBloque + tamBloque;
@@ -55,7 +76,8 @@ void serializarInfoDataNode(t_paquete * unPaquete, char * nombreNodo, int bloque
 	memcpy(unPaquete->buffer->data + desplazamiento, nombreNodo, lengthNombre);
 	desplazamiento += lengthNombre;
 
-	memcpy(unPaquete->buffer->data + desplazamiento, &bloquesTotales, tamBloque);
+	memcpy(unPaquete->buffer->data + desplazamiento, &bloquesTotales,
+			tamBloque);
 	desplazamiento += tamBloque;
 
 	memcpy(unPaquete->buffer->data + desplazamiento, &bloquesLibres, tamBloque);
@@ -81,7 +103,7 @@ void * deserializarArchivo(t_stream * buffer) {
 	return archivo;
 }
 
-t_nodo_info * deserializarInfoDataNode(t_stream * buffer){
+t_nodo_info * deserializarInfoDataNode(t_stream * buffer) {
 	t_nodo_info * info = malloc(sizeof(t_nodo_info));
 
 	int desplazamiento = 0;
@@ -99,6 +121,21 @@ t_nodo_info * deserializarInfoDataNode(t_stream * buffer){
 
 	return info;
 }
+
+void* deserializarBloque(t_stream* buffer) {
+
+	void* bloque = malloc(buffer->size);
+	memcpy(bloque, buffer->data, buffer->size);
+	return bloque;
+
+}
+
+int deserializarSolicitudBloque(t_stream* buffer){
+
+	return *(int*)(buffer->data);
+
+}
+
 
 /*-------------------------Funciones auxiliares-------------------------*/
 
