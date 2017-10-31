@@ -20,7 +20,8 @@
 #include <biblioteca/estructurasMasterYama.h>
 #include <biblioteca/estructurasWorkerMaster.h>
 #include <biblioteca/sockets.h>
-
+#include <commons/string.h>
+#include <time.h>
 /*
 
 Señales extraidas de /usr/bin/include/bits/signum.h
@@ -82,6 +83,13 @@ void signal_capturer(int numeroSenial);
 void crearDatosParaReduccionLocal(peticionDeReduccionLocal pedido[], int tam);
 
 
+// Variables globales
+
+int tareasRealizadasEnParalelo;
+int tareasTotalesReduccionLocal;
+int cantidadDeFallos;
+
+
 // Resultado de operaciones
 
 struct metricas {
@@ -97,6 +105,8 @@ int cont = 0;
 
 
 int main(void) {
+
+	clock_t inicioPrograma = clock();
 
 	int conexionYama = leerConfiguracion();
 
@@ -116,14 +126,15 @@ int main(void) {
 	pedido[2].direccion= "putoElQueLee";
 	pedido[2].worker="laburante";
 
-	dividirPorCero();
+	//dividirPorCero();
 
 
 	//gestionarTransformacion(pedido, tam);
 	//gestionarReduccionLocal(reduLo, 5);
 	printf("aca llego perfecto");
 
-	while (cont < 1) {}
+
+	printf("El proceso Master termino en: %d", (clock()-inicioPrograma)*1000/CLOCKS_PER_SEC);
 
 	return EXIT_SUCCESS;
 
@@ -141,11 +152,17 @@ int leerConfiguracion(){
 	char * ip = config_get_string_value(config, "YAMA_IP");
     printf("%s", ip);
 
-    //int socketYama = conectarCliente(ip, puerto, MASTER);
+    int socketYama = conectarCliente(ip, puerto, MASTER);
+    char * mensaje = string_new();
+    string_append(&mensaje,"Hola puto te re cabio");
 
-    return 2;
+    enviarMensaje(socketYama, mensaje);
+    while(1){
 
-    //enviarMensaje(socketYama, "Hola");
+    }
+    return socketYama;
+
+
 }
 
 
