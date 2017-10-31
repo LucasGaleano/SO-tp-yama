@@ -26,6 +26,11 @@ typedef struct {
 	t_stream * buffer;
 }t_paquete;
 
+typedef struct {
+	void* data;
+	int numBloque;
+}t_pedidoEscritura;
+
 enum emisor {
 	DATANODE = 900,
 	FILESYSTEM = 901,
@@ -40,6 +45,9 @@ enum cod_op{
 	ENVIAR_ARCHIVO=2,
 	ENVIAR_INFO_DATANODE=3,
 	ENVIAR_ERROR=4,
+	ENVIAR_BLOQUE=5,
+	ENVIAR_SOLICITUD_LECTURA_BLOQUE=6,
+	ENVIAR_SOLICITUD_ESCRITURA_BLOQUE=7,
 };
 
 #endif /* BIBLIOTECA_ESTRUCTURAS_H_ */
