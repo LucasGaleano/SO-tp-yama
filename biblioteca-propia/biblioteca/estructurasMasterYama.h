@@ -10,16 +10,17 @@
 
 	typedef struct {
 
-	char* worker;
 	char* direccion;
-	FILE* archivoTemporal;
+	char* puerto;
+	unsigned short int bloque;
+	char* rutaArchivoTemporal;
 
 } peticionDeTransformacion;
 
 	typedef struct peticionDeReduccionLocal {
 
-		FILE* archivoTransformacion;
-		FILE* archivoReduccionLocal;
+		char* archivoTransformacion;
+		char* archivoReduccionLocal;
 
 	} peticionDeReduccionLocal;
 
@@ -27,35 +28,61 @@
 
 		char* nodo;
 		char* direccion;
-		FILE* archivoReduccionPorWorker;
+		char* puerto;
+		char* archivoReduccionPorWorker;
 		char workerEncargdo;
-		FILE* ArchivoResultadoReduccionGlobal;
+		char* ArchivoResultadoReduccionGlobal;
 
 	} peticionDeReduccionGlobal;
 
 	typedef struct {
 
 		char* direccion;
-		FILE* archivoReduccionGlobal;
+		char* puerto;
+		char* archivoReduccionGlobal;
 
 	} peticionAlmacenadoFinal;
 
 
 
-	typedef struct {
 
+
+
+typedef struct  {
+	char* nodo;
+	char* direccion; // IP
+	char* puerto;
+	short unsigned int bloque;
+	unsigned int bytes;
+	char* rutaArchivoTemporal;
+} indicacionesParaTransformacion;
+
+
+
+typedef struct  {
 	char* nodo;
 	char* direccion;
-	FILE* archivoDeReduccionGlobal;
-
-} indicacionesAlmacenamientoFinal;
-
-
-// RESPUESTA WORKER A YAMA
-
-	typedef struct {
+	char* puerto;
+	char* archivoTemporalDeTransformacion; // Existe
+	char* archivoTemporalDeReduccionLocal; // Nuevo
+} indicacionesParaReduccionLocal;
 
 
-} resultadoTransformacion;
 
+typedef struct  {
+	char* nodo;
+	char* direccion;
+	char* puerto;
+	char* archivoDeReduccionLocal;
+	char* archivoDeReduccionGlobal;
+	char encargado;
+
+} indicacionesParaReduccionGlobal;
+
+typedef struct{
+	char* nodo;
+	char* ip;
+	char* puerto;
+	char* rutaArchivoReduccionGlobal;
+}indicacionesAlmacenamientoFinal;
 #endif
