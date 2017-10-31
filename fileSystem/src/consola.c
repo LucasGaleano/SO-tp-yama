@@ -121,6 +121,12 @@ void ejecutarComando(char * linea, bool * ejecutar) {
 		return;
 	}
 
+	//PRUEBA
+	if (string_starts_with(linea, "prueba")) {
+		crearArchivoTablaArchivo("/home/utnso/Escritorio/prueba.txt","user/juan/datos");
+		return;
+	}
+
 	//NO RECONOZCO EL COMANDO
 	printf("No se ha encontrado el comando %s \n", linea);
 }
@@ -401,29 +407,6 @@ char * obtenerParametro(char * linea, int parametro) {
 	path[tamPath] = '\0';
 
 	return path;
-}
-
-void destruirSubstring(char ** sub) {
-	int i;
-	for (i = 0; sub[i] != NULL; ++i) {
-		free(sub[i]);
-	}
-	free(sub[i]);
-	free(sub);
-}
-
-int obtenerIndexPadre(char * nomPadre) {
-	bool esPadreBuscado(t_directory * registro) {
-		return string_equals_ignore_case(registro->nombre, nomPadre);
-	}
-
-	t_directory *registro = list_find(tablaDirectorios, (void*) esPadreBuscado);
-
-	if (registro == NULL) {
-		return -1;
-	}
-
-	return registro->index;
 }
 
 bool verificarDuplicados(t_directory * duplicado) {
