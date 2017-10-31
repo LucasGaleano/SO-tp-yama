@@ -26,6 +26,11 @@ typedef struct {
 	t_stream * buffer;
 }t_paquete;
 
+typedef struct {
+	void* data;
+	int numBloque;
+}t_pedidoEscritura;
+
 enum emisor {
 	DATANODE = 900,
 	FILESYSTEM = 901,

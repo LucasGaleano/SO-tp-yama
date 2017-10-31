@@ -13,7 +13,7 @@
 #include <biblioteca/sockets.h>
 #include <stdbool.h>
 #include <biblioteca/estructuras.h>
-
+#include <biblioteca/paquetes.h>
 
 #define PATHCONFIG "./configuraciones/nodo.cfg"
 

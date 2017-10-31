@@ -20,10 +20,13 @@ void 				enviarArchivo					(int, char *);
 void 				enviarInfoDataNode				(int, char *, int, int);
 void 				enviarBloque					(int, char*);
 void 				enviarSolicitudLecturaBloque	(int, int);
+void 				enviarSolicitudEscrituraBloque	(int, void*,int);
 
 /*-------------------------Recibir paquetes-------------------------*/
 void 				recibirMensaje					(t_paquete *);
 void 				recibirArchivo					(t_paquete *);
 void 				recibirBloque					(t_paquete *);
 int 				recibirSolicitudLecturaBloque	(t_paquete *);
+t_pedidoEscritura* 	recibirSolicitudEscrituraBloque	(t_paquete *);
+
 #endif /* SRC_PROCESAMIENTOPAQUETES_H_ */

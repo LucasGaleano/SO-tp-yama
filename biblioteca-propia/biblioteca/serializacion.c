@@ -51,7 +51,7 @@ void serializarBloque(t_paquete* unPaquete, char* bloque) {
 	memcpy(unPaquete->buffer->data, bloque, tamBloque);
 }
 
-void serializarSolicitudBloque(t_paquete* unPaquete, int numBloque) {
+void serializarSolicitudLecturaBloque(t_paquete* unPaquete, int numBloque) {
 
 	int tamNumBloque = sizeof(int);
 	unPaquete->buffer = malloc(sizeof(t_stream));
@@ -59,6 +59,22 @@ void serializarSolicitudBloque(t_paquete* unPaquete, int numBloque) {
 	unPaquete->buffer->data = malloc(tamNumBloque);
 	memcpy(unPaquete->buffer->data,&numBloque,tamNumBloque);
 }
+
+
+void serializarSolicitudEscrituraBloque(t_paquete* unPaquete,void* bloque ,int numBloque) {
+
+	int tamBloque = strlen((char*)bloque);
+	int tamTotal = tamBloque + sizeof(int);
+	unPaquete->buffer = malloc(sizeof(t_stream));
+	unPaquete->buffer->size = tamBloque;
+	unPaquete->buffer->data = malloc(tamTotal);
+
+	int desplazamiento = 0;
+	memcpy(unPaquete->buffer->data + desplazamiento,bloque,tamBloque);
+	desplazamiento += tamBloque;
+	memcpy(unPaquete->buffer->data + desplazamiento,&numBloque,sizeof(int));
+}
+
 
 void serializarInfoDataNode(t_paquete * unPaquete, char * nombreNodo,
 		int bloquesTotales, int bloquesLibres) {
@@ -130,9 +146,20 @@ void* deserializarBloque(t_stream* buffer) {
 
 }
 
-int deserializarSolicitudBloque(t_stream* buffer){
+int deserializarSolicitudLecturaBloque(t_stream* buffer){
 
 	return *(int*)(buffer->data);
+
+}
+
+t_pedidoEscritura* deserializarSolicitudEscrituraBloque(t_stream* buffer){
+
+	t_pedidoEscritura* pedido = malloc(sizeof(t_pedidoEscritura));
+	int tamData = buffer->size - sizeof(int);
+	pedido->data = malloc(tamData);
+	memcpy(pedido->data, buffer->data,tamData);
+	memcpy(&pedido->numBloque, buffer->data + tamData, sizeof(int));
+	return pedido;
 
 }
 

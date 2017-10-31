@@ -208,6 +208,18 @@ void enviarSolicitudLecturaBloque(int server_socket, int numBloque) {
 
 }
 
+void enviarSolicitudEscrituraBloque(int server_socket, void* bloque, int numBloque) {
+
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_SOLICITUD_ESCRITURA_BLOQUE;
+
+	serializarSolicitudBloque(unPaquete,bloque ,numBloque);
+
+	enviarPaquetes(server_socket, unPaquete);
+
+}
+
 void enviarInfoDataNode(int server_socket, char * nombreNodo,
 		int bloquesTotales, int bloquesLibres) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
@@ -254,16 +266,15 @@ void* recibirbloque(t_paquete* unPaquete) {
 
 }
 
-
 int recibirSolicitudLecturaBloque(t_paquete* unPaquete) {
 
 	int numBloque = deserializarSolicitudBloque(unPaquete->buffer);
 	return numBloque;
 }
 
-//
-//int recibirSolicitudEscrituraBloque(t_paquete* unPaquete) {
-//
-//	int numBloque = deserializarSolicitudBloque(unPaquete->buffer);
-//	return numBloque;
-//}
+
+t_pedidoEscritura* recibirSolicitudEscrituraBloque(t_paquete* unPaquete) {
+
+	return deserializarSolicitudEscrituraBloque(unPaquete->buffer);
+
+}
