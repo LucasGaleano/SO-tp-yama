@@ -24,6 +24,7 @@ void 						serializarSolicitudEscrituraBloque		(t_paquete*, void*, int);
 void 						serializarSolicitudTransformacion		(t_paquete *, t_pedidoTransformacion *);
 void 						serializarSolicitudReduccionLocal		(t_paquete *, t_pedidoReduccionLocal *);
 void 						serializarSolicitudReduccionGlobal		(t_paquete *, t_pedidoReduccionGlobal *);
+void 						serializarSolicitudAlmacenadoFinal		(t_paquete *, t_pedidoAlmacenadoFinal *);
 
 /*-------------------------Deserializacion-------------------------*/
 char * 						deserializarMensaje						(t_stream *);
@@ -35,6 +36,7 @@ t_pedidoEscritura*			deserializarSolicitudEscrituraBloque	(t_stream *);
 t_pedidoTransformacion* 	deserializarSolicitudTransformacion		(t_stream *);
 t_pedidoReduccionLocal* 	deserializarSolicitudReduccionLocal		(t_stream *);
 t_pedidoReduccionGlobal*	deserializarSolicitudReduccionGlobal	(t_stream *);
+t_pedidoAlmacenadoFinal* 	deserializarSolicitudAlmacenadoFinal	(t_stream *);
 
 /*-------------------------Funciones auxiliares-------------------------*/
 void * 						abrirArchivo							(char *, size_t *, FILE **);
