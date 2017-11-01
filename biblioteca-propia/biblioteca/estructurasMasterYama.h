@@ -4,51 +4,38 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
-
 // ESTRUCTURAS DE PETICION DE OPERACIONES DE YAMA PARA WORKER
 
-	typedef struct {
+typedef struct {
+	char* ip;
+	char* puerto;
+	int bloque;
+	char* rutaArchivoTemporal;
+} t_pedidoTransformacion;
 
+typedef struct {
+	char* archivoTransformacion;
+	char* archivoReduccionLocal;
+} t_pedidoReduccionLocal;
+
+typedef struct {
+	char* nodo;
 	char* direccion;
 	char* puerto;
-	unsigned short int bloque;
-	char* rutaArchivoTemporal;
+	char* archivoReduccionPorWorker;
+	char* workerEncargdo;
+	char* ArchivoResultadoReduccionGlobal;
+} t_pedidoReduccionGlobal;
 
-} peticionDeTransformacion;
+/*----------------------------------------------------------------------------------------*/
 
-	typedef struct peticionDeReduccionLocal {
+typedef struct {
+	char* direccion;
+	char* puerto;
+	char* archivoReduccionGlobal;
+} peticionAlmacenadoFinal;
 
-		char* archivoTransformacion;
-		char* archivoReduccionLocal;
-
-	} peticionDeReduccionLocal;
-
-	typedef struct{
-
-		char* nodo;
-		char* direccion;
-		char* puerto;
-		char* archivoReduccionPorWorker;
-		char workerEncargdo;
-		char* ArchivoResultadoReduccionGlobal;
-
-	} peticionDeReduccionGlobal;
-
-	typedef struct {
-
-		char* direccion;
-		char* puerto;
-		char* archivoReduccionGlobal;
-
-	} peticionAlmacenadoFinal;
-
-
-
-
-
-
-typedef struct  {
+typedef struct {
 	char* nodo;
 	char* direccion; // IP
 	char* puerto;
@@ -57,9 +44,7 @@ typedef struct  {
 	char* rutaArchivoTemporal;
 } indicacionesParaTransformacion;
 
-
-
-typedef struct  {
+typedef struct {
 	char* nodo;
 	char* direccion;
 	char* puerto;
@@ -67,22 +52,19 @@ typedef struct  {
 	char* archivoTemporalDeReduccionLocal; // Nuevo
 } indicacionesParaReduccionLocal;
 
-
-
-typedef struct  {
+typedef struct {
 	char* nodo;
 	char* direccion;
 	char* puerto;
 	char* archivoDeReduccionLocal;
 	char* archivoDeReduccionGlobal;
 	char encargado;
-
 } indicacionesParaReduccionGlobal;
 
-typedef struct{
+typedef struct {
 	char* nodo;
 	char* ip;
 	char* puerto;
 	char* rutaArchivoReduccionGlobal;
-}indicacionesAlmacenamientoFinal;
+} indicacionesAlmacenamientoFinal;
 #endif
