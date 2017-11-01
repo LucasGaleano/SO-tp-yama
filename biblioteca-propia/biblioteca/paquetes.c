@@ -266,6 +266,17 @@ void enviarSolicitudPedidoReduccionGlobal(int server_socket,
 	enviarPaquetes(server_socket, unPaquete);
 }
 
+void enviarSolicitudPedidoAlmacenadoFinal(int server_socket,
+		t_pedidoAlmacenadoFinal * solicitud) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_SOLICITUD_ALMACENADO_FINAL;
+
+	serializarSolicitudAlmacenadoFinal(unPaquete, solicitud);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
+
 /*-------------------------Recibir-------------------------*/
 
 void recibirMensaje(t_paquete * unPaquete) {
@@ -309,15 +320,22 @@ t_pedidoEscritura* recibirSolicitudEscrituraBloque(t_paquete* unPaquete) {
 
 }
 
-t_pedidoTransformacion * recibirSolicitudTransformacion(t_paquete * unPaquete){
+t_pedidoTransformacion * recibirSolicitudTransformacion(t_paquete * unPaquete) {
 
 	return deserializarSolicitudTransformacion(unPaquete->buffer);
 }
 
-t_pedidoReduccionLocal * recibirSolicitudPedidoReduccionLocal(t_paquete * unPaquete){
+t_pedidoReduccionLocal * recibirSolicitudPedidoReduccionLocal(
+		t_paquete * unPaquete) {
 	return deserializarSolicitudReduccionLocal(unPaquete->buffer);
 }
 
-t_pedidoReduccionGlobal * recibirSolicitudPedidoReduccionGlobal(t_paquete * unPaquete){
+t_pedidoReduccionGlobal * recibirSolicitudPedidoReduccionGlobal(
+		t_paquete * unPaquete) {
 	return deserializarSolicitudReduccionGlobal(unPaquete->buffer);
+}
+
+t_pedidoAlmacenadoFinal * recibirSolicitudPedidoAlmacenadoFinal(
+		t_paquete * unPaquete) {
+	return deserializarSolicitudAlmacenadoFinal(unPaquete->buffer);
 }

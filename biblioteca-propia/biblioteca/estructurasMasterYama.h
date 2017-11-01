@@ -27,22 +27,22 @@ typedef struct {
 	char* ArchivoResultadoReduccionGlobal;
 } t_pedidoReduccionGlobal;
 
-/*----------------------------------------------------------------------------------------*/
-
 typedef struct {
 	char* direccion;
 	char* puerto;
 	char* archivoReduccionGlobal;
-} peticionAlmacenadoFinal;
+} t_pedidoAlmacenadoFinal;
+
+/*----------------------------------------------------------------------------------------*/
 
 typedef struct {
 	char* nodo;
-	char* direccion; // IP
+	char* direccion;
 	char* puerto;
-	short unsigned int bloque;
-	unsigned int bytes;
+	int bloque;
+	int bytes;
 	char* rutaArchivoTemporal;
-} indicacionesParaTransformacion;
+} t_indicacionTransformacion;
 
 typedef struct {
 	char* nodo;
@@ -50,7 +50,7 @@ typedef struct {
 	char* puerto;
 	char* archivoTemporalDeTransformacion; // Existe
 	char* archivoTemporalDeReduccionLocal; // Nuevo
-} indicacionesParaReduccionLocal;
+} t_indicacionReduccionLocal;
 
 typedef struct {
 	char* nodo;
@@ -58,8 +58,8 @@ typedef struct {
 	char* puerto;
 	char* archivoDeReduccionLocal;
 	char* archivoDeReduccionGlobal;
-	char encargado;
-} indicacionesParaReduccionGlobal;
+	char* encargado;
+} t_indicacionReduccionGlobal;
 
 typedef struct {
 	char* nodo;
@@ -67,4 +67,5 @@ typedef struct {
 	char* puerto;
 	char* rutaArchivoReduccionGlobal;
 } indicacionesAlmacenamientoFinal;
+
 #endif

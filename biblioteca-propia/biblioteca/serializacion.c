@@ -202,6 +202,32 @@ void serializarSolicitudReduccionGlobal(t_paquete * unPaquete,
 			tamArchivoResultadoReduccionGlobal);
 }
 
+void serializarSolicitudAlmacenadoFinal(t_paquete * unPaquete,
+		t_pedidoAlmacenadoFinal * solicitud) {
+
+	int tamDireccion = string_length(solicitud->direccion) + 1;
+	int tamPuerto = string_length(solicitud->puerto) + 1;
+	int tamArchivoReduccionGlobal = string_length(solicitud->archivoReduccionGlobal) + 1;
+
+	int tamTotal = tamDireccion + tamPuerto + tamArchivoReduccionGlobal;
+
+	unPaquete->buffer = malloc(sizeof(t_stream));
+	unPaquete->buffer->size = tamTotal;
+
+	unPaquete->buffer->data = malloc(tamTotal);
+
+	int desplazamiento = 0;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, solicitud->direccion, tamDireccion);
+	desplazamiento += tamDireccion;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, solicitud->puerto,tamPuerto);
+	desplazamiento += tamPuerto;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, solicitud->archivoReduccionGlobal, tamArchivoReduccionGlobal);
+}
+
+
 /*-------------------------Deserializacion-------------------------*/
 
 char * deserializarMensaje(t_stream * buffer) {
@@ -321,6 +347,24 @@ t_pedidoReduccionGlobal * deserializarSolicitudReduccionGlobal(
 
 	return solicitud;
 }
+
+t_pedidoAlmacenadoFinal * deserializarSolicitudAlmacenadoFinal(
+		t_stream * buffer) {
+	t_pedidoAlmacenadoFinal * solicitud = malloc(sizeof(t_pedidoAlmacenadoFinal));
+
+	int desplazamiento = 0;
+
+	solicitud->direccion = strdup(buffer->data + desplazamiento);
+	desplazamiento += strlen(solicitud->direccion) + 1;
+
+	solicitud->puerto = strdup(buffer->data + desplazamiento);
+	desplazamiento += strlen(solicitud->puerto) + 1;
+
+	solicitud->archivoReduccionGlobal = strdup(buffer->data + desplazamiento);
+
+	return solicitud;
+}
+
 
 /*-------------------------Funciones auxiliares-------------------------*/
 

@@ -25,6 +25,7 @@ void 						enviarSolicitudEscrituraBloque			(int, void*,int);
 void 						enviarSolicitudTransformacion			(int, t_pedidoTransformacion *);
 void 						enviarSolicitudPedidoReduccionLocal		(int, t_pedidoReduccionLocal *);
 void 						enviarSolicitudPedidoReduccionGlobal	(int, t_pedidoReduccionGlobal *);
+void 						enviarSolicitudPedidoAlmacenadoFinal	(int, t_pedidoAlmacenadoFinal *);
 
 /*-------------------------Recibir paquetes-------------------------*/
 void 						recibirMensaje							(t_paquete *);
@@ -35,5 +36,6 @@ t_pedidoEscritura* 			recibirSolicitudEscrituraBloque			(t_paquete *);
 t_pedidoTransformacion* 	recibirSolicitudTransformacion			(t_paquete *);
 t_pedidoReduccionLocal* 	recibirSolicitudPedidoReduccionLocal	(t_paquete *);
 t_pedidoReduccionGlobal*	recibirSolicitudPedidoReduccionGlobal	(t_paquete *);
+t_pedidoAlmacenadoFinal* 	recibirSolicitudPedidoAlmacenadoFinal	(t_paquete *);
 
 #endif /* SRC_PROCESAMIENTOPAQUETES_H_ */
