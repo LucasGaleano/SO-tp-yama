@@ -26,11 +26,6 @@ typedef struct {
 	t_stream * buffer;
 }t_paquete;
 
-typedef struct {
-	void* data;
-	int numBloque;
-}t_pedidoEscritura;
-
 enum emisor {
 	DATANODE = 900,
 	FILESYSTEM = 901,
@@ -57,6 +52,81 @@ enum cod_op{
 	ENVIAR_SOLICITUD_REDUCCION_GLOBAL=10,
 
 	ENVIAR_SOLICITUD_ALMACENADO_FINAL=11,
+
+	ENVIAR_INDICACION_TRANSFORMACION=12,
+
+	ENVIAR_INDICACION_REDUCCION_LOCAL=13,
+	ENVIAR_INDICACION_REDUCCION_GLOBAL=14,
+
+	ENVIAR_INDICACION_ALMACENADO_FINAL=15,
+
 };
+
+/*------------------------------Estructuras de comunicacion FS DataNode------------------------------*/
+typedef struct {
+	void* data;
+	int numBloque;
+}t_pedidoEscritura;
+
+/*------------------------------Estructuras de comunicacion Yama Master------------------------------*/
+typedef struct {
+	char* ip;
+	char* puerto;
+	int bloque;
+	char* rutaArchivoTemporal;
+} t_pedidoTransformacion;
+
+typedef struct {
+	char* archivoTransformacion;
+	char* archivoReduccionLocal;
+} t_pedidoReduccionLocal;
+
+typedef struct {
+	char* nodo;
+	char* direccion;
+	char* puerto;
+	char* archivoReduccionPorWorker;
+	char* workerEncargdo;
+	char* ArchivoResultadoReduccionGlobal;
+} t_pedidoReduccionGlobal;
+
+typedef struct {
+	char* direccion;
+	char* puerto;
+	char* archivoReduccionGlobal;
+} t_pedidoAlmacenadoFinal;
+
+typedef struct {
+	char* nodo;
+	char* direccion;
+	char* puerto;
+	int bloque;
+	int bytes;
+	char* rutaArchivoTemporal;
+} t_indicacionTransformacion;
+
+typedef struct {
+	char* nodo;
+	char* direccion;
+	char* puerto;
+	char* archivoTemporalTransformacion; // Existe
+	char* archivoTemporalReduccionLocal; // Nuevo
+} t_indicacionReduccionLocal;
+
+typedef struct {
+	char* nodo;
+	char* direccion;
+	char* puerto;
+	char* archivoDeReduccionLocal;
+	char* archivoDeReduccionGlobal;
+	char* encargado;
+} t_indicacionReduccionGlobal;
+
+typedef struct {
+	char* nodo;
+	char* ip;
+	char* puerto;
+	char* rutaArchivoReduccionGlobal;
+} t_indicacionAlmacenadoFinal;
 
 #endif /* BIBLIOTECA_ESTRUCTURAS_H_ */
