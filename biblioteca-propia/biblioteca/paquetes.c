@@ -244,7 +244,7 @@ void enviarSolicitudTransformacion(int server_socket,
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarSolicitudPedidoReduccionLocal(int server_socket,
+void enviarSolicitudReduccionLocal(int server_socket,
 		t_pedidoReduccionLocal * solicitud) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
@@ -255,7 +255,7 @@ void enviarSolicitudPedidoReduccionLocal(int server_socket,
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarSolicitudPedidoReduccionGlobal(int server_socket,
+void enviarSolicitudReduccionGlobal(int server_socket,
 		t_pedidoReduccionGlobal * solicitud) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
@@ -266,13 +266,53 @@ void enviarSolicitudPedidoReduccionGlobal(int server_socket,
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarSolicitudPedidoAlmacenadoFinal(int server_socket,
+void enviarSolicitudAlmacenadoFinal(int server_socket,
 		t_pedidoAlmacenadoFinal * solicitud) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_SOLICITUD_ALMACENADO_FINAL;
 
 	serializarSolicitudAlmacenadoFinal(unPaquete, solicitud);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
+
+void enviarIndicacionTransformacion(int server_socket, t_indicacionTransformacion * indicacion) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_INDICACION_TRANSFORMACION;
+
+	serializarIndicacionTransformacion(unPaquete, indicacion);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
+
+void enviarIndicacionReduccionLocal(int server_socket, t_indicacionReduccionLocal * indicacion) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_INDICACION_REDUCCION_LOCAL;
+
+	serializarIndicacionReduccionLocal(unPaquete, indicacion);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
+
+void enviarIndicacionReduccionGlobal(int server_socket, t_indicacionReduccionGlobal * indicacion) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_INDICACION_REDUCCION_GLOBAL;
+
+	serializarIndicacionReduccionGlobal(unPaquete, indicacion);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
+
+void enviarIndicacionAlmacenadoFinal(int server_socket, t_indicacionAlmacenadoFinal * indicacion) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_INDICACION_ALMACENADO_FINAL;
+
+	serializarIndicacionAlmacenadoFinal(unPaquete, indicacion);
 
 	enviarPaquetes(server_socket, unPaquete);
 }
@@ -325,17 +365,30 @@ t_pedidoTransformacion * recibirSolicitudTransformacion(t_paquete * unPaquete) {
 	return deserializarSolicitudTransformacion(unPaquete->buffer);
 }
 
-t_pedidoReduccionLocal * recibirSolicitudPedidoReduccionLocal(
-		t_paquete * unPaquete) {
+t_pedidoReduccionLocal * recibirSolicitudReduccionLocal(t_paquete * unPaquete) {
 	return deserializarSolicitudReduccionLocal(unPaquete->buffer);
 }
 
-t_pedidoReduccionGlobal * recibirSolicitudPedidoReduccionGlobal(
-		t_paquete * unPaquete) {
+t_pedidoReduccionGlobal * recibirSolicitudReduccionGlobal(t_paquete * unPaquete) {
 	return deserializarSolicitudReduccionGlobal(unPaquete->buffer);
 }
 
-t_pedidoAlmacenadoFinal * recibirSolicitudPedidoAlmacenadoFinal(
-		t_paquete * unPaquete) {
+t_pedidoAlmacenadoFinal * recibirSolicitudAlmacenadoFinal(t_paquete * unPaquete) {
 	return deserializarSolicitudAlmacenadoFinal(unPaquete->buffer);
+}
+
+t_indicacionTransformacion * recibirIndicacionTransformacion(t_paquete * unPaquete) {
+	return deserializarIndicacionTransformacion(unPaquete->buffer);
+}
+
+t_indicacionReduccionLocal * recibirIndicacionReduccionLocal(t_paquete * unPaquete) {
+	return deserializarIndicacionReduccionLocal(unPaquete->buffer);
+}
+
+t_indicacionReduccionGlobal * recibirIndicacionReduccionGlobal(t_paquete * unPaquete) {
+	return deserializarIndicacionReduccionGlobal(unPaquete->buffer);
+}
+
+t_indicacionAlmacenadoFinal * recibirIndicacionAlmacenadoFinal(t_paquete * unPaquete) {
+	return deserializarIndicacionAlmacenadoFinal(unPaquete->buffer);
 }
