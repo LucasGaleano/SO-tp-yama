@@ -83,7 +83,7 @@ typedef struct {
 
 typedef struct {
 	char* nodo;
-	char* direccion;
+	char* ip;
 	char* puerto;
 	char* archivoReduccionPorWorker;
 	char* workerEncargdo;
@@ -91,14 +91,14 @@ typedef struct {
 } t_pedidoReduccionGlobal;
 
 typedef struct {
-	char* direccion;
+	char* ip;
 	char* puerto;
 	char* archivoReduccionGlobal;
 } t_pedidoAlmacenadoFinal;
 
 typedef struct {
 	char* nodo;
-	char* direccion;
+	char* ip;
 	char* puerto;
 	int bloque;
 	int bytes;
@@ -107,7 +107,7 @@ typedef struct {
 
 typedef struct {
 	char* nodo;
-	char* direccion;
+	char* ip;
 	char* puerto;
 	char* archivoTemporalTransformacion; // Existe
 	char* archivoTemporalReduccionLocal; // Nuevo
@@ -115,7 +115,7 @@ typedef struct {
 
 typedef struct {
 	char* nodo;
-	char* direccion;
+	char* ip;
 	char* puerto;
 	char* archivoDeReduccionLocal;
 	char* archivoDeReduccionGlobal;
