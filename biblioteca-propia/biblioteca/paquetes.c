@@ -202,19 +202,20 @@ void enviarSolicitudLecturaBloque(int server_socket, int numBloque) {
 
 	unPaquete->codigoOperacion = ENVIAR_SOLICITUD_LECTURA_BLOQUE;
 
-	serializarSolicitudBloque(unPaquete, numBloque);
+	serializarSolicitudLecturaBloque(unPaquete, numBloque);
 
 	enviarPaquetes(server_socket, unPaquete);
 
 }
 
-void enviarSolicitudEscrituraBloque(int server_socket, void* bloque, int numBloque) {
+void enviarSolicitudEscrituraBloque(int server_socket, void* bloque,
+		int numBloque) {
 
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_SOLICITUD_ESCRITURA_BLOQUE;
 
-	serializarSolicitudBloque(unPaquete,bloque ,numBloque);
+	serializarSolicitudEscrituraBloque(unPaquete, bloque, numBloque);
 
 	enviarPaquetes(server_socket, unPaquete);
 
@@ -228,6 +229,90 @@ void enviarInfoDataNode(int server_socket, char * nombreNodo,
 
 	serializarInfoDataNode(unPaquete, nombreNodo, bloquesTotales,
 			bloquesLibres);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
+
+void enviarSolicitudTransformacion(int server_socket,
+		t_pedidoTransformacion * solicitud) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_SOLICITUD_TRANSFORMACION;
+
+	serializarSolicitudTransformacion(unPaquete, solicitud);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
+
+void enviarSolicitudReduccionLocal(int server_socket,
+		t_pedidoReduccionLocal * solicitud) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_SOLICITUD_REDUCCION_LOCAL;
+
+	serializarSolicitudReduccionLocal(unPaquete, solicitud);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
+
+void enviarSolicitudReduccionGlobal(int server_socket,
+		t_pedidoReduccionGlobal * solicitud) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_SOLICITUD_REDUCCION_GLOBAL;
+
+	serializarSolicitudReduccionGlobal(unPaquete, solicitud);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
+
+void enviarSolicitudAlmacenadoFinal(int server_socket,
+		t_pedidoAlmacenadoFinal * solicitud) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_SOLICITUD_ALMACENADO_FINAL;
+
+	serializarSolicitudAlmacenadoFinal(unPaquete, solicitud);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
+
+void enviarIndicacionTransformacion(int server_socket, t_indicacionTransformacion * indicacion) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_INDICACION_TRANSFORMACION;
+
+	serializarIndicacionTransformacion(unPaquete, indicacion);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
+
+void enviarIndicacionReduccionLocal(int server_socket, t_indicacionReduccionLocal * indicacion) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_INDICACION_REDUCCION_LOCAL;
+
+	serializarIndicacionReduccionLocal(unPaquete, indicacion);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
+
+void enviarIndicacionReduccionGlobal(int server_socket, t_indicacionReduccionGlobal * indicacion) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_INDICACION_REDUCCION_GLOBAL;
+
+	serializarIndicacionReduccionGlobal(unPaquete, indicacion);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
+
+void enviarIndicacionAlmacenadoFinal(int server_socket, t_indicacionAlmacenadoFinal * indicacion) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_INDICACION_ALMACENADO_FINAL;
+
+	serializarIndicacionAlmacenadoFinal(unPaquete, indicacion);
 
 	enviarPaquetes(server_socket, unPaquete);
 }
@@ -260,21 +345,50 @@ void recibirArchivo(t_paquete * unPaquete) {
 
 void* recibirbloque(t_paquete* unPaquete) {
 
-	void* bloque = deserializarBloque(unPaquete->buffer);
-
-	return bloque;
+	return deserializarBloque(unPaquete->buffer);;
 
 }
 
 int recibirSolicitudLecturaBloque(t_paquete* unPaquete) {
 
-	int numBloque = deserializarSolicitudBloque(unPaquete->buffer);
-	return numBloque;
+	return deserializarSolicitudLecturaBloque(unPaquete->buffer);
 }
-
 
 t_pedidoEscritura* recibirSolicitudEscrituraBloque(t_paquete* unPaquete) {
 
 	return deserializarSolicitudEscrituraBloque(unPaquete->buffer);
 
+}
+
+t_pedidoTransformacion * recibirSolicitudTransformacion(t_paquete * unPaquete) {
+
+	return deserializarSolicitudTransformacion(unPaquete->buffer);
+}
+
+t_pedidoReduccionLocal * recibirSolicitudReduccionLocal(t_paquete * unPaquete) {
+	return deserializarSolicitudReduccionLocal(unPaquete->buffer);
+}
+
+t_pedidoReduccionGlobal * recibirSolicitudReduccionGlobal(t_paquete * unPaquete) {
+	return deserializarSolicitudReduccionGlobal(unPaquete->buffer);
+}
+
+t_pedidoAlmacenadoFinal * recibirSolicitudAlmacenadoFinal(t_paquete * unPaquete) {
+	return deserializarSolicitudAlmacenadoFinal(unPaquete->buffer);
+}
+
+t_indicacionTransformacion * recibirIndicacionTransformacion(t_paquete * unPaquete) {
+	return deserializarIndicacionTransformacion(unPaquete->buffer);
+}
+
+t_indicacionReduccionLocal * recibirIndicacionReduccionLocal(t_paquete * unPaquete) {
+	return deserializarIndicacionReduccionLocal(unPaquete->buffer);
+}
+
+t_indicacionReduccionGlobal * recibirIndicacionReduccionGlobal(t_paquete * unPaquete) {
+	return deserializarIndicacionReduccionGlobal(unPaquete->buffer);
+}
+
+t_indicacionAlmacenadoFinal * recibirIndicacionAlmacenadoFinal(t_paquete * unPaquete) {
+	return deserializarIndicacionAlmacenadoFinal(unPaquete->buffer);
 }
