@@ -13,6 +13,7 @@
 #include <signal.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -104,35 +105,37 @@ struct metricas {
 int cont = 0;
 
 
-int main(void) {
+int main(int argc, char **argv) {
+
+	char* rutaScriptTransformador = argv [1];
+	char* rutaScriptReductor = argv [2];
+	char* rutaArchivoParaArrancar = argv [3];
+	char* rutaParaAlmacenarArchivo = argv [4];
+
 
 	clock_t inicioPrograma = clock();
+
+	bool finDeMensajes = true;
 
 	int conexionYama = leerConfiguracion();
 
 	signal(SIGFPE,signal_capturer);
 
-	peticionDeReduccionLocal reduLo[5];
-	mandarRutaInicial("/home/texto1.txt");
-	int tam = 3;
-	peticionDeTransformacion pedido[tam];
-	pedido[0].archivoTemporal = "sldklskd";
-	pedido[0].direccion= "putoElQueLee";
-	pedido[0].worker="laburante";
-	pedido[1].archivoTemporal = "sldklskd";
-	pedido[1].direccion= "putoElQueLee";
-	pedido[1].worker="laburante";
-	pedido[2].archivoTemporal = "sldklskd";
-	pedido[2].direccion= "putoElQueLee";
-	pedido[2].worker="laburante";
+	enviarMensaje(conexionYama,rutaArchivoParaArrancar);
 
+
+	while(finDeMensajes){
+
+	gestionarSolicitudes(conexionYama, (void *) procesarPaquete);
+
+
+
+	}
 	//dividirPorCero();
 
 
 	//gestionarTransformacion(pedido, tam);
 	//gestionarReduccionLocal(reduLo, 5);
-	printf("aca llego perfecto");
-
 
 	printf("El proceso Master termino en: %d", (clock()-inicioPrograma)*1000/CLOCKS_PER_SEC);
 
@@ -221,12 +224,15 @@ void gestionarReduccionLocal(peticionDeReduccionLocal pedido[], int tam){
 void gestionarReduccionGlobal(peticionDeReduccionGlobal pedido[], int tam){
 
 
+
+
 }
 
 void crearDAtosParaReduccionLocal (indicacionesParaReduccionLocal solicitud, int tam){}
 
 
 void pedir_reduccion(){
+
 
 }
 
@@ -246,3 +252,34 @@ void dividirPorCero(){
 
 	return;
 }
+
+
+
+
+void procesarPaquete(t_paquete * unPaquete, int * client_socket) { // contesto a *client_socket
+	switch (unPaquete->codigoOperacion) {
+	case ENVIAR_SOLICITUD_TRANSFORMACION:
+		t_pedidoTransformacion * indicacion = recibirIndicacionAlmacenadoFinal(); // deberia ser un array
+		int i = recibirEntero();
+		if (i == 0){
+			//ContinuarRecibiendo
+			gestionarTransformacion(indicacion, 3); //aca tengo que crear hilos
+		}else break; //sale para volver a pedir
+	case ENVIAR_MENSAJE:
+		recibirMensaje(unPaquete);
+		break;
+	case ENVIAR_ARCHIVO:
+		recibirArchivo(unPaquete);
+		break;
+	case ENVIAR_INFO_DATANODE:
+		recibirInfoNodo(unPaquete, *client_socket);
+		break;
+	case ENVIAR_ERROR:
+		recibirError(unPaquete);
+		break;
+	default:
+		break;
+	}
+	destruirPaquete(unPaquete);
+}
+
