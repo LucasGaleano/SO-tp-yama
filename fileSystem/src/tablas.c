@@ -93,12 +93,13 @@ void eliminarDirectorioTabla(char * nombreDirectorio, int padreDirectorio) {
 	free(stringIndex);
 }
 
-void modificarDirectorioTabla(t_directory * registroTabla, char * nombreFinal) {
+void modificarDirectorioTabla(t_directory * registroTabla, char * nombreFinal, int indexPadre) {
 
-	strcpy(registroTabla->nombre, nombreFinal);
+	memcpy(registroTabla->nombre, nombreFinal, string_length(nombreFinal)+1);
+	registroTabla->padre = indexPadre;
 
 	char * registro = armarRegistroDirectorio(nombreFinal,
-			registroTabla->padre);
+			indexPadre);
 
 	char * stringIndex = string_itoa(registroTabla->index);
 
