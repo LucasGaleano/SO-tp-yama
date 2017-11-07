@@ -110,6 +110,99 @@ void persistirTablaDirectorios(){
 	config_save(configTablaDirectorios);
 }
 
+/*-------------------------Tabla de archivos-------------------------*/
+int obtenerIndexPadre(char * nomPadre) {
+	bool esPadreBuscado(t_directory * registro) {
+		return string_equals_ignore_case(registro->nombre, nomPadre);
+	}
+
+	t_directory *registro = list_find(tablaDirectorios, (void*) esPadreBuscado);
+
+	if (registro == NULL) {
+		return -1;
+	}
+
+	return registro->index;
+}
+
+void destruirSubstring(char ** sub) {
+	int i;
+	for (i = 0; sub[i] != NULL; ++i) {
+		free(sub[i]);
+	}
+	free(sub[i]);
+	free(sub);
+}
+
+void crearArchivoTablaArchivo(char * origen, char *destino){
+	//Copio informacion del archivo
+	struct stat statArch;
+
+	stat(origen, &statArch);
+
+	//Busco el nombre del archivo
+	char ** listaOrigen = string_split(origen, "/");
+
+	int posicion;
+
+	for (posicion = 0; listaOrigen[posicion] != NULL; ++posicion) {
+	}
+
+	char * nombreArchivo = listaOrigen[posicion - 1];
+
+	//Busco el nombre del archivo
+	char ** listaDestino = string_split(destino, "/");
+
+	for (posicion = 0; listaDestino[posicion] != NULL; ++posicion) {
+	}
+
+
+	int indexPadre = obtenerIndexPadre(listaDestino[posicion-1]);
+	char * indexPadreString = string_itoa(indexPadre);
+
+	//Creo la carpeta donde va a estar el archivo
+	char * rutaArchivo = string_new();
+	string_append(&rutaArchivo, "/home/utnso/Escritorio/metadata/archivos");
+
+	mkdir(rutaArchivo, 0777);
+
+	string_append(&rutaArchivo, "/");
+	string_append(&rutaArchivo, indexPadreString);
+
+	mkdir(rutaArchivo, 0777);
+
+	//Abro el archivo para usarlo
+	string_append(&rutaArchivo, "/");
+	string_append(&rutaArchivo, nombreArchivo);
+
+	FILE* file = fopen(rutaArchivo, "w+b");
+
+	//Cierro el archivo
+	fclose(file);
+
+	//Creo la estructura de configuracion
+	t_config * configTablaArchivo = config_create(rutaArchivo);
+
+	//Cargo tamanio en el archivo
+	int tamArc = statArch.st_size;
+	char * tamArcString = string_itoa(tamArc);
+	config_set_value(configTablaArchivo, "TAMANIO", tamArcString);
+
+	//Cargo tipo en el archivo
+	if(string_contains(nombreArchivo,".csv")){
+		config_set_value(configTablaArchivo, "TIPO", "TEXTO");
+	}else{
+		config_set_value(configTablaArchivo, "TIPO", "BINARIO");
+	}
+
+	//Guardo en el archivo
+	config_save(configTablaArchivo);
+
+	//Libero memoria
+	config_destroy(configTablaArchivo);
+	//destruirSubstring(separado);
+}
+
 /*-------------------------Tabla de nodos-------------------------*/
 void crearTablaNodos(char * rutaTablaNodos) {
 	tablaNodos = malloc(sizeof(t_tabla_nodo));
@@ -326,7 +419,7 @@ void crearArchivoTablaBitmap(t_nodo_info * info) {
 	fclose(file);
 
 	//Creo la estructura de configuracion
-	configTablaBitmap = config_create(rutaArchivo);
+	t_config * configTablaBitmap = config_create(rutaArchivo);
 
 	//Seteo valores de bitmap en 0
 	int i;
@@ -345,4 +438,5 @@ void crearArchivoTablaBitmap(t_nodo_info * info) {
 	config_save(configTablaBitmap);
 
 	free(rutaArchivo);
+	config_destroy(configTablaBitmap);
 }

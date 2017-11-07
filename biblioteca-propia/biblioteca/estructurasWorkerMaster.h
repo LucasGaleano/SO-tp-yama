@@ -10,7 +10,7 @@
 
 typedef struct  {
 	char* nodo;
-	char* direccion; // IP
+	char* ip; // IP
 	char* puerto;
 	short unsigned int bloque;
 	unsigned int bytes;
@@ -20,7 +20,7 @@ typedef struct  {
 
  typedef struct  {
 	char* nodo;
-	char* direccion;
+	char* ip;
 	char* puerto;
 	char* archivoTemporalDeTransformacion; // Existe
 	char* archivoTemporalDeReduccionLocal; // Nuevo
@@ -29,7 +29,7 @@ typedef struct  {
 
 typedef struct  {
 	char* nodo;
-	char* direccion;
+	char* ip;
 	char* puerto;
 	char* archivoDeReduccionLocal;
 	char* archivoDeReduccionGlobal;
