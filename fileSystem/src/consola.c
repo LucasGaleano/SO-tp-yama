@@ -63,13 +63,13 @@ void ejecutarComando(char * linea, bool * ejecutar) {
 
 	//RENOMBRAR ARCHIVO O DIRECTORIO
 	if (string_starts_with(linea, "rename")) {
-		renombrarArchivo(linea);
+		modificarArchivo(linea);
 		return;
 	}
 
 	//MOVER ARCHIVO O DIRECTORIO
 	if (string_starts_with(linea, "mv")) {
-		moverArchivo(linea);
+		modificarArchivo(linea);
 		return;
 	}
 
@@ -277,9 +277,9 @@ void eliminarBloque(char * linea) {
 	free(nro_copia);
 }
 
-void renombrarArchivo(char * linea) {
+void modificarArchivo(char * linea) {
 	char * path_original = obtenerParametro(linea, 1);
-	char * nombre_final = obtenerParametro(linea, 2);
+	char * path_final = obtenerParametro(linea, 2);
 
 	//Busco el nombre del directorio original
 	char ** separadoOriginal = string_split(path_original, "/");
@@ -292,7 +292,18 @@ void renombrarArchivo(char * linea) {
 
 	posicionOriginal -= 1;
 
-	//Busco el directorio que voy a renombrar
+	//Busco el nombre del directorio original
+	char ** separadoFinal = string_split(path_final, "/");
+
+	int posicionFinal;
+
+	for (posicionFinal = 0; separadoFinal[posicionFinal] != NULL;
+			++posicionFinal) {
+	}
+
+	posicionFinal -= 1;
+
+	//Busco el directorio que voy a modificar
 	int indexPadre;
 
 	if (posicionOriginal == 0) {
@@ -311,33 +322,45 @@ void renombrarArchivo(char * linea) {
 			(void*) esRegistroBuscado);
 
 	if (registroDirectorio == NULL) {
-		printf("Lo que tengo que renombrar es un archivo \n");
+		printf("Lo que tengo que modificar es un archivo \n");
 		destruirSubstring(separadoOriginal);
+		destruirSubstring(separadoFinal);
 		free(path_original);
-		free(nombre_final);
+		free(path_final);
 		return;
 	}
 
-	modificarDirectorioTabla(registroDirectorio, nombre_final);
+	//Verifico si quiero renombrar o mover
+	char * nuevoNombre = string_new();
+	int nuevoIndex = registroDirectorio->padre;
+
+	//Busco los hijos del directorio
+	bool soyDirectorio(t_directory * registro) {
+		return string_equals_ignore_case(registro->nombre,
+				separadoFinal[posicionFinal]);
+	}
+
+	if (list_any_satisfy(tablaDirectorios, (void*) soyDirectorio)) {
+		//Quiero mover un archivo
+		if (posicionFinal == 0) {
+			nuevoIndex = obtenerIndexPadre("root");
+		} else {
+			nuevoIndex = obtenerIndexPadre(separadoFinal[posicionFinal]);
+		}
+		string_append(&nuevoNombre, registroDirectorio->nombre);
+	} else {
+		//Quiero renombrar un archivo
+		string_append(&nuevoNombre, separadoFinal[posicionFinal]);
+	}
+
+	modificarDirectorioTabla(registroDirectorio, nuevoNombre, nuevoIndex);
 
 	//Libero memoria
 	free(path_original);
-	free(nombre_final);
-	destruirSubstring(separadoOriginal);
-}
-
-void moverArchivo(char * linea) {
-	char * path_original = obtenerParametro(linea, 1);
-	char * path_final = obtenerParametro(linea, 2);
-
-	printf(
-			"Me llego el path_directorio para mover: %s y su path_final es: %s \n",
-			path_original, path_final);
-
-//Libero memoria
-	free(path_original);
 	free(path_final);
-
+	free(nuevoNombre);
+	destruirSubstring(separadoOriginal);
+	destruirSubstring(separadoFinal);
 }
 
 void mostrarContenidoArchivo(char * linea) {

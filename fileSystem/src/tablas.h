@@ -49,7 +49,7 @@ void 				crearTablaDirectorios			(char *);
 void 				crearArchivoTablaDirectorios	(char *);
 void 				agregarDirectorioTabla			(t_directory *, char *);
 void 				eliminarDirectorioTabla			(char *, int);
-void 				modificarDirectorioTabla		(t_directory *, char *);
+void 				modificarDirectorioTabla		(t_directory *, char *, int);
 
 /*-------------------------Tabla de archivos-------------------------*/
 void 				crearArchivoTablaArchivo		(char *, char *);
