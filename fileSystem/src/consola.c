@@ -316,7 +316,7 @@ void crearDirectorio(char * linea) {
 
 		registro->index = tablaDirectorios->elements_count;
 
-	agregarDirectorioTabla(registro);
+	agregarDirectorioTabla(registro,path_dir);
 
 	//Libero memoria
 	free(path_dir);
