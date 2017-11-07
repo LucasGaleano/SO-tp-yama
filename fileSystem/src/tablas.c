@@ -16,7 +16,7 @@ void crearTablaDirectorios(char * rutaTablaDirectorios) {
 
 	registro->padre = -1;
 
-	agregarDirectorioTabla(registro);
+	agregarDirectorioTabla(registro,"root");
 }
 
 void crearArchivoTablaDirectorios(char * ruta) {
@@ -41,12 +41,18 @@ void crearArchivoTablaDirectorios(char * ruta) {
 	free(rutaArchivo);
 }
 
-void agregarDirectorioTabla(t_directory * registroTabla) {
+void agregarDirectorioTabla(t_directory * registroTabla, char * ruta) {
 
 	char * registro = armarRegistroDirectorio(registroTabla->nombre,
 			registroTabla->padre);
 
 	int index = buscarIndexLibre();
+
+	if(index>99){
+		printf("mkdir: no se puede crear el directorio «./%s»: Se supera la cantidad de directorios maximos \n", ruta);
+		free(registro);
+		return;
+	}
 
 	char * stringIndex = string_itoa(index);
 
@@ -414,7 +420,7 @@ int buscarIndexLibre() {
 		index++;
 	}
 
-	bitMapDirectorio[index] = false;
+	if(index<99)bitMapDirectorio[index] = false;
 
 	return index;
 }
