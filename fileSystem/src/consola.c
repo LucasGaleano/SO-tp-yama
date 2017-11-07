@@ -281,13 +281,49 @@ void renombrarArchivo(char * linea) {
 	char * path_original = obtenerParametro(linea, 1);
 	char * nombre_final = obtenerParametro(linea, 2);
 
-	printf(
-			"Me llego el path_directorio para renombrar: %s y su nombre_final es: %s \n",
-			path_original, nombre_final);
+	//Busco el nombre del directorio original
+	char ** separadoOriginal = string_split(path_original, "/");
 
-//Libero memoria
+	int posicionOriginal;
+
+	for (posicionOriginal = 0; separadoOriginal[posicionOriginal] != NULL;
+			++posicionOriginal) {
+	}
+
+	posicionOriginal -= 1;
+
+	//Busco el directorio que voy a renombrar
+	int indexPadre;
+
+	if (posicionOriginal == 0) {
+		indexPadre = obtenerIndexPadre("root");
+	} else {
+		indexPadre = obtenerIndexPadre(separadoOriginal[posicionOriginal - 1]);
+	}
+
+	bool esRegistroBuscado(t_directory * registro) {
+		return string_equals_ignore_case(registro->nombre,
+				separadoOriginal[posicionOriginal])
+				&& registro->padre == indexPadre;
+	}
+
+	t_directory * registroDirectorio = list_find(tablaDirectorios,
+			(void*) esRegistroBuscado);
+
+	if (registroDirectorio == NULL) {
+		printf("Lo que tengo que renombrar es un archivo \n");
+		destruirSubstring(separadoOriginal);
+		free(path_original);
+		free(nombre_final);
+		return;
+	}
+
+	modificarDirectorioTabla(registroDirectorio, nombre_final);
+
+	//Libero memoria
 	free(path_original);
 	free(nombre_final);
+	destruirSubstring(separadoOriginal);
 }
 
 void moverArchivo(char * linea) {
