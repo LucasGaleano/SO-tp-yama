@@ -123,7 +123,8 @@ void ejecutarComando(char * linea, bool * ejecutar) {
 
 	//PRUEBA
 	if (string_starts_with(linea, "prueba")) {
-		crearArchivoTablaArchivo("/home/utnso/Escritorio/prueba.txt","user/juan/datos");
+		crearArchivoTablaArchivo("/home/utnso/Escritorio/prueba.txt",
+				"user/juan/datos");
 		return;
 	}
 
@@ -204,10 +205,61 @@ void eliminarArchivo(char * linea) {
 void eliminarDirectorio(char * linea) {
 	char * path_directorio = obtenerParametro(linea, 2);
 
-	printf("Me llego el path_directorio para eliminar: %s \n", path_directorio);
+	//Busco el nombre del directorio
+	char ** separado = string_split(path_directorio, "/");
+
+	int posicion;
+
+	for (posicion = 0; separado[posicion] != NULL; ++posicion) {
+	}
+
+	posicion -= 1;
+
+	//Busco el directorio que voy a eliminar
+	int indexPadre;
+
+	if (posicion == 0) {
+		indexPadre = obtenerIndexPadre("root");
+	} else {
+		indexPadre = obtenerIndexPadre(separado[posicion - 1]);
+	}
+
+	bool esRegistroBuscado(t_directory * registro) {
+		return string_equals_ignore_case(registro->nombre, separado[posicion])
+				&& registro->padre == indexPadre;
+	}
+
+	t_directory * registroDirectorio = list_find(tablaDirectorios,
+			(void*) esRegistroBuscado);
+
+	if (registroDirectorio == NULL) {
+		printf("rm: no se puede borrar «./%s»: El directorio no existe \n",
+				path_directorio);
+		destruirSubstring(separado);
+		free(path_directorio);
+		return;
+
+	}
+
+	//Busco los hijos del directorio
+	bool tengoHijos(t_directory * registro) {
+		return registro->padre == registroDirectorio->index;
+	}
+
+	if (list_any_satisfy(tablaDirectorios, (void*) tengoHijos)) {
+		printf("rm: no se puede borrar «./%s»: El directorio no está vacío \n",
+				path_directorio);
+		destruirSubstring(separado);
+		free(path_directorio);
+		return;
+	}
+
+	eliminarDirectorioTabla(registroDirectorio->nombre,
+			registroDirectorio->padre);
 
 	//Libero memoria
 	free(path_directorio);
+	destruirSubstring(separado);
 }
 
 void eliminarBloque(char * linea) {
@@ -219,7 +271,7 @@ void eliminarBloque(char * linea) {
 	printf("Me llego el nro_bloque para eliminar: %s \n", nro_bloque);
 	printf("Me llego el nro_copia para eliminar: %s \n", nro_copia);
 
-	//Libero memoria
+//Libero memoria
 	free(path_directorio);
 	free(nro_bloque);
 	free(nro_copia);
@@ -233,7 +285,7 @@ void renombrarArchivo(char * linea) {
 			"Me llego el path_directorio para renombrar: %s y su nombre_final es: %s \n",
 			path_original, nombre_final);
 
-	//Libero memoria
+//Libero memoria
 	free(path_original);
 	free(nombre_final);
 }
@@ -246,7 +298,7 @@ void moverArchivo(char * linea) {
 			"Me llego el path_directorio para mover: %s y su path_final es: %s \n",
 			path_original, path_final);
 
-	//Libero memoria
+//Libero memoria
 	free(path_original);
 	free(path_final);
 
@@ -258,13 +310,13 @@ void mostrarContenidoArchivo(char * linea) {
 	printf("Me llego el path_archivo: %s y muestro su contenido \n",
 			path_archivo);
 
-	//Libero memoria
+//Libero memoria
 	free(path_archivo);
 }
 
-void liberarSeparado(char ** separado){
+void liberarSeparado(char ** separado) {
 	int i;
-	for (i = 0; separado[i] != NULL; ++i){
+	for (i = 0; separado[i] != NULL; ++i) {
 		free(separado[i]);
 	}
 	free(separado[i]);
@@ -274,7 +326,7 @@ void liberarSeparado(char ** separado){
 void crearDirectorio(char * linea) {
 	char * path_dir = obtenerParametro(linea, 1);
 
-	//Busco el nombre del directorio
+//Busco el nombre del directorio
 	char ** separado = string_split(path_dir, "/");
 
 	int posicion;
@@ -297,7 +349,9 @@ void crearDirectorio(char * linea) {
 	}
 
 	if (indexPadre == -1) {
-		printf("mkdir: no se puede crear el directorio «./%s»: No existe el archivo o el directorio\n", path_dir);
+		printf(
+				"mkdir: no se puede crear el directorio «./%s»: No existe el archivo o el directorio\n",
+				path_dir);
 		free(path_dir);
 		liberarSeparado(separado);
 		free(registro);
@@ -306,19 +360,21 @@ void crearDirectorio(char * linea) {
 
 	registro->padre = indexPadre;
 
-	if (verificarDuplicados(registro)){
-		printf("mkdir: no se puede crear el directorio «./%s»: El archivo ya existe \n", path_dir);
+	if (verificarDuplicados(registro)) {
+		printf(
+				"mkdir: no se puede crear el directorio «./%s»: El archivo ya existe \n",
+				path_dir);
 		free(path_dir);
 		liberarSeparado(separado);
 		free(registro);
 		return;
 	}
 
-		registro->index = tablaDirectorios->elements_count;
+	registro->index = tablaDirectorios->elements_count;
 
-	agregarDirectorioTabla(registro,path_dir);
+	agregarDirectorioTabla(registro, path_dir);
 
-	//Libero memoria
+//Libero memoria
 	free(path_dir);
 	liberarSeparado(separado);
 }
