@@ -93,6 +93,25 @@ void eliminarDirectorioTabla(char * nombreDirectorio, int padreDirectorio) {
 	free(stringIndex);
 }
 
+void modificarDirectorioTabla(t_directory * registroTabla, char * nombreFinal) {
+
+	strcpy(registroTabla->nombre, nombreFinal);
+
+	char * registro = armarRegistroDirectorio(nombreFinal,
+			registroTabla->padre);
+
+	char * stringIndex = string_itoa(registroTabla->index);
+
+	config_set_value(configTablaDirectorios, stringIndex, registro);
+
+	config_save(configTablaDirectorios);
+
+
+	free(stringIndex);
+	free(registro);
+}
+
+
 /*-------------------------Tabla de archivos-------------------------*/
 void crearArchivoTablaArchivo(char * origen, char *destino) {
 	//Copio informacion del archivo
