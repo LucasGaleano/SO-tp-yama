@@ -81,15 +81,16 @@ void eliminarDirectorioTabla(char * nombreDirectorio, int padreDirectorio) {
 	t_directory * registro = list_remove_by_condition(tablaDirectorios,
 			(void*) esRegistroBuscado);
 
-	config_set_value(configTablaDirectorios, string_itoa(registro->index),
-			"[###]");
+	char * stringIndex = string_itoa(registro->index);
+
+	config_set_value(configTablaDirectorios, stringIndex, "[###]");
 
 	config_save(configTablaDirectorios);
 
 	bitMapDirectorio[registro->index] = true;
 
 	free(registro);
-
+	free(stringIndex);
 }
 
 /*-------------------------Tabla de archivos-------------------------*/
