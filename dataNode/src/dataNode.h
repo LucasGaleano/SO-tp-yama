@@ -24,14 +24,14 @@
 * @DESC: Retorna el numero del bloque pedido
 */
 
-char* getBloque (int numBLoque,char* pathFile);
+char* getBloque (int numBLoque);
 
 /**
 * @NAME: setBloque
 * @DESC: escribe el numero del bloque pedido
 */
 
-void setBloque (int numBLoque, char* bloque,char* pathFile);
+void setBloque (int numBLoque, char* bloque);
 
 void recibirSolicitud(t_paquete * unPaquete, int * client_socket);
 

@@ -3,7 +3,7 @@
 int main(void) {
 
 	t_config* conf;
-	char* bloque = calloc (TAMBLOQUE,1);
+	char* bloque = malloc (TAMBLOQUE);
 	t_log_level logLevel = LOG_LEVEL_INFO;               //elijo enum de log
     t_log* logger = log_create("dataNode_log", "dataNode", true, logLevel ); //creo archivo log
 
@@ -48,14 +48,40 @@ int main(void) {
 
 }
 
+void recibirSolicitud(t_paquete * unPaquete, int * client_socket){
+	switch (unPaquete->codigoOperacion) {
+		case ENVIAR_SOLICITUD_LECTURA_BLOQUE:
+			;
+			int numBloque;
+			char* bloque = malloc(TAMBLOQUE);
+			numBloque = recibirSolicitudLecturaBloque(unPaquete);
+			bloque = getBloque(numBloque);
 
-char* getBloque(int numBloque,char* pathFile)
+			enviarBloque(*client_socket, bloque);
+
+			free(bloque);
+
+
+			break;
+		case ENVIAR_SOLICITUD_ESCRITURA_BLOQUE:
+			;
+			t_pedidoEscritura* pedidoEscritura = malloc(sizeof(t_pedidoEscritura));
+			pedidoEscritura = recibirSolicitudEscrituraBloque(unPaquete);
+			setBloque(pedidoEscritura->numBloque,pedidoEscritura->data);
+
+		default:
+			break;
+	}
+
+}
+
+char* getBloque(int numBloque)
 {
 	struct stat sb;
 	char *map;
     char *bloque = malloc(TAMBLOQUE);
 
-	int fd = open(pathFile,	O_RDONLY); //abrir archivo data.bin
+	int fd = open(PATHCONFIG,	O_RDONLY); //abrir archivo data.bin
 
 	fstat(fd, &sb);
 
@@ -93,12 +119,12 @@ char* getBloque(int numBloque,char* pathFile)
 
 }
 
-void setBloque(int numBloque, char* bloque,char* pathFile)
+void setBloque(int numBloque, char* bloque)
 {
 	struct stat sb;
 	char *map;
 
-	int fd = open(pathFile,	O_RDWR); //abrir archivo data.bin
+	int fd = open(PATHCONFIG,O_RDWR); //abrir archivo data.bin
 
 	fstat(fd, &sb);
 
@@ -125,17 +151,4 @@ void setBloque(int numBloque, char* bloque,char* pathFile)
 
 }
 
-void recibirSolicitud(t_paquete * unPaquete, int * client_socket){
-	switch (unPaquete->codigoOperacion) {
-		case ENVIAR_SOLICITUD_LECTURA_BLOQUE:
-			recibirSolicitudLecturaBloque(unPaquete);
-			//procesar
 
-			break;
-		case ENVIAR_SOLICITUD_ESCRITURA_BLOQUE:
-			recibirSolicitudEscrituraBloque(unPaquete);
-		default:
-			break;
-	}
-
-}
