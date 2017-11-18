@@ -132,6 +132,16 @@ void almacenarArchivo(char * rutaArchivo, char * nomArchivo, int tipoArchivo) {
 		}
 		enviarSolicitudEscrituraBloque(socketNodoElegido, buffer,
 				bloqueAEscribir);
+
+		//Genero la copia
+		char * nodoElegidoCopia = buscarNodoMenosCargado();
+
+		int socketNodoElegidoCopia = buscarSocketPorNombre(nodoElegidoCopia);
+		int bloqueAEscribirCopia = buscarBloqueAEscribir(nodoElegidoCopia);
+
+		enviarSolicitudEscrituraBloque(socketNodoElegidoCopia, buffer,
+				bloqueAEscribirCopia);
+
 		free(buffer);
 	}
 }
