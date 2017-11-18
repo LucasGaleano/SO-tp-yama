@@ -25,7 +25,7 @@ void 				recibirInfoNodo					(t_paquete *, int);
 void 				recibirError					(t_paquete *);
 
 /*-------------------------Almacenar archivo-------------------------*/
-void				almacenarArchivo				(char *, char *, int);
+void				almacenarArchivo				(char *, char *, char *, int);
 void * 				dividirBloqueArchivoBinario		(void *, int *);
 void * 				dividirBloqueArchivoTexto		(void *, int *);
 char * 				buscarNodoMenosCargado			(void);
@@ -33,6 +33,6 @@ int 				buscarBloqueAEscribir			(char *);
 
 /*-------------------------Funciones auxiliares-------------------------*/
 void 				iniciarServidor					(char*);
-void 				mostrarTablas					(void);
+void 				armarRegistroTablaArchivos		(char **, char **, char *, int, int, int);
 
 #endif /* FILESYSTEM_H_ */
