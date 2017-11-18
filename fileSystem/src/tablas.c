@@ -112,7 +112,7 @@ void modificarDirectorioTabla(t_directory * registroTabla, char * nombreFinal,
 }
 
 /*-------------------------Tabla de archivos-------------------------*/
-void crearArchivoTablaArchivo(char * origen, char *destino) {
+t_config * crearArchivoTablaArchivo(char * origen, char *destino) {
 	//Copio informacion del archivo
 	struct stat statArch;
 
@@ -175,9 +175,7 @@ void crearArchivoTablaArchivo(char * origen, char *destino) {
 	//Guardo en el archivo
 	config_save(configTablaArchivo);
 
-	//Libero memoria
-	config_destroy(configTablaArchivo);
-	//destruirSubstring(separado);
+	return configTablaArchivo;
 }
 
 /*-------------------------Tabla de nodos-------------------------*/

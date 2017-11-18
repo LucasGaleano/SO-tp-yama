@@ -102,7 +102,8 @@ void recibirError(t_paquete * unPaquete) {
 }
 
 /*-------------------------Almacenar archivo-------------------------*/
-void almacenarArchivo(char * rutaArchivo, char * nomArchivo, int tipoArchivo) {
+void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
+		int tipoArchivo) {
 	size_t tamArch;
 
 	FILE * archivofd;
@@ -110,6 +111,11 @@ void almacenarArchivo(char * rutaArchivo, char * nomArchivo, int tipoArchivo) {
 	void * archivo = abrirArchivo(rutaArchivo, &tamArch, &archivofd);
 
 	int desplazamiento = 0;
+
+	int numeroBloque = 0;
+
+	t_config * configTablaArchivo = crearArchivoTablaArchivo(rutaArchivo,
+			rutaDestino);
 
 	while (desplazamiento < tamArch) {
 		char * nodoElegido = buscarNodoMenosCargado();
@@ -133,6 +139,14 @@ void almacenarArchivo(char * rutaArchivo, char * nomArchivo, int tipoArchivo) {
 		enviarSolicitudEscrituraBloque(socketNodoElegido, buffer,
 				bloqueAEscribir);
 
+		char * keyOriginal = string_new();
+		char * valorOriginal = string_new();
+
+		armarRegistroTablaArchivos(&keyOriginal, &valorOriginal, nodoElegido,
+				numeroBloque, 0, bloqueAEscribir);
+
+		config_set_value(configTablaArchivo, keyOriginal, valorOriginal);
+
 		//Genero la copia
 		char * nodoElegidoCopia = buscarNodoMenosCargado();
 
@@ -142,7 +156,26 @@ void almacenarArchivo(char * rutaArchivo, char * nomArchivo, int tipoArchivo) {
 		enviarSolicitudEscrituraBloque(socketNodoElegidoCopia, buffer,
 				bloqueAEscribirCopia);
 
+		char * keyCopia = string_new();
+		char * valorCopia = string_new();
+
+		armarRegistroTablaArchivos(&keyCopia, &valorCopia, nodoElegidoCopia,
+				numeroBloque, 1, bloqueAEscribirCopia);
+
+		config_set_value(configTablaArchivo, keyCopia, valorCopia);
+
+		char * bytesPorBloques = string_new();
+		string_append(&bytesPorBloques, "BLOQUE");
+		char * numeroBloqueChar = string_itoa(numeroBloque);
+		string_append(&bytesPorBloques, numeroBloqueChar);
+		string_append(&bytesPorBloques, "BYTES");
+
+		char * totalDeBytes = string_itoa(string_length((char *) buffer));
+
+		config_set_value(configTablaArchivo, bytesPorBloques, totalDeBytes);
+
 		free(buffer);
+		numeroBloque++;
 	}
 }
 
@@ -216,4 +249,22 @@ int buscarBloqueAEscribir(char * nombreNodo) {
 /*-------------------------Funciones auxiliares-------------------------*/
 void iniciarServidor(char* unPuerto) {
 	iniciarServer(unPuerto, (void *) procesarPaquete);
+}
+
+void armarRegistroTablaArchivos(char ** key, char ** valor, char * nodoElegido,
+		int numeroBloque, int numeroCopia, int bloqueAEscribir) {
+	char * numeroBloqueChar = string_itoa(numeroBloque);
+	char * numeroCopiaChar = string_itoa(numeroCopia);
+	char * bloqueAEscribirChar = string_itoa(bloqueAEscribir);
+
+	string_append(key, "BLOQUE");
+	string_append(key, numeroBloqueChar);
+	string_append(key, "COPIA");
+	string_append(key, numeroCopiaChar);
+
+	string_append(valor, "[");
+	string_append(valor, nodoElegido);
+	string_append(valor, ", ");
+	string_append(valor, bloqueAEscribirChar);
+	string_append(valor, "]");
 }
