@@ -101,6 +101,108 @@ void recibirError(t_paquete * unPaquete) {
 
 }
 
+/*-------------------------Almacenar archivo-------------------------*/
+void almacenarArchivo(char * rutaArchivo, char * nomArchivo, int tipoArchivo) {
+	size_t tamArch;
+
+	FILE * archivofd;
+
+	void * archivo = abrirArchivo(rutaArchivo, &tamArch, &archivofd);
+
+	int desplazamiento = 0;
+
+	while (desplazamiento < tamArch) {
+		char * nodoElegido = buscarNodoMenosCargado();
+
+		int socketNodoElegido = buscarSocketPorNombre(nodoElegido);
+		int bloqueAEscribir = buscarBloqueAEscribir(nodoElegido);
+
+		void * buffer;
+		switch (tipoArchivo) {
+		case BINARIO:
+			buffer = dividirBloqueArchivoBinario(archivo, &desplazamiento);
+			break;
+		case TEXTO:
+			buffer = dividirBloqueArchivoTexto(archivo, &desplazamiento);
+			break;
+		default:
+			printf("No puedo enviar el archivo xq no conosco su tipo de dato");
+			return;
+			break;
+		}
+		enviarSolicitudEscrituraBloque(socketNodoElegido, buffer,
+				bloqueAEscribir);
+		free(buffer);
+	}
+}
+
+void * dividirBloqueArchivoBinario(void * archivo, int * desplazamiento) {
+	int tamProximoBloque;
+
+	int tamArch = string_length((char *) archivo);
+
+	if (tamArch - *desplazamiento < TAM_BLOQUE) {
+		tamProximoBloque = tamArch - *desplazamiento;
+	} else {
+		tamProximoBloque = TAM_BLOQUE;
+	}
+
+	void * buffer = malloc(tamProximoBloque);
+	memcpy(buffer, archivo + *desplazamiento, tamProximoBloque);
+	*desplazamiento += tamProximoBloque;
+	return buffer;
+}
+
+void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
+	char ** archivoSeparado = string_split((char *) archivo + *desplazamiento,
+			"\n");
+
+	int i = 0;
+	int tamProximoBloque = string_length(archivoSeparado[i]);
+	void * buffer;
+	int tamBuffer = 0;
+
+	while (TAM_BLOQUE > tamBuffer + tamProximoBloque
+			&& archivoSeparado[i] != NULL) {
+		buffer = realloc(buffer, tamProximoBloque);
+		memcpy(buffer, archivoSeparado[i], tamProximoBloque);
+		i++;
+		tamProximoBloque = string_length(archivoSeparado[i]);
+		tamBuffer = string_length((char *) buffer);
+	}
+
+	*desplazamiento *= tamBuffer;
+
+	return buffer;
+}
+
+char * buscarNodoMenosCargado() {
+
+	bool nodoMenosCargado(t_nodo_info * cargado, t_nodo_info * menosCargado) {
+		int cargadoNum = cargado->total - cargado->libre;
+		int menosCargadoNum = menosCargado->total - menosCargado->libre;
+		return cargadoNum < menosCargadoNum;
+	}
+
+	list_sort(tablaNodos->infoDeNodo, (void*) nodoMenosCargado);
+
+	t_nodo_info * nodo = list_get(tablaNodos->infoDeNodo, 0);
+
+	return nodo->nombre;
+}
+
+int buscarBloqueAEscribir(char * nombreNodo) {
+
+	bool esNodoBuscado(t_tabla_bitMaps * registroNodo) {
+		return string_equals_ignore_case(registroNodo->nombre, nombreNodo);
+	}
+
+	t_tabla_bitMaps * registroNodo = list_find(tablaBitmapPorNodo,
+			(void*) esNodoBuscado);
+
+	return buscarBloqueLibre(registroNodo->configTablaBitmap);
+}
+
 /*-------------------------Funciones auxiliares-------------------------*/
 void iniciarServidor(char* unPuerto) {
 	iniciarServer(unPuerto, (void *) procesarPaquete);
