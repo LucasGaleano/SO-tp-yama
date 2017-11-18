@@ -16,6 +16,8 @@
 #include <unistd.h>
 
 /*------------------------------Estructuras------------------------------*/
+#define TAM_BLOQUE 1024
+
 typedef struct {
 	size_t size;
 	void * data;
@@ -60,6 +62,11 @@ enum cod_op{
 
 	ENVIAR_INDICACION_ALMACENADO_FINAL=15,
 
+};
+
+enum tipoArchivo{
+	TEXTO=0,
+	BINARIO=1,
 };
 
 /*------------------------------Estructuras de comunicacion FS DataNode------------------------------*/
