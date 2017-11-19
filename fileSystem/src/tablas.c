@@ -112,24 +112,19 @@ void modificarDirectorioTabla(t_directory * registroTabla, char * nombreFinal,
 }
 
 /*-------------------------Tabla de archivos-------------------------*/
-t_config * crearArchivoTablaArchivo(char * origen, char *destino) {
+t_config * crearArchivoTablaArchivo(char * origen, char *destino, char * nombre) {
 	//Copio informacion del archivo
 	struct stat statArch;
 
 	stat(origen, &statArch);
 
 	//Busco el nombre del archivo
-	char ** listaOrigen = string_split(origen, "/");
-
-	int posicion;
-
-	for (posicion = 0; listaOrigen[posicion] != NULL; ++posicion) {
-	}
-
-	char * nombreArchivo = listaOrigen[posicion - 1];
+	char * nombreArchivo = nombre;
 
 	//Busco el nombre del archivo
 	char ** listaDestino = string_split(destino, "/");
+
+	int posicion;
 
 	for (posicion = 0; listaDestino[posicion] != NULL; ++posicion) {
 	}
