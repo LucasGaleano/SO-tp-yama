@@ -115,14 +115,9 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 	int numeroBloque = 0;
 
 	t_config * configTablaArchivo = crearArchivoTablaArchivo(rutaArchivo,
-			rutaDestino);
+			rutaDestino, nomArchivo);
 
 	while (desplazamiento < tamArch) {
-		char * nodoElegido = buscarNodoMenosCargado();
-
-		int socketNodoElegido = buscarSocketPorNombre(nodoElegido);
-		int bloqueAEscribir = buscarBloqueAEscribir(nodoElegido);
-
 		void * buffer;
 		switch (tipoArchivo) {
 		case BINARIO:
@@ -136,46 +131,38 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 			return;
 			break;
 		}
+
+		//Genero el bloque original
+		char * nodoElegido = buscarNodoMenosCargado();
+		int socketNodoElegido = buscarSocketPorNombre(nodoElegido);
+		int bloqueAEscribir = buscarBloqueAEscribir(nodoElegido);
+
+		agregarRegistroTablaArchivos(nodoElegido, bloqueAEscribir, numeroBloque,0,
+				configTablaArchivo);
+
 		enviarSolicitudEscrituraBloque(socketNodoElegido, buffer,
 				bloqueAEscribir);
 
-		char * keyOriginal = string_new();
-		char * valorOriginal = string_new();
-
-		armarRegistroTablaArchivos(&keyOriginal, &valorOriginal, nodoElegido,
-				numeroBloque, 0, bloqueAEscribir);
-
-		config_set_value(configTablaArchivo, keyOriginal, valorOriginal);
-
 		//Genero la copia
 		char * nodoElegidoCopia = buscarNodoMenosCargado();
-
 		int socketNodoElegidoCopia = buscarSocketPorNombre(nodoElegidoCopia);
 		int bloqueAEscribirCopia = buscarBloqueAEscribir(nodoElegidoCopia);
+
+		agregarRegistroTablaArchivos(nodoElegidoCopia, bloqueAEscribirCopia, numeroBloque, 1,
+				configTablaArchivo);
 
 		enviarSolicitudEscrituraBloque(socketNodoElegidoCopia, buffer,
 				bloqueAEscribirCopia);
 
-		char * keyCopia = string_new();
-		char * valorCopia = string_new();
+		//Bytes guardados en un bloque
+		int tamBuffer = strlen((char*)buffer);
+		guardoBytesPorBloque(numeroBloque, tamBuffer, configTablaArchivo);
 
-		armarRegistroTablaArchivos(&keyCopia, &valorCopia, nodoElegidoCopia,
-				numeroBloque, 1, bloqueAEscribirCopia);
-
-		config_set_value(configTablaArchivo, keyCopia, valorCopia);
-
-		char * bytesPorBloques = string_new();
-		string_append(&bytesPorBloques, "BLOQUE");
-		char * numeroBloqueChar = string_itoa(numeroBloque);
-		string_append(&bytesPorBloques, numeroBloqueChar);
-		string_append(&bytesPorBloques, "BYTES");
-
-		char * totalDeBytes = string_itoa(string_length((char *) buffer));
-
-		config_set_value(configTablaArchivo, bytesPorBloques, totalDeBytes);
-
-		free(buffer);
+		//Actualizo el numero de bloques
 		numeroBloque++;
+
+		//Libero memoria
+		free(buffer);
 	}
 }
 
@@ -184,17 +171,18 @@ void * dividirBloqueArchivoBinario(void * archivo, int * desplazamiento) {
 
 	int tamArch = string_length((char *) archivo);
 
-	if (tamArch - *desplazamiento < TAM_BLOQUE) {
+	if ((tamArch - (*desplazamiento)) < TAM_BLOQUE) {
 		tamProximoBloque = tamArch - *desplazamiento;
 	} else {
 		tamProximoBloque = TAM_BLOQUE;
 	}
 
 	void * buffer = malloc(tamProximoBloque);
-	memcpy(buffer, archivo + *desplazamiento, tamProximoBloque);
+	memcpy(buffer, archivo + (*desplazamiento), tamProximoBloque);
 	*desplazamiento += tamProximoBloque;
 	return buffer;
 }
+
 
 void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
 	char ** archivoSeparado = string_split((char *) archivo + *desplazamiento,
@@ -214,10 +202,11 @@ void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
 		tamBuffer = string_length((char *) buffer);
 	}
 
-	*desplazamiento *= tamBuffer;
+	*desplazamiento += tamBuffer;
 
 	return buffer;
 }
+
 
 char * buscarNodoMenosCargado() {
 
@@ -231,8 +220,14 @@ char * buscarNodoMenosCargado() {
 
 	t_nodo_info * nodo = list_get(tablaNodos->infoDeNodo, 0);
 
+	//Actualizo tabla de nodos
+	tablaNodos->libres--;
+	nodo->libre--;
+	persistirTablaNodos();
+
 	return nodo->nombre;
 }
+
 
 int buscarBloqueAEscribir(char * nombreNodo) {
 
@@ -251,20 +246,53 @@ void iniciarServidor(char* unPuerto) {
 	iniciarServer(unPuerto, (void *) procesarPaquete);
 }
 
-void armarRegistroTablaArchivos(char ** key, char ** valor, char * nodoElegido,
-		int numeroBloque, int numeroCopia, int bloqueAEscribir) {
-	char * numeroBloqueChar = string_itoa(numeroBloque);
+
+void agregarRegistroTablaArchivos(char * nodoElegido, int bloqueAEscribir, int bloqueDelArchivo, int numeroCopia, t_config * configTablaArchivo) {
+
+	char * key = string_new();
+	char * valor = string_new();
+
+	char * numeroBloqueAEscribirChar = string_itoa(bloqueAEscribir);
+	char * numeroBloqueDelArchivoChar = string_itoa(bloqueDelArchivo);
 	char * numeroCopiaChar = string_itoa(numeroCopia);
-	char * bloqueAEscribirChar = string_itoa(bloqueAEscribir);
 
-	string_append(key, "BLOQUE");
-	string_append(key, numeroBloqueChar);
-	string_append(key, "COPIA");
-	string_append(key, numeroCopiaChar);
+	string_append(&key, "BLOQUE");
+	string_append(&key, numeroBloqueDelArchivoChar);
+	string_append(&key, "COPIA");
+	string_append(&key, numeroCopiaChar);
 
-	string_append(valor, "[");
-	string_append(valor, nodoElegido);
-	string_append(valor, ", ");
-	string_append(valor, bloqueAEscribirChar);
-	string_append(valor, "]");
+	string_append(&valor, "[");
+	string_append(&valor, nodoElegido);
+	string_append(&valor, ", ");
+	string_append(&valor, numeroBloqueAEscribirChar);
+	string_append(&valor, "]");
+
+	config_set_value(configTablaArchivo, key, valor);
+
+	config_save(configTablaArchivo);
+
+	free(key);
+	free(valor);
+	free(numeroBloqueAEscribirChar);
+	free(numeroBloqueDelArchivoChar);
+	free(numeroCopiaChar);
+}
+
+
+void guardoBytesPorBloque(int numeroBloque, int tamBuffer, t_config * configTablaArchivo){
+	char * bytesPorBloques = string_new();
+	char * numeroBloqueChar = string_itoa(numeroBloque);
+	char * totalDeBytes = string_itoa(tamBuffer);
+
+	string_append(&bytesPorBloques, "BLOQUE");
+	string_append(&bytesPorBloques, numeroBloqueChar);
+	string_append(&bytesPorBloques, "BYTES");
+
+	config_set_value(configTablaArchivo, bytesPorBloques, totalDeBytes);
+
+	config_save(configTablaArchivo);
+
+	free(bytesPorBloques);
+	free(numeroBloqueChar);
+	free(totalDeBytes);
 }

@@ -62,6 +62,10 @@ int recibirTamPaquete(int client_socket) {
 		//Cierro el socket
 		close(client_socket);
 
+		//Libero memoria
+		free(buffer);
+
+		return -1;
 	} else {
 
 		//Copio el buffer en una variable asi despues lo libero

@@ -33,6 +33,7 @@ int 				buscarBloqueAEscribir			(char *);
 
 /*-------------------------Funciones auxiliares-------------------------*/
 void 				iniciarServidor					(char*);
-void 				armarRegistroTablaArchivos		(char **, char **, char *, int, int, int);
+void 				agregarRegistroTablaArchivos	(char *, int, int, int, t_config *);
+void 				guardoBytesPorBloque			(int, int, t_config *);
 
 #endif /* FILESYSTEM_H_ */
