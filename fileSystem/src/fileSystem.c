@@ -137,8 +137,8 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 		int socketNodoElegido = buscarSocketPorNombre(nodoElegido);
 		int bloqueAEscribir = buscarBloqueAEscribir(nodoElegido);
 
-		agregarRegistroTablaArchivos(nodoElegido, bloqueAEscribir, numeroBloque,0,
-				configTablaArchivo);
+		agregarRegistroTablaArchivos(nodoElegido, bloqueAEscribir, numeroBloque,
+				0, configTablaArchivo);
 
 		enviarSolicitudEscrituraBloque(socketNodoElegido, buffer,
 				bloqueAEscribir);
@@ -148,14 +148,14 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 		int socketNodoElegidoCopia = buscarSocketPorNombre(nodoElegidoCopia);
 		int bloqueAEscribirCopia = buscarBloqueAEscribir(nodoElegidoCopia);
 
-		agregarRegistroTablaArchivos(nodoElegidoCopia, bloqueAEscribirCopia, numeroBloque, 1,
-				configTablaArchivo);
+		agregarRegistroTablaArchivos(nodoElegidoCopia, bloqueAEscribirCopia,
+				numeroBloque, 1, configTablaArchivo);
 
 		enviarSolicitudEscrituraBloque(socketNodoElegidoCopia, buffer,
 				bloqueAEscribirCopia);
 
 		//Bytes guardados en un bloque
-		int tamBuffer = strlen((char*)buffer);
+		int tamBuffer = strlen((char*) buffer);
 		guardoBytesPorBloque(numeroBloque, tamBuffer, configTablaArchivo);
 
 		//Actualizo el numero de bloques
@@ -164,6 +164,7 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 		//Libero memoria
 		free(buffer);
 	}
+	config_destroy(configTablaArchivo);
 }
 
 void * dividirBloqueArchivoBinario(void * archivo, int * desplazamiento) {
@@ -185,31 +186,72 @@ void * dividirBloqueArchivoBinario(void * archivo, int * desplazamiento) {
 
 
 void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
+
 	char ** archivoSeparado = string_split((char *) archivo + *desplazamiento,
 			"\n");
 
 	int i = 0;
-	int tamProximoBloque = string_length(archivoSeparado[i]);
-	void * buffer;
-	int tamBuffer = 0;
 
-	while (TAM_BLOQUE > tamBuffer + tamProximoBloque
-			&& archivoSeparado[i] != NULL) {
-		buffer = realloc(buffer, tamProximoBloque);
-		memcpy(buffer, archivoSeparado[i], tamProximoBloque);
+	int tamProximoBloque = string_length(archivoSeparado[i]) + 1;
+
+	if (tamProximoBloque > TAM_BLOQUE)
+		return NULL;
+
+	char * buffer = string_new();
+
+	char * bufferInterno = string_new();
+
+	string_append(&bufferInterno, archivoSeparado[i]);
+	string_append(&bufferInterno, "\n");
+
+	string_append((char**) &buffer, bufferInterno);
+
+	i++;
+
+	int tamBuffer = tamProximoBloque;
+
+	tamProximoBloque = string_length(archivoSeparado[i]) + 1;
+
+	printf("El proximo tamanio es: %d y el tamBuffer es: %d \n",
+			tamProximoBloque, tamBuffer);
+
+	free(bufferInterno);
+
+	while (TAM_BLOQUE >= (tamBuffer + tamProximoBloque)
+			&& archivoSeparado[i + 1] != NULL) {
+
+		char * bufferInterno = string_new();
+		string_append(&bufferInterno, archivoSeparado[i]);
+		string_append(&bufferInterno, "\n");
+
+		string_append((char**) &buffer, bufferInterno);
+
 		i++;
-		tamProximoBloque = string_length(archivoSeparado[i]);
-		tamBuffer = string_length((char *) buffer);
+
+		tamBuffer += tamProximoBloque;
+
+		tamProximoBloque = string_length(archivoSeparado[i]) + 1;
+
+		free(bufferInterno);
+	}
+
+	if (TAM_BLOQUE >= (tamBuffer + tamProximoBloque)) {
+		buffer = realloc(buffer, tamBuffer + tamProximoBloque);
+		memcpy(buffer + tamBuffer, archivoSeparado[i], tamProximoBloque);
+		tamBuffer += tamProximoBloque;
+
 	}
 
 	*desplazamiento += tamBuffer;
+
+	//Libero memoria
+	destruirSubstring(archivoSeparado);
 
 	return buffer;
 }
 
 
 char * buscarNodoMenosCargado() {
-
 	bool nodoMenosCargado(t_nodo_info * cargado, t_nodo_info * menosCargado) {
 		int cargadoNum = cargado->total - cargado->libre;
 		int menosCargadoNum = menosCargado->total - menosCargado->libre;
@@ -230,7 +272,6 @@ char * buscarNodoMenosCargado() {
 
 
 int buscarBloqueAEscribir(char * nombreNodo) {
-
 	bool esNodoBuscado(t_tabla_bitMaps * registroNodo) {
 		return string_equals_ignore_case(registroNodo->nombre, nombreNodo);
 	}
@@ -246,8 +287,8 @@ void iniciarServidor(char* unPuerto) {
 	iniciarServer(unPuerto, (void *) procesarPaquete);
 }
 
-
-void agregarRegistroTablaArchivos(char * nodoElegido, int bloqueAEscribir, int bloqueDelArchivo, int numeroCopia, t_config * configTablaArchivo) {
+void agregarRegistroTablaArchivos(char * nodoElegido, int bloqueAEscribir,
+		int bloqueDelArchivo, int numeroCopia, t_config * configTablaArchivo) {
 
 	char * key = string_new();
 	char * valor = string_new();
@@ -278,8 +319,8 @@ void agregarRegistroTablaArchivos(char * nodoElegido, int bloqueAEscribir, int b
 	free(numeroCopiaChar);
 }
 
-
-void guardoBytesPorBloque(int numeroBloque, int tamBuffer, t_config * configTablaArchivo){
+void guardoBytesPorBloque(int numeroBloque, int tamBuffer,
+		t_config * configTablaArchivo) {
 	char * bytesPorBloques = string_new();
 	char * numeroBloqueChar = string_itoa(numeroBloque);
 	char * totalDeBytes = string_itoa(tamBuffer);

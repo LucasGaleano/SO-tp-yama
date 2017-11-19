@@ -60,7 +60,7 @@ void 				modificarDirectorioTabla		(t_directory *, char *, int);
 /*-------------------------Tabla de archivos-------------------------*/
 t_config *			crearArchivoTablaArchivo		(char *, char *, char *);
 
-///*-------------------------Tabla de nodos-------------------------*/
+/*-------------------------Tabla de nodos-------------------------*/
 void	 			crearTablaNodos					(char *);
 void 				crearArchivoTablaNodos			(char *);
 void 				agregarNodoTablaNodos			(t_nodo_info *);
