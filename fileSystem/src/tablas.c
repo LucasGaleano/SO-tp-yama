@@ -170,6 +170,12 @@ t_config * crearArchivoTablaArchivo(char * origen, char *destino, char * nombre)
 	//Guardo en el archivo
 	config_save(configTablaArchivo);
 
+	//Libero memoria
+	free(indexPadreString);
+	free(tamArcString);
+	destruirSubstring(listaDestino);
+	free(rutaArchivo);
+
 	return configTablaArchivo;
 }
 
@@ -457,6 +463,7 @@ int buscarBloqueLibre(t_config * tablaBitMaps) {
 		}
 
 		free(nombreBloque);
+		free(numeroNodo);
 	}
 
 	return i;
