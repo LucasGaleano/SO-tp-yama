@@ -42,14 +42,19 @@ t_config * configTablaDirectorios;
 t_config * configTablaNodo;
 t_config * configTablaBitmap;
 
+bool bitMapDirectorio[100];
+
 /*-------------------------Tabla de directorios-------------------------*/
 void 				crearTablaDirectorios			(char *);
 void 				crearArchivoTablaDirectorios	(char *);
-void 				agregarDirectorioTabla			(t_directory *);
+void 				agregarDirectorioTabla			(t_directory *, char *);
 void 				eliminarDirectorioTabla			(char *, int);
-void 				persistirTablaDirectorios		(void);
+void 				modificarDirectorioTabla		(t_directory *, char *, int);
 
-/*-------------------------Tabla de nodos-------------------------*/
+/*-------------------------Tabla de archivos-------------------------*/
+void 				crearArchivoTablaArchivo		(char *, char *);
+
+///*-------------------------Tabla de nodos-------------------------*/
 void	 			crearTablaNodos					(char *);
 void 				crearArchivoTablaNodos			(char *);
 void 				agregarNodoTablaNodos			(t_nodo_info *);
@@ -63,5 +68,12 @@ char * 				eliminarNodoTablaSockets		(int);
 
 /*-------------------------Tabla de Bitmap-------------------------*/
 void 				crearArchivoTablaBitmap			(t_nodo_info *);
+
+/*-------------------------Funciones auxiliares-------------------------*/
+char * 				armarRegistroDirectorio			(char *, int);
+int 				buscarIndexLibre				(void);
+int 				obtenerIndexPadre				(char *);
+void 				llenarBitmap					(void);
+void 				destruirSubstring				(char **);
 
 #endif /* TABLAS_H_ */
