@@ -17,6 +17,12 @@ typedef struct {
 	char * nombre;
 } t_tabla_sockets;
 
+//Tabla de bitMaps
+typedef struct {
+	char * nombre;
+	t_config * configTablaBitmap;
+} t_tabla_bitMaps;
+
 //Tabla de nodos
 typedef struct {
 	int tamanio;
@@ -37,17 +43,22 @@ typedef struct {
 t_list * tablaSockets;
 t_tabla_nodo * tablaNodos;
 t_list * tablaDirectorios;
+t_list * tablaBitmapPorNodo;
 
 t_config * configTablaDirectorios;
 t_config * configTablaNodo;
-t_config * configTablaBitmap;
+
+bool bitMapDirectorio[100];
 
 /*-------------------------Tabla de directorios-------------------------*/
 void 				crearTablaDirectorios			(char *);
 void 				crearArchivoTablaDirectorios	(char *);
-void 				agregarDirectorioTabla			(t_directory *);
+void 				agregarDirectorioTabla			(t_directory *, char *);
 void 				eliminarDirectorioTabla			(char *, int);
-void 				persistirTablaDirectorios		(void);
+void 				modificarDirectorioTabla		(t_directory *, char *, int);
+
+/*-------------------------Tabla de archivos-------------------------*/
+t_config *			crearArchivoTablaArchivo		(char *, char *, char *);
 
 /*-------------------------Tabla de nodos-------------------------*/
 void	 			crearTablaNodos					(char *);
@@ -60,8 +71,17 @@ void 				persistirTablaNodos				(void);
 void 				crearTablaSockets				(void);
 void 				agregarNodoTablaSockets			(char *, int);
 char * 				eliminarNodoTablaSockets		(int);
+int 				buscarSocketPorNombre			(char *);
 
 /*-------------------------Tabla de Bitmap-------------------------*/
 void 				crearArchivoTablaBitmap			(t_nodo_info *);
+int 				buscarBloqueLibre				(t_config *);
+
+/*-------------------------Funciones auxiliares-------------------------*/
+char * 				armarRegistroDirectorio			(char *, int);
+int 				buscarIndexLibre				(void);
+int 				obtenerIndexPadre				(char *);
+void 				llenarBitmap					(void);
+void 				destruirSubstring				(char **);
 
 #endif /* TABLAS_H_ */
