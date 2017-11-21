@@ -13,15 +13,16 @@
 #include <signal.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <commons/config.h>
-#include <biblioteca/estructurasMasterYama.h>
-#include <biblioteca/estructurasWorkerMaster.h>
+#include <commons/collections/list.h>
 #include <biblioteca/sockets.h>
 #include <commons/string.h>
 #include <time.h>
+#include <estructuras.h>
 /*
 
 Señales extraidas de /usr/bin/include/bits/signum.h
@@ -73,21 +74,37 @@ Señales extraidas de /usr/bin/include/bits/signum.h
 
 int leerConfiguracion();
 void mandarRutaInicial(char* ruta);
-void gestionarTransformacion(peticionDeTransformacion pedido[], int tam);
-void pedir_transformacion(peticionDeTransformacion pedido[], int a);
-void gestionarReduccionLocal(peticionDeReduccionLocal pedido[], int tam);
-void gestionarReduccionGlobal(peticionDeReduccionGlobal pedido[], int tam);
-void pedir_reduccion();
-void dividirPorCero(); //para ejemplo de señales
-void signal_capturer(int numeroSenial);
-void crearDatosParaReduccionLocal(peticionDeReduccionLocal pedido[], int tam);
 
+void gestionarTransformacion();
+void mandarDatosTransformacion(t_pedidoTransformacion pedido);
+
+
+void gestionarReduccionLocal();
+
+
+void gestionarReduccionGlobal(peticionDeReduccionGlobal pedido);
+
+
+void signal_capturer(int numeroSenial);
+
+
+void gestionarSolicitudes(int conexionYama, t_paquete * procesarPaquete);
+
+
+void avisarWorker();
 
 // Variables globales
 
+t_list pedidosDeTransformacion = t_list_create();
+t_list pedidosDeRedcuccionLocal = t_list_create();
 int tareasRealizadasEnParalelo;
 int tareasTotalesReduccionLocal;
 int cantidadDeFallos;
+char* rutaScriptTransformador ;
+char* rutaScriptReductor ;
+char* rutaArchivoParaArrancar ;
+char* rutaParaAlmacenarArchivo;
+int conexionYama;
 
 
 // Resultado de operaciones
@@ -104,34 +121,30 @@ struct metricas {
 int cont = 0;
 
 
-int main(void) {
+int main(int argc, char **argv) {
+
+	rutaScriptTransformador = argv [1];
+	rutaScriptReductor = argv [2];
+	rutaArchivoParaArrancar = argv [3];
+	rutaParaAlmacenarArchivo = argv [4];
 
 	clock_t inicioPrograma = clock();
 
-	int conexionYama = leerConfiguracion();
+	bool finDeMensajes = true;
+
+	conexionYama = leerConfiguracion();
 
 	signal(SIGFPE,signal_capturer);
 
-	peticionDeReduccionLocal reduLo[5];
-	mandarRutaInicial("/home/texto1.txt");
-	int tam = 3;
-	peticionDeTransformacion pedido[tam];
-	pedido[0].archivoTemporal = "sldklskd";
-	pedido[0].direccion= "putoElQueLee";
-	pedido[0].worker="laburante";
-	pedido[1].archivoTemporal = "sldklskd";
-	pedido[1].direccion= "putoElQueLee";
-	pedido[1].worker="laburante";
-	pedido[2].archivoTemporal = "sldklskd";
-	pedido[2].direccion= "putoElQueLee";
-	pedido[2].worker="laburante";
-
-	//dividirPorCero();
+	enviarMensaje(conexionYama,rutaArchivoParaArrancar);
 
 
-	//gestionarTransformacion(pedido, tam);
-	//gestionarReduccionLocal(reduLo, 5);
-	printf("aca llego perfecto");
+	while(finDeMensajes){
+
+	gestionarSolicitudes(conexionYama, (void *) procesarPaquete);
+
+	}
+
 
 
 	printf("El proceso Master termino en: %d", (clock()-inicioPrograma)*1000/CLOCKS_PER_SEC);
@@ -173,76 +186,131 @@ void mandarRutaInicial(char* ruta){
 
 
 
-void gestionarTransformacion(peticionDeTransformacion pedido[], int tam){
+void gestionarTransformacion(){
+
+	while(list_is_empty(pedidosDeTransformacion)){
 
 
-	pthread_t nuevoHilo;
-	int i;
-	for (i= 0; i<tam; i++){
-	pthread_create(&nuevoHilo,NULL, (void*) pedir_transformacion, (&pedido,i));
+		t_pedidoTransformacion pedido = list_remove(pedidosDeTransformacion, list_size(pedidosDeTransformacion));
+		pthread_t hiloTransformar;
+		pthread_create(hiloTransformar,NULL,(void *) mandarDatosTransformacion, (pedido));
+
+
 	}
-	pthread_join(nuevoHilo, NULL);
+
+
 
 }
 
-void pedir_transformacion(peticionDeTransformacion pedido[], int numeroHilo){
+void mandarDatosTransformacion(t_pedidoTransformacion pedido){
 
-
-	printf("me llego");
-
-
-
-	printf("%s",pedido[numeroHilo].archivoTemporal);
-	printf("%s",pedido[numeroHilo].direccion);
-	printf("%s",pedido[numeroHilo].worker);
-	printf("%d",numeroHilo);
+	pthread_mutex_t mutexArchivo;
+	pthread_mutex_lock(&mutexArchivo);
+	avisarWorker(rutaArchivoParaArrancar, rutaScriptReductor);
+	pthread_mutex_unlock(&mutexArchivo);
 
 }
 
+void gestionarReduccionLocal(){
 
-void gestionarReduccionLocal(peticionDeReduccionLocal pedido[], int tam){
-	int aux;
-	indicacionesParaReduccionLocal solicitud[aux];
-	crearDatosParaReduccionLocal(&solicitud, aux);
-	pthread_t hiloInformar;
-	char* archivo;
-	int i;
-	for (i = 0; i<aux ; i++){
-		if (archivo != solicitud[i].nodo){
-			pthread_create(&hiloInformar, NULL,(void *) pedir_reduccion,NULL);
-			archivo = solicitud[i].nodo;
-		}
-	pthread_join(hiloInformar,NULL);
+
+	while(list_is_empty(pedidosDeRedcuccionLocal)){
+
+
+		t_pedidoReduccionLocal pedido = list_remove(pedidosDeTransformacion, list_size(pedidosDeTransformacion));
+		pthread_t hiloReduLocal;
+		pthread_create(hiloReduLocal,NULL,(void *) mandarDatosReduccionLocal, (pedido));
+
+
 	}
 
 
 }
 
+
+void mandarDatosReduccionLocal(t_pedidoReduccionLocal){
+
+	pthread_mutex_t mutexArchivo;
+	pthread_mutex_lock(&mutexArchivo);
+	avisarWorker(rutaArchivoParaArrancar, rutaScriptReductor); // aca iria comunicacion con worker
+	pthread_mutex_unlock(&mutexArchivo);
+
+}
 void gestionarReduccionGlobal(peticionDeReduccionGlobal pedido[], int tam){
 
 
 }
+
+void avisarWorker(){};
 
 void crearDAtosParaReduccionLocal (indicacionesParaReduccionLocal solicitud, int tam){}
 
 
 void pedir_reduccion(){
 
+
 }
 
 void signal_capturer(int numeroSenial){
 
-	if(numeroSenial == 8){
-	printf("division por 0");
-	} else {printf("llego una señal diferente");}
-	cont++;
+	if(numeroSenial == 8)
+		{
+		enviarMensaje(conexionYama,"division por 0");
+		}
+	else
+		{
+		enviarMensaje(conexionYama,"hay que ver que llega");
+		}
 
 	return;
 }
-void crearDatosParaReduccionLocal(peticionDeReduccionLocal pedido[], int tam){}
 
-void dividirPorCero(){
-	int a = 4/0;
 
-	return;
+void procesarPaquete(t_paquete * unPaquete, int * client_socket) { // contesto a *client_socket
+
+
+	switch (unPaquete->codigoOperacion) {
+
+
+	case ENVIAR_SOLICITUD_TRANSFORMACION:
+
+		t_pedidoTransformacion * indicacionTransformacion = recibirIndicacionTransformacion();
+		int continuarRecibiendoPedidosTransformacion = recibirEntero();
+		lista_add(pedidosDeTransformacion,indicacionTransformacion); //leno lista con pedidos
+		if (continuarRecibiendoPedidosTransformacion == 0){
+			gestionarTransformacion();
+		}
+		break;// sale para volver a pedir
+
+
+	case ENVIAR_INDICACION_REDUCCION_LOCAL:
+
+		t_pedidoReduccionLocal * indicacionReduLocal = recibirIndicacionReduccionLocal();
+		int continuarRecibiendoPedidosDeReduLocal = recibirEntero();
+		lista_add(indicacionReduLocal,indicacionReduLocal);
+		if(continuarRecibiendoPedidosDeReduLocal == 0){
+			gestionarReduccionLocal();
+		}
+		break;
+
+
+	case ENVIAR_ARCHIVO:
+		break;
+
+
+	case ENVIAR_SOLICITUD_REDUCCION_GLOBAL:
+		break;
+
+
+	case ENVIAR_ERROR:
+		recibirError(unPaquete);
+		break;
+
+
+	default:
+		break;
+	}
+
+	destruirPaquete(unPaquete);
 }
+
