@@ -31,7 +31,7 @@ char* getBloque (int numBLoque);
 * @DESC: escribe el numero del bloque pedido
 */
 
-void setBloque (int numBLoque, char* bloque);
+int setBloque (int numBLoque, char* bloque);
 
 void recibirSolicitud(t_paquete * unPaquete, int * client_socket);
 

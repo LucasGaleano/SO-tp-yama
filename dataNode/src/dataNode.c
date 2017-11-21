@@ -5,7 +5,7 @@ int main(void) {
 	t_config* conf;
 	char* bloque = malloc (TAMBLOQUE);
 	t_log_level logLevel = LOG_LEVEL_INFO;               //elijo enum de log
-    t_log* logger = log_create("dataNode_log", "dataNode", true, logLevel ); //creo archivo log
+    t_log* logger = log_create("dataNode.log", "dataNode", true, logLevel ); //creo archivo log
 
 
 	//LEER ARCHIVO DE CONFIGURACION ---------------------------------------------------------
@@ -20,11 +20,6 @@ int main(void) {
 
     //log_warning(logger, "algo paso aca!!!!!");
 
-    //setBloque(2,"11111111",RUTA_DATABIN);
-    //bloque = getBloque(2,RUTA_DATABIN);
-    //printf("bloque: %s \n",bloque );
-
-
 
     //CONECTARSE A FILESYSTEM, QUEDAR A LA ESPERA DE SOLICITUDES --------------------------------
 
@@ -32,7 +27,7 @@ int main(void) {
 
 
     char* msg = string_new();
-    string_append(msg,"hola");
+    //string_append(msg,"hola");
 
     enviarInfoDataNode(socketFileSystem,msg,100,0);
 
@@ -40,24 +35,34 @@ int main(void) {
 
     	gestionarSolicitudes(socketFileSystem, (void*) recibirSolicitud);
 
-
     }
 
+    config_destroy(conf);
     free(bloque);
 	return EXIT_SUCCESS;
 
 }
 
 void recibirSolicitud(t_paquete * unPaquete, int * client_socket){
+
+	t_log_level logLevel = LOG_LEVEL_INFO;               //elijo enum de log
+    t_log* logger = log_create("dataNode.log", "dataNode", true, logLevel ); //creo archivo log
+
 	switch (unPaquete->codigoOperacion) {
 		case ENVIAR_SOLICITUD_LECTURA_BLOQUE:
 			;
 			int numBloque;
 			char* bloque = malloc(TAMBLOQUE);
 			numBloque = recibirSolicitudLecturaBloque(unPaquete);
+
 			bloque = getBloque(numBloque);
 
-			enviarBloque(*client_socket, bloque);
+			if(bloque == NULL)
+			{
+				log_error(logger,"error buscando bloque");
+			}
+
+			enviarBloque(*client_socket, bloque) ;
 
 			free(bloque);
 
@@ -67,7 +72,11 @@ void recibirSolicitud(t_paquete * unPaquete, int * client_socket){
 			;
 			t_pedidoEscritura* pedidoEscritura = malloc(sizeof(t_pedidoEscritura));
 			pedidoEscritura = recibirSolicitudEscrituraBloque(unPaquete);
-			setBloque(pedidoEscritura->numBloque,pedidoEscritura->data);
+
+			if (setBloque(pedidoEscritura->numBloque,pedidoEscritura->data) == -1);
+			{
+				log_error(logger,"error guardando bloque");
+			}
 
 		default:
 			break;
@@ -96,7 +105,7 @@ char* getBloque(int numBloque)
     {
     	close(fd);
     	perror("[-] Error mapeando el archivo");
-    	exit(EXIT_FAILURE);
+    	return NULL;
     }
 
     int i;
@@ -111,7 +120,7 @@ char* getBloque(int numBloque)
     if(munmap(map,sb.st_size) == -1) //cierro mmap()
     {
     	perror("[-]Error cerrando map");
-    	exit(EXIT_FAILURE);
+    	return NULL;
     }
 
     close(fd);				//cierro archivo
@@ -119,7 +128,7 @@ char* getBloque(int numBloque)
 
 }
 
-void setBloque(int numBloque, char* bloque)
+int setBloque(int numBloque, char* bloque)
 {
 	struct stat sb;
 	char *map;
@@ -135,6 +144,14 @@ void setBloque(int numBloque, char* bloque)
 				fd,				//el file descriptor
 				0);				//desde donde leer
 
+
+    if (map == MAP_FAILED)
+    {
+    	close(fd);
+    	perror("[-] Error mapeando el archivo");
+    	return -1;
+    }
+
 	int i = numBloque*TAMBLOQUE;
 	int j = 0;
 	for(i; i<(numBloque*TAMBLOQUE + TAMBLOQUE); i++ )
@@ -144,9 +161,15 @@ void setBloque(int numBloque, char* bloque)
 	}
 
 
-    munmap(map,sb.st_size);  //cierro mmap()
-    close(fd);				//cierro archivo
+	if(munmap(map,sb.st_size) == -1) //cierro mmap()
+	    {
+	    	perror("[-]Error cerrando map");
+	    	return -1;
+	    }
 
+
+    close(fd);				//cierro archivo
+    return 0;
 
 
 }
