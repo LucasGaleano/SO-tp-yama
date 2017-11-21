@@ -184,7 +184,6 @@ void * dividirBloqueArchivoBinario(void * archivo, int * desplazamiento) {
 	return buffer;
 }
 
-
 void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
 
 	char ** archivoSeparado = string_split((char *) archivo + *desplazamiento,
@@ -192,7 +191,10 @@ void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
 
 	int i = 0;
 
-	int tamProximoBloque = string_length(archivoSeparado[i]) + 1;
+	int tamProximoBloque = string_length(archivoSeparado[i]);
+
+	if (archivoSeparado[i + 1] != NULL)
+		tamProximoBloque++;
 
 	if (tamProximoBloque > TAM_BLOQUE)
 		return NULL;
@@ -210,15 +212,16 @@ void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
 
 	int tamBuffer = tamProximoBloque;
 
-	tamProximoBloque = string_length(archivoSeparado[i]) + 1;
-
-	printf("El proximo tamanio es: %d y el tamBuffer es: %d \n",
-			tamProximoBloque, tamBuffer);
+	if (archivoSeparado[i] != NULL) {
+			tamProximoBloque = string_length(archivoSeparado[i]);
+			if (archivoSeparado[i + 1] != NULL)
+				tamProximoBloque++;
+		}
 
 	free(bufferInterno);
 
 	while (TAM_BLOQUE >= (tamBuffer + tamProximoBloque)
-			&& archivoSeparado[i + 1] != NULL) {
+			&& archivoSeparado[i + 1] != NULL && archivoSeparado[i] != NULL) {
 
 		char * bufferInterno = string_new();
 		string_append(&bufferInterno, archivoSeparado[i]);
@@ -230,7 +233,11 @@ void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
 
 		tamBuffer += tamProximoBloque;
 
-		tamProximoBloque = string_length(archivoSeparado[i]) + 1;
+		if (archivoSeparado[i + 1] != NULL) {
+			tamProximoBloque = string_length(archivoSeparado[i + 1]);
+			if (archivoSeparado[i + 2] != NULL)
+				tamProximoBloque++;
+		}
 
 		free(bufferInterno);
 	}
@@ -249,7 +256,6 @@ void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
 
 	return buffer;
 }
-
 
 char * buscarNodoMenosCargado() {
 	bool nodoMenosCargado(t_nodo_info * cargado, t_nodo_info * menosCargado) {
@@ -270,16 +276,17 @@ char * buscarNodoMenosCargado() {
 	return nodo->nombre;
 }
 
-
 int buscarBloqueAEscribir(char * nombreNodo) {
-	bool esNodoBuscado(t_tabla_bitMaps * registroNodo) {
-		return string_equals_ignore_case(registroNodo->nombre, nombreNodo);
-	}
+	char * rutaConfig = string_new();
+	string_append(&rutaConfig, "/home/utnso/Escritorio/metadata/bitmaps/");
+	string_append(&rutaConfig, nombreNodo);
+	string_append(&rutaConfig, ".dat");
 
-	t_tabla_bitMaps * registroNodo = list_find(tablaBitmapPorNodo,
-			(void*) esNodoBuscado);
+	t_config * configBitMap = config_create(rutaConfig);
 
-	return buscarBloqueLibre(registroNodo->configTablaBitmap);
+	free(rutaConfig);
+
+	return buscarBloqueLibre(configBitMap);
 }
 
 /*-------------------------Funciones auxiliares-------------------------*/
