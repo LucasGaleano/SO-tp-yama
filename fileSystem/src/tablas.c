@@ -4,16 +4,19 @@
 void crearTablaDirectorios(char * rutaTablaDirectorios) {
 	tablaDirectorios = list_create();
 
-	//Creo el primer que es el root
+	//Lleno el bit map de directorios
+	llenarBitmap();
+
+	crearArchivoTablaDirectorios(rutaTablaDirectorios);
+
+	//Armo el root y lo agrego a la lista
 	t_directory * registro = malloc(sizeof(t_directory));
 
 	strncpy(registro->nombre, "root", sizeof(registro->nombre) - 1);
+
 	registro->padre = -1;
-	registro->index=0;
 
-	list_add(tablaDirectorios, registro);
-
-	crearArchivoTablaDirectorios(rutaTablaDirectorios);
+	agregarDirectorioTabla(registro, "root");
 }
 
 void crearArchivoTablaDirectorios(char * ruta) {
@@ -27,137 +30,106 @@ void crearArchivoTablaDirectorios(char * ruta) {
 	if (file == NULL) {
 		mkdir("/home/utnso/Escritorio/metadata", 0777);
 		file = fopen(rutaArchivo, "w+b");
-
-		//Cierro el archivo
-		fclose(file);
-
-		//Creo la estructura de configuracion
-		configTablaDirectorios = config_create(rutaArchivo);
-
-	} else {
-
-		//Creo la estructura de configuracion
-		configTablaDirectorios = config_create(rutaArchivo);
-
-		//Cierro el archivo
-		fclose(file);
-
 	}
 
+	//Cierro el archivo
+	fclose(file);
+
+	//Creo la estructura de configuracion
+	configTablaDirectorios = config_create(rutaArchivo);
+
 	free(rutaArchivo);
-
-	persistirTablaDirectorios();
-
 }
 
-void agregarDirectorioTabla(t_directory * registro) {
-	//Verifico que haya espacio para agregar directorios
-	if (tablaDirectorios->elements_count == 100) {
-		printf("No se puede agregar un nuevo directorio");
+void agregarDirectorioTabla(t_directory * registroTabla, char * ruta) {
+
+	char * registro = armarRegistroDirectorio(registroTabla->nombre,
+			registroTabla->padre);
+
+	int index = buscarIndexLibre();
+
+	if (index > 99) {
+		printf(
+				"mkdir: no se puede crear el directorio «./%s»: Se supera la cantidad de directorios maximos \n",
+				ruta);
+		free(registro);
 		return;
 	}
 
-	//Agrego a la tabla el registro del directorio
-	list_add(tablaDirectorios, registro);
+	char * stringIndex = string_itoa(index);
 
-	persistirTablaDirectorios();
+	config_set_value(configTablaDirectorios, stringIndex, registro);
+
+	//Agrego a la tabla el registro del directorio
+	registroTabla->index = index;
+
+	list_add(tablaDirectorios, registroTabla);
+
+	config_save(configTablaDirectorios);
+
+	free(stringIndex);
+	free(registro);
 }
 
-void eliminarDirectorioTabla(char * nombreDirectorio, int padreDirectorio){
+void eliminarDirectorioTabla(char * nombreDirectorio, int padreDirectorio) {
 
 	bool esRegistroBuscado(t_directory * registro) {
-		return string_equals_ignore_case(registro->nombre, nombreDirectorio) && registro->padre == padreDirectorio;
+		return string_equals_ignore_case(registro->nombre, nombreDirectorio)
+				&& registro->padre == padreDirectorio;
 	}
 
 	t_directory * registro = list_remove_by_condition(tablaDirectorios,
 			(void*) esRegistroBuscado);
 
-	free(registro->nombre);
-	free(registro);
+	char * stringIndex = string_itoa(registro->index);
 
-	persistirTablaDirectorios();
-
-}
-
-void persistirTablaDirectorios(){
-	int i;
-	for (i = 0; i < tablaDirectorios->elements_count; ++i) {
-		t_directory * registro = list_get(tablaDirectorios, i);
-
-		char * indexNum = string_itoa(i);
-
-		char * nombre = string_new();
-		string_append(&nombre, indexNum);
-		string_append(&nombre, "_NOMBRE");
-
-		config_set_value(configTablaDirectorios, nombre, registro->nombre);
-
-		char * padre = string_new();
-		string_append(&padre, indexNum);
-		string_append(&padre, "_PADRE");
-
-		char * padreNum;
-		int registroNu = registro->padre;
-		padreNum= string_itoa(registroNu);
-		config_set_value(configTablaDirectorios, padre, padreNum);
-
-		free(indexNum);
-		free(padreNum);
-		free(nombre);
-		free(padre);
-	}
+	config_set_value(configTablaDirectorios, stringIndex, "[###]");
 
 	config_save(configTablaDirectorios);
+
+	bitMapDirectorio[registro->index] = true;
+
+	free(registro);
+	free(stringIndex);
+}
+
+void modificarDirectorioTabla(t_directory * registroTabla, char * nombreFinal,
+		int indexPadre) {
+
+	memcpy(registroTabla->nombre, nombreFinal, string_length(nombreFinal) + 1);
+	registroTabla->padre = indexPadre;
+
+	char * registro = armarRegistroDirectorio(nombreFinal, indexPadre);
+
+	char * stringIndex = string_itoa(registroTabla->index);
+
+	config_set_value(configTablaDirectorios, stringIndex, registro);
+
+	config_save(configTablaDirectorios);
+
+	free(stringIndex);
+	free(registro);
 }
 
 /*-------------------------Tabla de archivos-------------------------*/
-int obtenerIndexPadre(char * nomPadre) {
-	bool esPadreBuscado(t_directory * registro) {
-		return string_equals_ignore_case(registro->nombre, nomPadre);
-	}
-
-	t_directory *registro = list_find(tablaDirectorios, (void*) esPadreBuscado);
-
-	if (registro == NULL) {
-		return -1;
-	}
-
-	return registro->index;
-}
-
-void destruirSubstring(char ** sub) {
-	int i;
-	for (i = 0; sub[i] != NULL; ++i) {
-		free(sub[i]);
-	}
-	free(sub[i]);
-	free(sub);
-}
-
-void crearArchivoTablaArchivo(char * origen, char *destino){
+t_config * crearArchivoTablaArchivo(char * origen, char *destino, char * nombre) {
 	//Copio informacion del archivo
 	struct stat statArch;
 
 	stat(origen, &statArch);
 
 	//Busco el nombre del archivo
-	char ** listaOrigen = string_split(origen, "/");
-
-	int posicion;
-
-	for (posicion = 0; listaOrigen[posicion] != NULL; ++posicion) {
-	}
-
-	char * nombreArchivo = listaOrigen[posicion - 1];
+	char * nombreArchivo = nombre;
 
 	//Busco el nombre del archivo
 	char ** listaDestino = string_split(destino, "/");
 
+	int posicion;
+
 	for (posicion = 0; listaDestino[posicion] != NULL; ++posicion) {
 	}
 
-
-	int indexPadre = obtenerIndexPadre(listaDestino[posicion-1]);
+	int indexPadre = obtenerIndexPadre(listaDestino[posicion - 1]);
 	char * indexPadreString = string_itoa(indexPadre);
 
 	//Creo la carpeta donde va a estar el archivo
@@ -189,9 +161,9 @@ void crearArchivoTablaArchivo(char * origen, char *destino){
 	config_set_value(configTablaArchivo, "TAMANIO", tamArcString);
 
 	//Cargo tipo en el archivo
-	if(string_contains(nombreArchivo,".csv")){
+	if (string_contains(nombreArchivo, ".csv")) {
 		config_set_value(configTablaArchivo, "TIPO", "TEXTO");
-	}else{
+	} else {
 		config_set_value(configTablaArchivo, "TIPO", "BINARIO");
 	}
 
@@ -199,8 +171,12 @@ void crearArchivoTablaArchivo(char * origen, char *destino){
 	config_save(configTablaArchivo);
 
 	//Libero memoria
-	config_destroy(configTablaArchivo);
-	//destruirSubstring(separado);
+	free(indexPadreString);
+	free(tamArcString);
+	destruirSubstring(listaDestino);
+	free(rutaArchivo);
+
+	return configTablaArchivo;
 }
 
 /*-------------------------Tabla de nodos-------------------------*/
@@ -212,6 +188,8 @@ void crearTablaNodos(char * rutaTablaNodos) {
 
 	tablaNodos->infoDeNodo = list_create();
 	tablaNodos->nomNodos = list_create();
+
+	tablaBitmapPorNodo = list_create();
 
 	crearArchivoTablaNodos(rutaTablaNodos);
 }
@@ -267,6 +245,9 @@ void agregarNodoTablaNodos(t_nodo_info * info) {
 	char * nombre = malloc(string_length(info->nombre) + 1);
 	memcpy(nombre, info->nombre, string_length(info->nombre) + 1);
 	list_add(tablaNodos->nomNodos, nombre);
+
+	//Creo su bitMaps
+	crearArchivoTablaBitmap(info);
 
 	persistirTablaNodos();
 }
@@ -404,6 +385,17 @@ char * eliminarNodoTablaSockets(int cliente_desconectado) {
 	return nom;
 }
 
+int buscarSocketPorNombre(char * nombreNodo) {
+	bool esSocketBuscado(t_tabla_sockets* nodo) {
+		return string_equals_ignore_case(nodo->nombre, nombreNodo);
+	}
+
+	t_tabla_sockets * registroSocket = list_find(tablaSockets,
+			(void*) esSocketBuscado);
+
+	return registroSocket->socket;
+}
+
 /*-------------------------Tabla de Bitmap-------------------------*/
 void crearArchivoTablaBitmap(t_nodo_info * info) {
 	//Abro el archivo para usarlo
@@ -421,13 +413,21 @@ void crearArchivoTablaBitmap(t_nodo_info * info) {
 	//Creo la estructura de configuracion
 	t_config * configTablaBitmap = config_create(rutaArchivo);
 
+	t_tabla_bitMaps * registroTabla = malloc(sizeof(t_tabla_bitMaps));
+	registroTabla->configTablaBitmap = configTablaBitmap;
+	int tamNombreNodo = string_length(info->nombre) + 1;
+	registroTabla->nombre = malloc(tamNombreNodo);
+	strcpy(registroTabla->nombre, info->nombre);
+
+	list_add(tablaBitmapPorNodo, registroTabla);
+
 	//Seteo valores de bitmap en 0
 	int i;
 	for (i = 0; i < info->total; ++i) {
 		char * nombre = string_new();
 		string_append(&nombre, "Bloque");
 		char * numeroNodo = string_itoa(i);
-		char * estado = string_itoa(0);
+		char * estado = string_itoa(true);
 		string_append(&nombre, numeroNodo);
 		config_set_value(configTablaBitmap, nombre, estado);
 		free(nombre);
@@ -438,5 +438,92 @@ void crearArchivoTablaBitmap(t_nodo_info * info) {
 	config_save(configTablaBitmap);
 
 	free(rutaArchivo);
-	config_destroy(configTablaBitmap);
 }
+
+int buscarBloqueLibre(t_config * tablaBitMaps) {
+	int cantBloquesBitMaps = config_keys_amount(tablaBitMaps);
+	int i;
+	bool encontreBloqueLibre = false;
+
+	for (i = 0; i < cantBloquesBitMaps && !encontreBloqueLibre; ++i) {
+		char * nombreBloque = string_new();
+		string_append(&nombreBloque, "Bloque");
+		char * numeroNodo = string_itoa(i);
+		string_append(&nombreBloque, numeroNodo);
+
+		int estado = config_get_int_value(tablaBitMaps, nombreBloque);
+
+		if (estado == 1) {
+			encontreBloqueLibre = true;
+			char * nuevoEstado = string_itoa(false);
+			config_set_value(tablaBitMaps, nombreBloque, nuevoEstado);
+			config_save(tablaBitMaps);
+			free(nuevoEstado);
+			i --;
+		}
+
+		free(nombreBloque);
+		free(numeroNodo);
+	}
+
+	return i;
+}
+
+/*-------------------------Funciones auxiliares-------------------------*/
+char * armarRegistroDirectorio(char * nombreDirectorio, int indexPadre) {
+	char * registro = string_new();
+	string_append(&registro, "[ ");
+	string_append(&registro, nombreDirectorio);
+	string_append(&registro, ", ");
+	char * stringIndexPadre = string_itoa(indexPadre);
+	string_append(&registro, stringIndexPadre);
+	string_append(&registro, "]");
+
+	free(stringIndexPadre);
+
+	return registro;
+}
+
+void llenarBitmap() {
+	int i;
+	for (i = 0; i < 100; ++i) {
+		bitMapDirectorio[i] = true;
+	}
+}
+
+int buscarIndexLibre() {
+	int index = 0;
+
+	while (!bitMapDirectorio[index]) {
+		index++;
+	}
+
+	if (index < 99)
+		bitMapDirectorio[index] = false;
+
+	return index;
+}
+
+int obtenerIndexPadre(char * nomPadre) {
+	bool esPadreBuscado(t_directory * registro) {
+		return string_equals_ignore_case(registro->nombre, nomPadre);
+	}
+
+	t_directory *registro = list_find(tablaDirectorios, (void*) esPadreBuscado);
+
+	if (registro == NULL) {
+		return -1;
+	}
+
+	return registro->index;
+}
+
+void destruirSubstring(char ** sub) {
+	int i;
+	for (i = 0; sub[i] != NULL; ++i) {
+		free(sub[i]);
+	}
+	free(sub[i]);
+	free(sub);
+}
+
