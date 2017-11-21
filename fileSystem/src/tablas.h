@@ -43,7 +43,6 @@ typedef struct {
 t_list * tablaSockets;
 t_tabla_nodo * tablaNodos;
 t_list * tablaDirectorios;
-t_list * tablaBitmapPorNodo;
 
 t_config * configTablaDirectorios;
 t_config * configTablaNodo;
@@ -65,6 +64,7 @@ void	 			crearTablaNodos					(char *);
 void 				crearArchivoTablaNodos			(char *);
 void 				agregarNodoTablaNodos			(t_nodo_info *);
 void 				eliminarNodoTablaNodos			(char *);
+void 				liberarBloqueTablaNodos			(char *, int);
 void 				persistirTablaNodos				(void);
 
 /*-------------------------Tabla de sockets-------------------------*/
@@ -76,6 +76,7 @@ int 				buscarSocketPorNombre			(char *);
 /*-------------------------Tabla de Bitmap-------------------------*/
 void 				crearArchivoTablaBitmap			(t_nodo_info *);
 int 				buscarBloqueLibre				(t_config *);
+void 				liberarBloquebitMap				(char *, int);
 
 /*-------------------------Funciones auxiliares-------------------------*/
 char * 				armarRegistroDirectorio			(char *, int);

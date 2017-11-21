@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <sys/types.h>
+#include <dirent.h>
 
 #include "tablas.h"
 
@@ -37,5 +39,7 @@ char * 				obtenerParametro				(char *, int);
 void 				destruirSubstring				(char **);
 int 				obtenerIndexPadre				(char *);
 bool 				verificarDuplicados				(t_directory *);
+char ** 			buscarBloqueABorar				(int, int *, int *, t_config *);
+int 				cantArchivosEnDirectorio		(char *);
 
 #endif /* CONSOLA_H_ */
