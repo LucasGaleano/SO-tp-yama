@@ -243,6 +243,7 @@ void eliminarArchivo(char * linea) {
 
 		liberarBloqueTablaNodos(nodoBloqueABorar[0], numeroBloque);
 
+		destruirSubstring(nodoBloqueABorar);
 	}
 
 	//Borro el archivo de la tabla de archivos
@@ -616,6 +617,11 @@ char ** buscarBloqueABorar(int posicion, int * numeroCopia, int * numeroBloque,
 		*numeroCopia = 0;
 		*numeroBloque = *numeroBloque + 1;
 	}
+
+	//Libero memoria
+	free(key);
+	free(numeoBloqueChar);
+	free(numeroCopiaChar);
 
 	return nodoBloqueABorar;
 }

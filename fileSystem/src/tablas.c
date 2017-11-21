@@ -448,6 +448,7 @@ void crearArchivoTablaBitmap(t_nodo_info * info) {
 
 	config_save(configTablaBitmap);
 
+	config_destroy(configTablaBitmap);
 	free(rutaArchivo);
 }
 
