@@ -22,7 +22,7 @@
 #include <biblioteca/sockets.h>
 #include <commons/string.h>
 #include <time.h>
-#include <estructuras.h>
+#include <biblioteca/estructuras.h>
 /*
 
 Señales extraidas de /usr/bin/include/bits/signum.h
@@ -81,22 +81,24 @@ void mandarDatosTransformacion(t_pedidoTransformacion pedido);
 
 void gestionarReduccionLocal();
 
+void mandarDatosReduccionLocal(t_pedidoReduccionLocal * pedido);
 
-void gestionarReduccionGlobal(peticionDeReduccionGlobal pedido);
+
+void gestionarReduccionGlobal(t_pedidoReduccionGlobal pedido);
 
 
 void signal_capturer(int numeroSenial);
 
 
-void gestionarSolicitudes(int conexionYama, t_paquete * procesarPaquete);
 
 
 void avisarWorker();
 
+void procesarPaquete(t_paquete * unPaquete, int * client_socket);
 // Variables globales
 
-t_list pedidosDeTransformacion = t_list_create();
-t_list pedidosDeRedcuccionLocal = t_list_create();
+t_list * pedidosDeTransformacion ;
+t_list * pedidosDeRedcuccionLocal;
 int tareasRealizadasEnParalelo;
 int tareasTotalesReduccionLocal;
 int cantidadDeFallos;
@@ -123,6 +125,8 @@ int cont = 0;
 
 int main(int argc, char **argv) {
 
+	pedidosDeTransformacion = list_create();
+	pedidosDeRedcuccionLocal = list_create();
 	rutaScriptTransformador = argv [1];
 	rutaScriptReductor = argv [2];
 	rutaArchivoParaArrancar = argv [3];
@@ -147,7 +151,7 @@ int main(int argc, char **argv) {
 
 
 
-	printf("El proceso Master termino en: %d", (clock()-inicioPrograma)*1000/CLOCKS_PER_SEC);
+	printf("El proceso Master termino en: %f", (clock()-inicioPrograma)*1000/CLOCKS_PER_SEC);
 
 	return EXIT_SUCCESS;
 
@@ -191,7 +195,7 @@ void gestionarTransformacion(){
 	while(list_is_empty(pedidosDeTransformacion)){
 
 
-		t_pedidoTransformacion pedido = list_remove(pedidosDeTransformacion, list_size(pedidosDeTransformacion));
+		t_pedidoTransformacion * pedido = list_remove(pedidosDeTransformacion, list_size(pedidosDeTransformacion));
 		pthread_t hiloTransformar;
 		pthread_create(hiloTransformar,NULL,(void *) mandarDatosTransformacion, (pedido));
 
@@ -216,10 +220,9 @@ void gestionarReduccionLocal(){
 
 	while(list_is_empty(pedidosDeRedcuccionLocal)){
 
-
-		t_pedidoReduccionLocal pedido = list_remove(pedidosDeTransformacion, list_size(pedidosDeTransformacion));
+		t_pedidoReduccionLocal * pedido = list_remove(pedidosDeTransformacion , list_size(pedidosDeTransformacion));
 		pthread_t hiloReduLocal;
-		pthread_create(hiloReduLocal,NULL,(void *) mandarDatosReduccionLocal, (pedido));
+		pthread_create(hiloReduLocal,NULL,(void *) mandarDatosReduccionLocal, pedido);
 
 
 	}
@@ -228,7 +231,7 @@ void gestionarReduccionLocal(){
 }
 
 
-void mandarDatosReduccionLocal(t_pedidoReduccionLocal){
+void mandarDatosReduccionLocal(t_pedidoReduccionLocal * pedido){
 
 	pthread_mutex_t mutexArchivo;
 	pthread_mutex_lock(&mutexArchivo);
@@ -236,14 +239,12 @@ void mandarDatosReduccionLocal(t_pedidoReduccionLocal){
 	pthread_mutex_unlock(&mutexArchivo);
 
 }
-void gestionarReduccionGlobal(peticionDeReduccionGlobal pedido[], int tam){
+void gestionarReduccionGlobal(t_pedidoReduccionGlobal a){
 
 
 }
 
 void avisarWorker(){};
-
-void crearDAtosParaReduccionLocal (indicacionesParaReduccionLocal solicitud, int tam){}
 
 
 void pedir_reduccion(){
@@ -273,10 +274,10 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) { // contesto a
 
 
 	case ENVIAR_SOLICITUD_TRANSFORMACION:
-
-		t_pedidoTransformacion * indicacionTransformacion = recibirIndicacionTransformacion();
-		int continuarRecibiendoPedidosTransformacion = recibirEntero();
-		lista_add(pedidosDeTransformacion,indicacionTransformacion); //leno lista con pedidos
+		 ;
+		t_pedidoTransformacion * indicacionTransformacion = recibirSolicitudTransformacion(unPaquete);
+		int continuarRecibiendoPedidosTransformacion = 1; //recibirMensaje(unPaquete); // hay que castear a entero
+		list_add(pedidosDeTransformacion,indicacionTransformacion); //leno lista con pedidos
 		if (continuarRecibiendoPedidosTransformacion == 0){
 			gestionarTransformacion();
 		}
@@ -285,9 +286,10 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) { // contesto a
 
 	case ENVIAR_INDICACION_REDUCCION_LOCAL:
 
-		t_pedidoReduccionLocal * indicacionReduLocal = recibirIndicacionReduccionLocal();
-		int continuarRecibiendoPedidosDeReduLocal = recibirEntero();
-		lista_add(indicacionReduLocal,indicacionReduLocal);
+		 ;
+		t_pedidoReduccionLocal * indicacionReduLocal = recibirSolicitudReduccionLocal(unPaquete);
+		int continuarRecibiendoPedidosDeReduLocal = 1; //recibirMensaje(unPaquete); // hay que castear a entero
+		list_add(indicacionReduLocal,indicacionReduLocal);
 		if(continuarRecibiendoPedidosDeReduLocal == 0){
 			gestionarReduccionLocal();
 		}
@@ -303,7 +305,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) { // contesto a
 
 
 	case ENVIAR_ERROR:
-		recibirError(unPaquete);
+
 		break;
 
 
