@@ -1,7 +1,10 @@
 #include "dataNode.h"
 
+bool recibirSolicitudes;
+
 int main(void) {
 
+	recibirSolicitudes=true;
 	t_config* conf;
 	char* bloque = malloc (TAMBLOQUE);
 	t_log_level logLevel = LOG_LEVEL_INFO;               //elijo enum de log
@@ -16,7 +19,7 @@ int main(void) {
     char* NOMBRE_NODO = config_get_string_value(conf,"NOMBRE_NODO");
     int PUERTO_WORKER = config_get_int_value(conf,"PUERTO_WORKER");
     int PUERTO_DATANODE = config_get_int_value(conf,"PUERTO_DATANODE");
-    char* RUTA_DATABIN = config_get_string_value(conf,"RUTA_DATABIN");
+    rutaDatabin = config_get_string_value(conf,"RUTA_DATABIN");
 
     //log_warning(logger, "algo paso aca!!!!!");
 
@@ -26,17 +29,23 @@ int main(void) {
     int socketFileSystem = conectarCliente(IP_FILESYSTEM,PUERTO_FILESYSTEM,DATANODE);
 
 
-    char* msg = string_new();
-    //string_append(msg,"hola");
 
-    enviarInfoDataNode(socketFileSystem,msg,100,0);
+    enviarInfoDataNode(socketFileSystem,NOMBRE_NODO,20,20);
 
-    while(true){
+    while(recibirSolicitudes){
 
     	gestionarSolicitudes(socketFileSystem, (void*) recibirSolicitud);
 
     }
 
+	int i=0;
+		for(;i<10;i++)
+		{
+			printf("%s\n",getBloque(i));
+		}
+
+
+	log_destroy(logger);
     config_destroy(conf);
     free(bloque);
 	return EXIT_SUCCESS;
@@ -70,17 +79,30 @@ void recibirSolicitud(t_paquete * unPaquete, int * client_socket){
 			break;
 		case ENVIAR_SOLICITUD_ESCRITURA_BLOQUE:
 			;
-			t_pedidoEscritura* pedidoEscritura = malloc(sizeof(t_pedidoEscritura));
+			t_pedidoEscritura* pedidoEscritura;
 			pedidoEscritura = recibirSolicitudEscrituraBloque(unPaquete);
+			printf("%d\n",pedidoEscritura->numBloque);
+			printf("%s\n",pedidoEscritura->data);
 
-			if (setBloque(pedidoEscritura->numBloque,pedidoEscritura->data) == -1);
+			if (setBloque(pedidoEscritura->numBloque,pedidoEscritura->data) == -1)
 			{
 				log_error(logger,"error guardando bloque");
 			}
 
-		default:
+			free(pedidoEscritura->data);
+			free(pedidoEscritura->numBloque);
+			free(pedidoEscritura);
+
+			break;
+		case ENVIAR_ERROR:
+			;
+			recibirSolicitudes=false;
+			default:
 			break;
 	}
+
+	log_destroy(logger);
+	destruirPaquete(unPaquete);
 
 }
 
@@ -90,7 +112,7 @@ char* getBloque(int numBloque)
 	char *map;
     char *bloque = malloc(TAMBLOQUE);
 
-	int fd = open(PATHCONFIG,	O_RDONLY); //abrir archivo data.bin
+	int fd = open(rutaDatabin,	O_RDONLY); //abrir archivo data.bin
 
 	fstat(fd, &sb);
 
@@ -133,7 +155,7 @@ int setBloque(int numBloque, char* bloque)
 	struct stat sb;
 	char *map;
 
-	int fd = open(PATHCONFIG,O_RDWR); //abrir archivo data.bin
+	int fd = open(rutaDatabin,O_RDWR); //abrir archivo data.bin
 
 	fstat(fd, &sb);
 
