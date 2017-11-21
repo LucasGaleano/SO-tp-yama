@@ -4,12 +4,15 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../src/balanceador.c \
 ../src/yama.c 
 
 OBJS += \
+./src/balanceador.o \
 ./src/yama.o 
 
 C_DEPS += \
+./src/balanceador.d \
 ./src/yama.d 
 
 

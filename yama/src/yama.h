@@ -15,12 +15,14 @@
 typedef struct {
 	int job;
 	int master;
-	int nodo;
+	char * nodo;
 	int bloque;
 	int etapa;
 	char * archivoTemporal;
 	int estado;
 } t_elemento_tabla_estado;
+
+//TODO enum etapa y para estado
 
 typedef struct {
 	char * ip;
@@ -28,6 +30,7 @@ typedef struct {
 	int retardo;
 	char * algoritmo;
 	char * puerto_yama;
+	int disponibilidad_base;
 } t_configuracion;
 
 /*------------------------Configuracion proyecto-------------------------*/
