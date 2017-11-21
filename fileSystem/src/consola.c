@@ -1,4 +1,5 @@
 #include "consola.h"
+#include "fileSystem.h"
 
 /*------------------------------Consola------------------------------*/
 void iniciarConsola() {
@@ -123,8 +124,7 @@ void ejecutarComando(char * linea, bool * ejecutar) {
 
 	//PRUEBA
 	if (string_starts_with(linea, "prueba")) {
-		crearArchivoTablaArchivo("/home/utnso/Escritorio/prueba.txt",
-				"user/juan/datos");
+		almacenarArchivo("/home/utnso/Escritorio/prueba.txt","user","texto2.txt",TEXTO);
 		return;
 	}
 
@@ -196,10 +196,75 @@ void formatearFilesystem() {
 void eliminarArchivo(char * linea) {
 	char * path_archivo = obtenerParametro(linea, 1);
 
-	printf("Me llego el path para eliminar: %s \n", path_archivo);
+	//Busco el nombre del directorio
+	char ** separado = string_split(path_archivo, "/");
+
+	int posicion;
+
+	for (posicion = 0; separado[posicion] != NULL; ++posicion) {
+	}
+
+	posicion -= 1;
+
+	//Busco el index del padre
+	int indexPadre;
+
+	if (posicion == 0) {
+		indexPadre = obtenerIndexPadre("root");
+	} else {
+		indexPadre = obtenerIndexPadre(separado[posicion - 1]);
+	}
+
+	//Busco la configuracion del archivo
+	char * rutaFS = string_new();
+	string_append(&rutaFS, "/home/utnso/Escritorio/metadata/archivos/");
+	char * indexPadreChar = string_itoa(indexPadre);
+	string_append(&rutaFS, indexPadreChar);
+	string_append(&rutaFS, "/");
+	string_append(&rutaFS, separado[posicion]);
+
+	t_config * configArchivo = config_create(rutaFS);
+
+	//Marco como libre los bloques en el bitmap de cada nodo
+	int cantBloques = config_keys_amount(configArchivo);
+	cantBloques -= 2;
+	cantBloques = cantBloques / 3;
+	cantBloques *= 2;
+
+	int i;
+	int numeroBloque = 0;
+	int numeroCopia = 0;
+
+	for (i = 0; i < cantBloques; i++) {
+		char ** nodoBloqueABorar = buscarBloqueABorar(i, &numeroCopia,
+				&numeroBloque, configArchivo);
+
+		int numeroBloque = atoi(nodoBloqueABorar[1]);
+
+		liberarBloqueTablaNodos(nodoBloqueABorar[0], numeroBloque);
+
+	}
+
+	//Borro el archivo de la tabla de archivos
+	remove(rutaFS);
+
+	char * rutaDirectorioArchivo = string_new();
+	string_append(&rutaDirectorioArchivo, "/home/utnso/Escritorio/metadata/archivos/");
+	string_append(&rutaDirectorioArchivo, indexPadreChar);
+
+	int cantArchivos = cantArchivosEnDirectorio(rutaDirectorioArchivo);
+
+	if(cantArchivos==0){
+		rmdir(rutaDirectorioArchivo);
+	}
 
 	//Libero memoria
 	free(path_archivo);
+	free(rutaFS);
+	free(indexPadreChar);
+	destruirSubstring(separado);
+	config_destroy(configArchivo);
+	free(rutaDirectorioArchivo);
 }
 
 void eliminarDirectorio(char * linea) {
@@ -531,4 +596,45 @@ bool verificarDuplicados(t_directory * duplicado) {
 	}
 
 	return list_any_satisfy(tablaDirectorios, (void*) esDulpicadoBuscado);
+}
+
+char ** buscarBloqueABorar(int posicion, int * numeroCopia, int * numeroBloque,
+		t_config * configArchivo) {
+	char * key = string_new();
+	string_append(&key, "BLOQUE");
+	char * numeoBloqueChar = string_itoa(*numeroBloque);
+	string_append(&key, numeoBloqueChar);
+	string_append(&key, "COPIA");
+	char * numeroCopiaChar = string_itoa(*numeroCopia);
+	string_append(&key, numeroCopiaChar);
+
+	char ** nodoBloqueABorar = config_get_array_value(configArchivo, key);
+
+	if (*numeroCopia == 0) {
+		*numeroCopia = *numeroCopia + 1;
+	} else {
+		*numeroCopia = 0;
+		*numeroBloque = *numeroBloque + 1;
+	}
+
+	return nodoBloqueABorar;
+}
+
+int cantArchivosEnDirectorio(char * ruta) {
+	DIR *dir;
+	struct dirent *ent;
+
+	dir = opendir(ruta);
+
+	int i = 0;
+
+	while ((ent = readdir(dir)) != NULL) {
+		if (ent->d_name[0] != '.') {
+			i++;
+		}
+	}
+
+	closedir(dir);
+
+	return i;
 }
