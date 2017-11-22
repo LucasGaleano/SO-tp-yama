@@ -1,5 +1,6 @@
 #include "consola.h"
-#include "fileSystem.h"
+#include "fileSystem.h"//TODO esto vuela
+//TODO modificar direccion de donde se crean los matadatos
 
 /*------------------------------Consola------------------------------*/
 void iniciarConsola() {
@@ -64,13 +65,13 @@ void ejecutarComando(char * linea, bool * ejecutar) {
 
 	//RENOMBRAR ARCHIVO O DIRECTORIO
 	if (string_starts_with(linea, "rename")) {
-		modificarArchivo(linea);
+		modificar(linea);
 		return;
 	}
 
 	//MOVER ARCHIVO O DIRECTORIO
 	if (string_starts_with(linea, "mv")) {
-		modificarArchivo(linea);
+		modificar(linea);
 		return;
 	}
 
@@ -226,6 +227,20 @@ void eliminarArchivo(char * linea) {
 
 	t_config * configArchivo = config_create(rutaFS);
 
+	//Verifico que hayan ingresado bien el path
+	if (configArchivo == NULL) {
+		printf("rm: no se puede borrar «./%s»: El archivo no existe \n",
+				path_archivo);
+
+		//Libero memoria
+		free(path_archivo);
+		destruirSubstring(separado);
+		free(rutaFS);
+		free(indexPadreChar);
+
+		return;
+	}
+
 	//Marco como libre los bloques en el bitmap de cada nodo
 	int cantBloques = config_keys_amount(configArchivo);
 	cantBloques -= 2;
@@ -301,7 +316,7 @@ void eliminarDirectorio(char * linea) {
 			(void*) esRegistroBuscado);
 
 	if (registroDirectorio == NULL) {
-		printf("rm: no se puede borrar «./%s»: El directorio no existe \n",
+		printf("rm -d: no se puede borrar «./%s»: El directorio no existe \n",
 				path_directorio);
 		destruirSubstring(separado);
 		free(path_directorio);
@@ -315,7 +330,8 @@ void eliminarDirectorio(char * linea) {
 	}
 
 	if (list_any_satisfy(tablaDirectorios, (void*) tengoHijos)) {
-		printf("rm: no se puede borrar «./%s»: El directorio no está vacío \n",
+		printf(
+				"rm -d: no se puede borrar «./%s»: El directorio no está vacío \n",
 				path_directorio);
 		destruirSubstring(separado);
 		free(path_directorio);
@@ -484,7 +500,7 @@ void eliminarBloque(char * linea) {
 	free(keyCopia);
 }
 
-void modificarArchivo(char * linea) {
+void modificar(char * linea) {
 	char * path_original = obtenerParametro(linea, 1);
 	char * path_final = obtenerParametro(linea, 2);
 
@@ -499,7 +515,7 @@ void modificarArchivo(char * linea) {
 
 	posicionOriginal -= 1;
 
-	//Busco el nombre del directorio original
+	//Busco el nombre del directorio final
 	char ** separadoFinal = string_split(path_final, "/");
 
 	int posicionFinal;
@@ -510,7 +526,7 @@ void modificarArchivo(char * linea) {
 
 	posicionFinal -= 1;
 
-	//Busco el directorio que voy a modificar
+	//Busco lo que voy a modificar
 	int indexPadre;
 
 	if (posicionOriginal == 0) {
@@ -529,10 +545,8 @@ void modificarArchivo(char * linea) {
 			(void*) esRegistroBuscado);
 
 	if (registroDirectorio == NULL) {
-		printf("Lo que tengo que modificar es un archivo \n");
-		destruirSubstring(separadoOriginal);
-		destruirSubstring(separadoFinal);
-		free(path_original);
+		modificarArchivo(separadoOriginal, separadoFinal, indexPadre,
+				posicionOriginal, posicionFinal, path_original);
 		free(path_final);
 		return;
 	}
@@ -541,10 +555,20 @@ void modificarArchivo(char * linea) {
 	char * nuevoNombre = string_new();
 	int nuevoIndex = registroDirectorio->padre;
 
+	//Busco el index del padre del nombre final
+	int indexPadreFinal;
+
+	if (posicionFinal == 0) {
+		indexPadreFinal = obtenerIndexPadre("root");
+	} else {
+		indexPadreFinal = obtenerIndexPadre(separadoFinal[posicionFinal - 1]);
+	}
+
 	//Busco los hijos del directorio
 	bool soyDirectorio(t_directory * registro) {
 		return string_equals_ignore_case(registro->nombre,
-				separadoFinal[posicionFinal]);
+				separadoFinal[posicionFinal])
+				&& (registro->padre == indexPadreFinal);
 	}
 
 	if (list_any_satisfy(tablaDirectorios, (void*) soyDirectorio)) {
@@ -580,15 +604,6 @@ void mostrarContenidoArchivo(char * linea) {
 	free(path_archivo);
 }
 
-void liberarSeparado(char ** separado) {
-	int i;
-	for (i = 0; separado[i] != NULL; ++i) {
-		free(separado[i]);
-	}
-	free(separado[i]);
-	free(separado);
-}
-
 void crearDirectorio(char * linea) {
 	char * path_dir = obtenerParametro(linea, 1);
 
@@ -619,7 +634,7 @@ void crearDirectorio(char * linea) {
 				"mkdir: no se puede crear el directorio «./%s»: No existe el archivo o el directorio\n",
 				path_dir);
 		free(path_dir);
-		liberarSeparado(separado);
+		destruirSubstring(separado);
 		free(registro);
 		return;
 	}
@@ -631,7 +646,7 @@ void crearDirectorio(char * linea) {
 				"mkdir: no se puede crear el directorio «./%s»: El archivo ya existe \n",
 				path_dir);
 		free(path_dir);
-		liberarSeparado(separado);
+		destruirSubstring(separado);
 		free(registro);
 		return;
 	}
@@ -642,7 +657,7 @@ void crearDirectorio(char * linea) {
 
 //Libero memoria
 	free(path_dir);
-	liberarSeparado(separado);
+	destruirSubstring(separado);
 }
 
 void copiarArchivoLocalAlYamafsInterfaz(char * linea) {
@@ -784,4 +799,86 @@ int cantArchivosEnDirectorio(char * ruta) {
 	closedir(dir);
 
 	return i;
+}
+
+void modificarArchivo(char ** separadoOriginal, char ** separadoFinal,
+		int indexPadre, int posicionOriginal, int posicionFinal,
+		char * path_original) {
+	//Verifico que el archivo que voy a modificar exista
+	char * rutaFS = string_new();
+	string_append(&rutaFS, "/home/utnso/Escritorio/metadata/archivos/");
+	char * indexPadreChar = string_itoa(indexPadre);
+	string_append(&rutaFS, indexPadreChar);
+	string_append(&rutaFS, "/");
+	string_append(&rutaFS, separadoOriginal[posicionOriginal]);
+
+	t_config * configArchivo = config_create(rutaFS);
+
+	if (configArchivo == NULL) {
+		printf("El archivo/directorio «./%s» no existe \n", path_original);
+
+		//Libero memoria
+		destruirSubstring(separadoOriginal);
+		destruirSubstring(separadoFinal);
+		free(path_original);
+		free(rutaFS);
+		free(indexPadreChar);
+
+		return;
+	}
+
+	//Verifico si quiero renombrar o mover
+
+	//Busco el index del padre del nombre final
+	int indexPadreFinal;
+
+	if (posicionFinal == 0) {
+		indexPadreFinal = obtenerIndexPadre("root");
+	} else {
+		indexPadreFinal = obtenerIndexPadre(separadoFinal[posicionFinal - 1]);
+	}
+
+	//Busco los hijos del directorio
+	bool esRegistroBuscado(t_directory * registro) {
+		return string_equals_ignore_case(registro->nombre,
+				separadoFinal[posicionFinal])
+				&& registro->padre == indexPadreFinal;
+	}
+
+	t_directory * registroDirectorio = list_find(tablaDirectorios,
+			(void*) esRegistroBuscado);
+
+	char * nuevaRutaFS = string_new();
+	string_append(&nuevaRutaFS, "/home/utnso/Escritorio/metadata/archivos/");
+
+	if (registroDirectorio != NULL) {
+		//Quiero mover un archivo
+		char * indexPadreNuevoChar = string_itoa(registroDirectorio->index);
+		string_append(&nuevaRutaFS, indexPadreNuevoChar);
+
+		mkdir(nuevaRutaFS, 0777);
+
+		string_append(&nuevaRutaFS, "/");
+		string_append(&nuevaRutaFS, separadoOriginal[posicionOriginal]);
+
+		free(indexPadreNuevoChar);
+	} else {
+		//Quiero renombrar un archivo
+		string_append(&nuevaRutaFS, indexPadreChar);
+		string_append(&nuevaRutaFS, "/");
+		string_append(&nuevaRutaFS, separadoFinal[posicionFinal]);
+	}
+
+	config_save_in_file(configArchivo, nuevaRutaFS);
+
+	remove(rutaFS);
+
+	//Libero memoria
+	destruirSubstring(separadoOriginal);
+	destruirSubstring(separadoFinal);
+	free(path_original);
+	free(rutaFS);
+	free(indexPadreChar);
+	config_destroy(configArchivo);
+	free(nuevaRutaFS);
 }

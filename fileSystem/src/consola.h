@@ -24,7 +24,7 @@ void 				formatearFilesystem						(void);
 void 				eliminarArchivo							(char *);
 void 				eliminarDirectorio						(char *);
 void 				eliminarBloque							(char *);
-void 				modificarArchivo						(char *);
+void 				modificar								(char *);
 void 				mostrarContenidoArchivo					(char *);
 void 				crearDirectorio							(char *);
 void 				copiarArchivoLocalAlYamafsInterfaz		(char *);
@@ -41,5 +41,5 @@ int 				obtenerIndexPadre				(char *);
 bool 				verificarDuplicados				(t_directory *);
 char ** 			buscarBloqueABorar				(int, int *, int *, t_config *);
 int 				cantArchivosEnDirectorio		(char *);
-
+void				modificarArchivo				(char **, char **, int, int, int, char *);
 #endif /* CONSOLA_H_ */
