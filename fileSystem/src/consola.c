@@ -124,7 +124,8 @@ void ejecutarComando(char * linea, bool * ejecutar) {
 
 	//PRUEBA
 	if (string_starts_with(linea, "prueba")) {
-		almacenarArchivo("/home/utnso/Escritorio/prueba.txt","user","texto2.txt",TEXTO);
+		almacenarArchivo("/home/utnso/Escritorio/prueba.txt", "user",
+				"texto2.txt", TEXTO);
 		return;
 	}
 
@@ -250,12 +251,13 @@ void eliminarArchivo(char * linea) {
 	remove(rutaFS);
 
 	char * rutaDirectorioArchivo = string_new();
-	string_append(&rutaDirectorioArchivo, "/home/utnso/Escritorio/metadata/archivos/");
+	string_append(&rutaDirectorioArchivo,
+			"/home/utnso/Escritorio/metadata/archivos/");
 	string_append(&rutaDirectorioArchivo, indexPadreChar);
 
 	int cantArchivos = cantArchivosEnDirectorio(rutaDirectorioArchivo);
 
-	if(cantArchivos==0){
+	if (cantArchivos == 0) {
 		rmdir(rutaDirectorioArchivo);
 	}
 
@@ -329,18 +331,157 @@ void eliminarDirectorio(char * linea) {
 }
 
 void eliminarBloque(char * linea) {
-	char * path_directorio = obtenerParametro(linea, 2);
+	char * path_archivo = obtenerParametro(linea, 2);
 	char * nro_bloque = obtenerParametro(linea, 3);
 	char * nro_copia = obtenerParametro(linea, 4);
 
-	printf("Me llego el path_directorio para eliminar: %s \n", path_directorio);
-	printf("Me llego el nro_bloque para eliminar: %s \n", nro_bloque);
-	printf("Me llego el nro_copia para eliminar: %s \n", nro_copia);
+	//Busco el nombre del directorio
+	char ** separado = string_split(path_archivo, "/");
 
-//Libero memoria
-	free(path_directorio);
+	int posicion;
+
+	for (posicion = 0; separado[posicion] != NULL; ++posicion) {
+	}
+
+	posicion -= 1;
+
+	//Busco el index del padre
+	int indexPadre;
+
+	if (posicion == 0) {
+		indexPadre = obtenerIndexPadre("root");
+	} else {
+		indexPadre = obtenerIndexPadre(separado[posicion - 1]);
+	}
+
+	//Busco la configuracion del archivo
+	char * rutaFS = string_new();
+	string_append(&rutaFS, "/home/utnso/Escritorio/metadata/archivos/");
+	char * indexPadreChar = string_itoa(indexPadre);
+	string_append(&rutaFS, indexPadreChar);
+	string_append(&rutaFS, "/");
+	string_append(&rutaFS, separado[posicion]);
+
+	t_config * configArchivo = config_create(rutaFS);
+
+	//Verifico que hayan ingresado bien el path
+	if (configArchivo == NULL) {
+		printf(
+				"rm -b: no se puede borrar el bloque: %s copia: %s del archivo «./%s»: El archivo no existe \n",
+				nro_bloque, nro_copia, path_archivo);
+
+		//Libero memoria
+		free(path_archivo);
+		free(nro_bloque);
+		free(nro_copia);
+		destruirSubstring(separado);
+		free(rutaFS);
+		free(indexPadreChar);
+
+		return;
+	}
+
+	//Armo el bloque a buscar
+	char * key = string_new();
+	string_append(&key, "BLOQUE");
+	string_append(&key, nro_bloque);
+	string_append(&key, "COPIA");
+	string_append(&key, nro_copia);
+
+	//Verifico que el bloque exista
+	if (!config_has_property(configArchivo, key)) {
+		printf(
+				"rm -b: no se puede borrar el bloque: %s copia: %s del archivo «./%s»: El bloque no existe \n",
+				nro_bloque, nro_copia, path_archivo);
+
+		//Libero memoria
+		free(path_archivo);
+		free(nro_bloque);
+		free(nro_copia);
+		destruirSubstring(separado);
+		free(rutaFS);
+		free(indexPadreChar);
+		free(key);
+		config_destroy(configArchivo);
+
+		return;
+	}
+
+	//Armo la copia del bloque a buscar
+	char * keyCopia = string_new();
+	string_append(&keyCopia, "BLOQUE");
+	string_append(&keyCopia, nro_bloque);
+	string_append(&keyCopia, "COPIA");
+	if (nro_copia == 0) {
+		string_append(&keyCopia, "1");
+	} else {
+		string_append(&keyCopia, "0");
+	}
+
+	//Verifico que el bloque no este borrado
+	char * verificador = config_get_string_value(configArchivo, key);
+	if (string_equals_ignore_case(verificador, "###")) {
+		printf(
+				"rm -b: no se puede borrar el bloque: %s copia: %s del archivo «./%s»: El bloque ya fue borrado \n",
+				nro_bloque, nro_copia, path_archivo);
+
+		//Libero memoria
+		free(path_archivo);
+		free(nro_bloque);
+		free(nro_copia);
+		destruirSubstring(separado);
+		free(rutaFS);
+		free(indexPadreChar);
+		config_destroy(configArchivo);
+		free(key);
+		free(keyCopia);
+
+		return;
+	}
+
+	//Verifico que el bloque no sea el ultimo
+	char * verificador2 = config_get_string_value(configArchivo, keyCopia);
+	if (string_equals_ignore_case(verificador2, "###")) {
+		printf(
+				"rm -b: no se puede borrar el bloque: %s copia: %s del archivo «./%s»: El bloque es el ultimo del sistema \n",
+				nro_bloque, nro_copia, path_archivo);
+
+		//Libero memoria
+		free(path_archivo);
+		free(nro_bloque);
+		free(nro_copia);
+		destruirSubstring(separado);
+		free(rutaFS);
+		free(indexPadreChar);
+		config_destroy(configArchivo);
+		free(key);
+		free(keyCopia);
+
+		return;
+	}
+
+	//Libero el bloque de la tabla de nodos
+	char ** valor = config_get_array_value(configArchivo, key);
+	liberarBloqueTablaNodos(valor[0], atoi(valor[1]));
+
+	//Libero el bloque de la tabla de archivo
+	char * nuevoValor = string_new();
+	string_append(&nuevoValor, "###");
+	config_set_value(configArchivo, key, nuevoValor);
+	config_save(configArchivo);
+
+	//Libero memoria
+	free(path_archivo);
 	free(nro_bloque);
 	free(nro_copia);
+	free(rutaFS);
+	free(indexPadreChar);
+	destruirSubstring(separado);
+	destruirSubstring(valor);
+	free(nuevoValor);
+	config_destroy(configArchivo);
+	free(key);
+	free(keyCopia);
 }
 
 void modificarArchivo(char * linea) {
