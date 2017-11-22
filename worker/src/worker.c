@@ -8,46 +8,213 @@
  ============================================================================
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <commons/config.h> //config
-#include <commons/log.h> //log
-#include <commons/txt.h> //txt
-#include <fcntl.h>  // O_RDONLY modo de abrir para el open()
-#include <sys/stat.h> //fstat()
-#include <sys/mman.h>  //mmap()
-#include <unistd.h>  //PROT_READ del mmap()
 #include "worker.h"
 
 #define PATHCONFIG "../configuraciones/nodo.cfg"
+#define TAM_MAX 100
+#define TAM_BLOQUE 1048576 //1024 * 1024, un mega
 
-int main(void) {
+int main(void)
+{
 
 	t_config *conf;
 
 	//LEER ARCHIVO DE CONFIGURACION ---------------------------------------------------------
 
    	conf = config_create(PATHCONFIG);                 // path relativo al archivo nodo.cfg
-    char* IP_FILESYSTEM = config_get_string_value(conf,"IP_FILESYSTEM");        // traigo los datos del archivo nodo.cfg
-    char* PUERTO_FILESYSTEM = config_get_string_value(conf,"PUERTO_FILESYSTEM");
-    int NOMBRE_NODO = config_get_string_value(conf,"NOMBRE_NODO");
+    //int NOMBRE_NODO = config_get_string_value(conf,"NOMBRE_NODO");
     int PUERTO_WORKER = config_get_int_value(conf,"PUERTO_WORKER");
-    int PUERTO_DATANODE = config_get_int_value(conf,"PUERTO_DATANODE");
     char* RUTA_DATABIN = config_get_string_value(conf,"RUTA_DATABIN");
 
 
+    iniciarServer(PUERTO_WORKER, (void *) procesarPaquete);
 
+
+    config_destroy(conf);
 	return EXIT_SUCCESS;
 }
 
+void procesarPaquete(t_paquete * unPaquete, int * client_socket)
+{
+	switch (unPaquete->codigoOperacion)
+	{
+	case HANDSHAKE:
+		recibirHandshake(unPaquete, client_socket);
+		break;
+	case ENVIAR_INDICACION_TRANSFORMACION:
+		t_indicacionTransformacion *auxTransf = recibirIndicacionTransformacion(unPaquete);
+		transformacion(auxTransf->bloque, auxTransf->rutaArchivoTemporal);
+		break;
+	case ENVIAR_INDICACION_REDUCCION_LOCAL:
+		t_indicacionReduccionLocal *auxRedL = recibirIndicacionReduccionLocal(unPaquete);
+		//hablar con grupo sobre cambio a estructura
+		break;
+	case ENVIAR_INDICACION_REDUCCION_GLOBAL:
+		t_indicacionReduccionGlobal *auxRedG = recibirIndicacionReduccionGlobal(unPaquete);
+		if(auxRedG->encargado)
+			iniciarEncargado();
+		else
+			iniciarEsclavo();
+		break;
+	/*case ENVIAR_INDICACION_ALMACENADO_FINAL:
+		break;*/
+	default:
+		break;
+	}
+	destruirPaquete(unPaquete);
+}
 
-void transformacion(char* bloque){
+void recibirHandshake(t_paquete * unPaquete, int * client_socket)
+{
+	int tipoCliente;
+	memcpy(&tipoCliente, unPaquete->buffer->data, sizeof(int));
+
+	switch (tipoCliente)
+	{
+	case WORKER:
+	case MASTER:
+		break;
+	default:
+		*client_socket = -1;
+		break;
+	}
+}
+
+//Funcion de ordenamiento universal para las tres etapas.
+
+char** ordenar(char** palabras, int cant_palabras)
+{
+	int i, j;
+	char canje[TAM_MAX] = {'\0'};
+	for(i= 0; i < (cant_palabras - 1); i++)
+	{
+		for(j = 0; j < ( cant_palabras - i - 1); j++)
+		{
+			if(strcmp(palabras[j], palabras[j+1]) > 0)
+			{
+				strcpy(canje, palabras[j]);
+				strcpy(palabras[j], palabras[j+1]);
+				strcpy(palabras[j+1], canje);
+			}
+		}
+	}
+	return palabras;
+}
+
+void transformacion(unsigned int bloque, char* ruta)
+{
 
 	//aplicar tranformacion aca
 
-	char* time = temporal_get_string_time();
-	FILE* archivo_temp = txt_open_for_append(strcat(time , ".tmp"));
-	txt_write_in_file(archivo_temp,bloque);
-	txt_close_file(archivo_temp);
+	FILE *a_ordenar = fopen("/home/utnso/Escritorio/Nuevo.txt", "r");
+	int j;
+	if (a_ordenar == NULL)
+		_exit(EXIT_FAILURE);
+	FILE *salida = fopen(ruta, "w");
+	if (salida == NULL)
+	{
+		fclose(a_ordenar);
+		_exit(EXIT_FAILURE);
+	}
+	char** palabras = NULL;
+	char leido[TAM_MAX] = {'\0'};
+	int i = 0;
+
+	while(fgets(leido, TAM_MAX, a_ordenar) != NULL)
+	{
+		palabras = (char**)realloc(palabras, (i+1)*sizeof(char*));
+		palabras[i] = (char*)calloc(TAM_MAX, sizeof(char));
+		strcpy(palabras[i], leido);
+		if(palabras[i][strlen(palabras[i])-1] != '\n')
+			palabras[i][strlen(palabras[i])] = '\n';
+
+		i++;
+	}
+	palabras = ordenar(palabras, i);
+	for(j=0; j<i; j++)
+	{
+		fputs(palabras[j], salida);
+		free(palabras[j]);
+	}
+	fclose(a_ordenar);
+	fclose(salida);
+	free(palabras);
+}
+
+inline int sonTodosVerdaderos(int *fdt, int cant)
+{
+	int i;
+	for(i=0;i<cant;i++)
+	{
+		if(fdt[i] == 0)
+			return 0;
+	}
+	return 1;
+}
+
+FILE* aparear(FILE* archi[], int cant)
+{
+	char** palabras = NULL;
+	int i = 0, j = 0;
+	int* fdt = calloc(cant, sizeof(int)); //Para saber si ya llego a EOF. 0 para no, 1 para si
+	char leido[TAM_MAX];
+	char* ret;
+	FILE* devolucion = NULL;
+	while(!sonTodosVerdaderos(fdt, cant))
+	{
+		if(fdt[i%cant] == 1)
+		{
+			i++;
+			continue;
+		}
+		ret = fgets(leido, TAM_MAX, archi[i%cant]);
+		if(ret == NULL)
+		{
+			fdt[i%cant] = 1;
+			i++;
+			continue;
+		}
+		palabras = (char**)realloc(palabras, (j+1)*sizeof(char*));
+		palabras[j] = (char*)calloc(TAM_MAX, sizeof(char));
+		strcpy(palabras[j], leido);
+		if(palabras[j][strlen(palabras[j])-1] != '\n')
+			palabras[j][strlen(palabras[j])] = '\n';
+
+		j++;
+		palabras = ordenar(palabras, j);
+		i++;
+	}
+	free(fdt);
+	devolucion = fopen("/home/utnso/Escritorio/apareado.txt", "w");
+	for(i=0;i<j;i++)
+	{
+		fputs(palabras[i], devolucion);
+		free(palabras[i]);
+	}
+	free(palabras);
+	return devolucion;
+}
+
+void reduccionLocal(char* rutas[], int cant)
+{
+	FILE* loc[cant];
+	FILE* apareado = NULL;
+	int i;
+	for(i = 0; i<cant; i++)
+	{
+		loc[i] = fopen(rutas[i], "r");
+		if(loc[i] == NULL)
+			_exit(EXIT_FAILURE);
+	}
+
+	apareado = aparear(loc, cant);
+
+
+	//Por aca va la reduccion
+
+
+	for(i = 0; i<cant; i++)
+		fclose(loc[i]);
+	fclose(apareado);
 
 }
