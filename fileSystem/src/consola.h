@@ -41,5 +41,6 @@ int 				obtenerIndexPadre				(char *);
 bool 				verificarDuplicados				(t_directory *);
 char ** 			buscarBloqueABorar				(int, int *, int *, t_config *);
 int 				cantArchivosEnDirectorio		(char *);
+void 				listarArchivosDirectorios		(char *);
 void				modificarArchivo				(char **, char **, int, int, int, char *);
 #endif /* CONSOLA_H_ */
