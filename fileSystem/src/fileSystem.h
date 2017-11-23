@@ -11,6 +11,7 @@
 
 #include "consola.h"
 #include "tablas.h"
+#include "interfaz.h"
 
 /*---------	---------------Estructuras-------------------------*/
 #define PUERTO_FILESYSTEM "3200"
@@ -24,16 +25,7 @@ void 				recibirHandshake				(t_paquete *, int *);
 void 				recibirInfoNodo					(t_paquete *, int);
 void 				recibirError					(t_paquete *);
 
-/*-------------------------Almacenar archivo-------------------------*/
-void				almacenarArchivo				(char *, char *, char *, int);
-void * 				dividirBloqueArchivoBinario		(void *, int *);
-void * 				dividirBloqueArchivoTexto		(void *, int *);
-char * 				buscarNodoMenosCargado			(void);
-int 				buscarBloqueAEscribir			(char *);
-
 /*-------------------------Funciones auxiliares-------------------------*/
 void 				iniciarServidor					(char*);
-void 				agregarRegistroTablaArchivos	(char *, int, int, int, t_config *);
-void 				guardoBytesPorBloque			(int, int, t_config *);
 
 #endif /* FILESYSTEM_H_ */

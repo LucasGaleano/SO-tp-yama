@@ -12,6 +12,7 @@
 #include <dirent.h>
 
 #include "tablas.h"
+#include "interfaz.h"
 
 #define RUTA_METADATA "/home/utnso/Escritorio/"
 

@@ -58,6 +58,8 @@ void 				modificarDirectorioTabla		(t_directory *, char *, int);
 
 /*-------------------------Tabla de archivos-------------------------*/
 t_config *			crearArchivoTablaArchivo		(char *, char *, char *, int);
+void 				agregarRegistroTablaArchivos	(char *, int,int, int, t_config *);
+void 				guardoBytesPorBloque			(int, int, t_config *);
 
 /*-------------------------Tabla de nodos-------------------------*/
 void	 			crearTablaNodos					(char *);
