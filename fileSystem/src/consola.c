@@ -663,13 +663,30 @@ void crearDirectorio(char * linea) {
 void copiarArchivoLocalAlYamafsInterfaz(char * linea) {
 	char * path_archivo_origen = obtenerParametro(linea, 1);
 	char * directorio_yamafs = obtenerParametro(linea, 2);
+	char * tipo_archivo = obtenerParametro(linea, 3);
 
-	printf("Me llego el path_archivo_origen: %s \n", path_archivo_origen);
-	printf("Lo copio segun interfaz en: %s \n", directorio_yamafs);
+	//Busco el nombre del archivo
+	char ** separado = string_split(path_archivo_origen,"/");
 
-//Libero memoria
+	int posicion;
+
+	for (posicion = 0; separado[posicion] != NULL; ++posicion) {
+	}
+
+	posicion -= 1;
+
+	//Seteo el tipo del archivo
+	int tipoArchivoNumero = TEXTO;
+
+	if(string_equals_ignore_case(tipo_archivo,"BINARIO"))tipoArchivoNumero=BINARIO;
+
+	almacenarArchivo(path_archivo_origen,directorio_yamafs,separado[posicion],tipoArchivoNumero);
+
+	//Libero memoria
 	free(path_archivo_origen);
 	free(directorio_yamafs);
+	free(tipo_archivo);
+	destruirSubstring(separado);
 }
 
 void copiarArchivoLocalAlYamafs(char * linea) {
