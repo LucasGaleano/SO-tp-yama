@@ -944,6 +944,8 @@ void listarArchivosDirectorios(char * ruta) {
 
 	dir = opendir(ruta);
 
+	if(dir == NULL)return;
+
 	while ((ent = readdir(dir)) != NULL) {
 		if (ent->d_name[0] != '.') {
 			printf("%s \n", ent->d_name);
