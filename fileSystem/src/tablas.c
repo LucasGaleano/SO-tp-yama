@@ -179,6 +179,57 @@ t_config * crearArchivoTablaArchivo(char * origen, char *destino, char * nombre,
 	return configTablaArchivo;
 }
 
+void agregarRegistroTablaArchivos(char * nodoElegido, int bloqueAEscribir,
+		int bloqueDelArchivo, int numeroCopia, t_config * configTablaArchivo) {
+
+	char * key = string_new();
+	char * valor = string_new();
+
+	char * numeroBloqueAEscribirChar = string_itoa(bloqueAEscribir);
+	char * numeroBloqueDelArchivoChar = string_itoa(bloqueDelArchivo);
+	char * numeroCopiaChar = string_itoa(numeroCopia);
+
+	string_append(&key, "BLOQUE");
+	string_append(&key, numeroBloqueDelArchivoChar);
+	string_append(&key, "COPIA");
+	string_append(&key, numeroCopiaChar);
+
+	string_append(&valor, "[");
+	string_append(&valor, nodoElegido);
+	string_append(&valor, ", ");
+	string_append(&valor, numeroBloqueAEscribirChar);
+	string_append(&valor, "]");
+
+	config_set_value(configTablaArchivo, key, valor);
+
+	config_save(configTablaArchivo);
+
+	free(key);
+	free(valor);
+	free(numeroBloqueAEscribirChar);
+	free(numeroBloqueDelArchivoChar);
+	free(numeroCopiaChar);
+}
+
+void guardoBytesPorBloque(int numeroBloque, int tamBuffer,
+		t_config * configTablaArchivo) {
+	char * bytesPorBloques = string_new();
+	char * numeroBloqueChar = string_itoa(numeroBloque);
+	char * totalDeBytes = string_itoa(tamBuffer);
+
+	string_append(&bytesPorBloques, "BLOQUE");
+	string_append(&bytesPorBloques, numeroBloqueChar);
+	string_append(&bytesPorBloques, "BYTES");
+
+	config_set_value(configTablaArchivo, bytesPorBloques, totalDeBytes);
+
+	config_save(configTablaArchivo);
+
+	free(bytesPorBloques);
+	free(numeroBloqueChar);
+	free(totalDeBytes);
+}
+
 /*-------------------------Tabla de nodos-------------------------*/
 void crearTablaNodos(char * rutaTablaNodos) {
 	tablaNodos = malloc(sizeof(t_tabla_nodo));
