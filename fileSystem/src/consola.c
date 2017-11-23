@@ -1,6 +1,5 @@
 #include "consola.h"
 #include "fileSystem.h"//TODO esto vuela
-//TODO modificar direccion de donde se crean los matadatos
 
 /*------------------------------Consola------------------------------*/
 void iniciarConsola() {
@@ -219,7 +218,8 @@ void eliminarArchivo(char * linea) {
 
 	//Busco la configuracion del archivo
 	char * rutaFS = string_new();
-	string_append(&rutaFS, "/home/utnso/Escritorio/metadata/archivos/");
+	string_append(&rutaFS, RUTA_METADATA);
+	string_append(&rutaFS, "metadata/archivos/");
 	char * indexPadreChar = string_itoa(indexPadre);
 	string_append(&rutaFS, indexPadreChar);
 	string_append(&rutaFS, "/");
@@ -266,8 +266,9 @@ void eliminarArchivo(char * linea) {
 	remove(rutaFS);
 
 	char * rutaDirectorioArchivo = string_new();
+	string_append(&rutaDirectorioArchivo, RUTA_METADATA);
 	string_append(&rutaDirectorioArchivo,
-			"/home/utnso/Escritorio/metadata/archivos/");
+			"metadata/archivos/");
 	string_append(&rutaDirectorioArchivo, indexPadreChar);
 
 	int cantArchivos = cantArchivosEnDirectorio(rutaDirectorioArchivo);
@@ -372,7 +373,8 @@ void eliminarBloque(char * linea) {
 
 	//Busco la configuracion del archivo
 	char * rutaFS = string_new();
-	string_append(&rutaFS, "/home/utnso/Escritorio/metadata/archivos/");
+	string_append(&rutaFS, RUTA_METADATA);
+	string_append(&rutaFS, "metadata/archivos/");
 	char * indexPadreChar = string_itoa(indexPadre);
 	string_append(&rutaFS, indexPadreChar);
 	string_append(&rutaFS, "/");
@@ -778,7 +780,8 @@ void listarArchivos(char * linea) {
 
 	//Busco los archivos que contenga el directorio
 	char * rutaFS = string_new();
-	string_append(&rutaFS, "/home/utnso/Escritorio/metadata/archivos/");
+	string_append(&rutaFS, RUTA_METADATA);
+	string_append(&rutaFS, "metadata/archivos/");
 	char * indexChar = string_itoa(registroDirectorio->index);
 	string_append(&rutaFS, indexChar);
 	listarArchivosDirectorios(rutaFS);
@@ -814,7 +817,8 @@ void mostrarInfo(char * linea) {
 
 	//Abro el archivo de config
 	char * rutaFS = string_new();
-	string_append(&rutaFS, "/home/utnso/Escritorio/metadata/archivos/");
+	string_append(&rutaFS, RUTA_METADATA);
+	string_append(&rutaFS, "metadata/archivos/");
 	char * indexChar = string_itoa(indexPadre);
 	string_append(&rutaFS, indexChar);
 	string_append(&rutaFS, "/");
@@ -954,7 +958,8 @@ void modificarArchivo(char ** separadoOriginal, char ** separadoFinal,
 		char * path_original) {
 	//Verifico que el archivo que voy a modificar exista
 	char * rutaFS = string_new();
-	string_append(&rutaFS, "/home/utnso/Escritorio/metadata/archivos/");
+	string_append(&rutaFS, RUTA_METADATA);
+	string_append(&rutaFS, "metadata/archivos/");
 	char * indexPadreChar = string_itoa(indexPadre);
 	string_append(&rutaFS, indexPadreChar);
 	string_append(&rutaFS, "/");
@@ -997,7 +1002,8 @@ void modificarArchivo(char ** separadoOriginal, char ** separadoFinal,
 			(void*) esRegistroBuscado);
 
 	char * nuevaRutaFS = string_new();
-	string_append(&nuevaRutaFS, "/home/utnso/Escritorio/metadata/archivos/");
+	string_append(&rutaFS, RUTA_METADATA);
+	string_append(&nuevaRutaFS, "metadata/archivos/");
 
 	if (registroDirectorio != NULL) {
 		//Quiero mover un archivo
