@@ -666,7 +666,7 @@ void copiarArchivoLocalAlYamafsInterfaz(char * linea) {
 	char * tipo_archivo = obtenerParametro(linea, 3);
 
 	//Busco el nombre del archivo
-	char ** separado = string_split(path_archivo_origen,"/");
+	char ** separado = string_split(path_archivo_origen, "/");
 
 	int posicion;
 
@@ -678,9 +678,11 @@ void copiarArchivoLocalAlYamafsInterfaz(char * linea) {
 	//Seteo el tipo del archivo
 	int tipoArchivoNumero = TEXTO;
 
-	if(string_equals_ignore_case(tipo_archivo,"BINARIO"))tipoArchivoNumero=BINARIO;
+	if (string_equals_ignore_case(tipo_archivo, "BINARIO"))
+		tipoArchivoNumero = BINARIO;
 
-	almacenarArchivo(path_archivo_origen,directorio_yamafs,separado[posicion],tipoArchivoNumero);
+	almacenarArchivo(path_archivo_origen, directorio_yamafs, separado[posicion],
+			tipoArchivoNumero);
 
 	//Libero memoria
 	free(path_archivo_origen);
@@ -729,11 +731,63 @@ void solicitarHash(char * linea) {
 void listarArchivos(char * linea) {
 	char * path_directorio = obtenerParametro(linea, 1);
 
-	printf("Me llego el path_directorio: %s para listar los archivos \n",
-			path_directorio);
+	//Busco el nombre del directorio
+	char ** separado = string_split(path_directorio, "/");
 
-//Libero memoria
+	int posicion;
+
+	for (posicion = 0; separado[posicion] != NULL; ++posicion) {
+	}
+
+	posicion -= 1;
+
+	//Busco el index del padre del nombre final
+	int indexPadre;
+
+	if (posicion == 0) {
+		indexPadre = obtenerIndexPadre("root");
+	} else {
+		indexPadre = obtenerIndexPadre(separado[posicion - 1]);
+	}
+
+	//Busco los hijos del directorio
+	bool esRegistroBuscado(t_directory * registro) {
+		return string_equals_ignore_case(registro->nombre, separado[posicion])
+				&& registro->padre == indexPadre;
+	}
+
+	t_directory * registroDirectorio = list_find(tablaDirectorios,
+			(void*) esRegistroBuscado);
+
+	//Busco los directorios hijos del direcorio
+	int i;
+	int cantidadMaximaDirectorios = config_keys_amount(configTablaDirectorios);
+	for (i = 0; i < cantidadMaximaDirectorios; ++i) {
+		char * iChar = string_itoa(i);
+		char * directorioPrueba = config_get_string_value(
+				configTablaDirectorios, iChar);
+		if (!string_equals_ignore_case(directorioPrueba, "[###]")) {
+			char ** directorioAMostrar = config_get_array_value(
+					configTablaDirectorios, iChar);
+			if (registroDirectorio->index == atoi(directorioAMostrar[1]))
+				printf("%s/\n", directorioAMostrar[0]);
+			free(iChar);
+			destruirSubstring(directorioAMostrar);
+		}
+	}
+
+	//Busco los archivos que contenga el directorio
+	char * rutaFS = string_new();
+	string_append(&rutaFS, "/home/utnso/Escritorio/metadata/archivos/");
+	char * indexChar = string_itoa(registroDirectorio->index);
+	string_append(&rutaFS, indexChar);
+	listarArchivosDirectorios(rutaFS);
+
+	//Libero memoria
 	free(path_directorio);
+	destruirSubstring(separado);
+	free(rutaFS);
+	free(indexChar);
 }
 
 void mostrarInfo(char * linea) {
@@ -816,6 +870,21 @@ int cantArchivosEnDirectorio(char * ruta) {
 	closedir(dir);
 
 	return i;
+}
+
+void listarArchivosDirectorios(char * ruta) {
+	DIR *dir;
+	struct dirent *ent;
+
+	dir = opendir(ruta);
+
+	while ((ent = readdir(dir)) != NULL) {
+		if (ent->d_name[0] != '.') {
+			printf("%s \n",ent->d_name);
+		}
+	}
+
+	closedir(dir);
 }
 
 void modificarArchivo(char ** separadoOriginal, char ** separadoFinal,
