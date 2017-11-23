@@ -57,7 +57,7 @@ void 				eliminarDirectorioTabla			(char *, int);
 void 				modificarDirectorioTabla		(t_directory *, char *, int);
 
 /*-------------------------Tabla de archivos-------------------------*/
-t_config *			crearArchivoTablaArchivo		(char *, char *, char *);
+t_config *			crearArchivoTablaArchivo		(char *, char *, char *, int);
 
 /*-------------------------Tabla de nodos-------------------------*/
 void	 			crearTablaNodos					(char *);
