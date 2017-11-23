@@ -43,4 +43,5 @@ char ** 			buscarBloqueABorar				(int, int *, int *, t_config *);
 int 				cantArchivosEnDirectorio		(char *);
 void 				listarArchivosDirectorios		(char *);
 void				modificarArchivo				(char **, char **, int, int, int, char *);
+void 				imprimirBloque					(t_config *, int, int);
 #endif /* CONSOLA_H_ */

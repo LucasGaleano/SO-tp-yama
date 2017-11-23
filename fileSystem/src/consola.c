@@ -793,11 +793,73 @@ void listarArchivos(char * linea) {
 void mostrarInfo(char * linea) {
 	char * path_archivo = obtenerParametro(linea, 1);
 
-	printf("Me llego el path_directorio: %s para mostrar su informacion \n",
-			path_archivo);
+	//Busco el nombre del directorio
+	char ** separado = string_split(path_archivo, "/");
 
-//Libero memoria
+	int posicion;
+
+	for (posicion = 0; separado[posicion] != NULL; ++posicion) {
+	}
+
+	posicion -= 1;
+
+	//Busco el index del padre
+	int indexPadre;
+
+	if (posicion == 0) {
+		indexPadre = obtenerIndexPadre("root");
+	} else {
+		indexPadre = obtenerIndexPadre(separado[posicion-1]);
+	}
+
+	//Abro el archivo de config
+	char * rutaFS = string_new();
+	string_append(&rutaFS, "/home/utnso/Escritorio/metadata/archivos/");
+	char * indexChar = string_itoa(indexPadre);
+	string_append(&rutaFS, indexChar);
+	string_append(&rutaFS, "/");
+	string_append(&rutaFS, separado[posicion]);
+
+	t_config * configArchivo = config_create(rutaFS);
+
+	//Imprimo por pantalla el archivo
+	char * tamanio = config_get_string_value(configArchivo, "TAMANIO");
+	printf("TAMANIO = %s\n", tamanio);
+	char * tipo = config_get_string_value(configArchivo, "TIPO");
+	printf("TIPO = %s\n", tipo);
+
+	int i;
+	int bloque = 0;
+	int copia = 0;
+	int cantidadBloque = ((config_keys_amount(configArchivo)-2)/3)*2;
+	for (i = 0; i < cantidadBloque; ++i) {
+		imprimirBloque(configArchivo, bloque, copia);
+		if (copia == 0) {
+			copia++;
+		} else {
+			char * bloqueBytes = string_new();
+			string_append(&bloqueBytes,"BLOQUE");
+			char * numeroBloqueChar = string_itoa(bloque);
+			string_append(&bloqueBytes, numeroBloqueChar);
+			string_append(&bloqueBytes,"BYTES");
+
+			char * valor = config_get_string_value(configArchivo, bloqueBytes);
+
+			printf("%s = %s \n",bloqueBytes,valor);
+
+			free(bloqueBytes);
+			free(numeroBloqueChar);
+			copia = 0;
+			bloque ++;
+		}
+	}
+
+	//Libero memoria
 	free(path_archivo);
+	destruirSubstring(separado);
+	free(rutaFS);
+	free(indexChar);
+	config_destroy(configArchivo);
 }
 
 /*------------------------------Auxiliares------------------------------*/
@@ -880,7 +942,7 @@ void listarArchivosDirectorios(char * ruta) {
 
 	while ((ent = readdir(dir)) != NULL) {
 		if (ent->d_name[0] != '.') {
-			printf("%s \n",ent->d_name);
+			printf("%s \n", ent->d_name);
 		}
 	}
 
@@ -967,4 +1029,23 @@ void modificarArchivo(char ** separadoOriginal, char ** separadoFinal,
 	free(indexPadreChar);
 	config_destroy(configArchivo);
 	free(nuevaRutaFS);
+}
+
+void imprimirBloque(t_config * configArchivo, int numeroBloque, int numeroCopia) {
+	char * key = string_new();
+	string_append(&key, "BLOQUE");
+	char * numeoBloqueChar = string_itoa(numeroBloque);
+	string_append(&key, numeoBloqueChar);
+	string_append(&key, "COPIA");
+	char * numeroCopiaChar = string_itoa(numeroCopia);
+	string_append(&key, numeroCopiaChar);
+
+	char * nodoBloqueABorar = config_get_string_value(configArchivo, key);
+
+	printf("%s = %s\n", key, nodoBloqueABorar);
+
+	//Libero memoria
+	free(key);
+	free(numeoBloqueChar);
+	free(numeroCopiaChar);
 }
