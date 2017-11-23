@@ -115,7 +115,7 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 	int numeroBloque = 0;
 
 	t_config * configTablaArchivo = crearArchivoTablaArchivo(rutaArchivo,
-			rutaDestino, nomArchivo);
+			rutaDestino, nomArchivo, tipoArchivo);
 
 	while (desplazamiento < tamArch) {
 		void * buffer;

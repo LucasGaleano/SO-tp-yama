@@ -112,7 +112,7 @@ void modificarDirectorioTabla(t_directory * registroTabla, char * nombreFinal,
 }
 
 /*-------------------------Tabla de archivos-------------------------*/
-t_config * crearArchivoTablaArchivo(char * origen, char *destino, char * nombre) {
+t_config * crearArchivoTablaArchivo(char * origen, char *destino, char * nombre, int tipoArchivo) {
 	//Copio informacion del archivo
 	struct stat statArch;
 
@@ -161,7 +161,7 @@ t_config * crearArchivoTablaArchivo(char * origen, char *destino, char * nombre)
 	config_set_value(configTablaArchivo, "TAMANIO", tamArcString);
 
 	//Cargo tipo en el archivo
-	if (string_contains(nombreArchivo, ".csv")) {
+	if (tipoArchivo == TEXTO) {
 		config_set_value(configTablaArchivo, "TIPO", "TEXTO");
 	} else {
 		config_set_value(configTablaArchivo, "TIPO", "BINARIO");
