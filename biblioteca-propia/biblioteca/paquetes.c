@@ -328,7 +328,12 @@ void recibirMensaje(t_paquete * unPaquete) {
 	free(mensaje);
 }
 
-void recibirArchivo(t_paquete * unPaquete) {
+void* recibirArchivo(t_paquete * unPaquete)
+{
+	return deserializarArchivo(unPaquete->buffer);
+}
+
+/*void recibirArchivo(t_paquete * unPaquete) {
 	void * archivo = deserializarArchivo(unPaquete->buffer);
 
 	printf("Me llego un archivo \n");
@@ -341,7 +346,7 @@ void recibirArchivo(t_paquete * unPaquete) {
 
 	//Libero memoria
 	free(archivo);
-}
+}*
 
 void* recibirbloque(t_paquete* unPaquete) {
 
