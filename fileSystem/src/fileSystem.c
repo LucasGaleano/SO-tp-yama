@@ -53,6 +53,25 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_ERROR:
 		recibirError(unPaquete);
 		break;
+	case ENVIAR_BLOQUE_ARCHIVO_TEMPORAL:
+		;
+		t_respuestaLecturaArchTemp * bloque = recibirBloqueArchTemp(unPaquete);
+		list_add(listaTemporal,bloque);
+		break;
+	case ENVIAR_RESPUESTA_ESCRITURA_BLOQUE:
+		;
+		t_respuestaEscritura * respuesta = recibirRespuestaEscrituraBloque(unPaquete);
+
+		char * nomNodo = buscarNombrePorSocket(*client_socket);
+
+		if(respuesta->exito){
+			printf("Se pudo guardar el bloque: %d en el nodo: %s \n",respuesta->numBloque,nomNodo);
+		}else{
+			printf("No se pudo guardar el bloque: %d en el nodo: %s \n",respuesta->numBloque,nomNodo);
+		}
+
+		free(respuesta);
+		break;
 	default:
 		break;
 	}

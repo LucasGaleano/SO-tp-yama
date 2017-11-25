@@ -112,10 +112,10 @@ void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
 	int tamBuffer = tamProximoBloque;
 
 	if (archivoSeparado[i] != NULL) {
-			tamProximoBloque = string_length(archivoSeparado[i]);
-			if (archivoSeparado[i + 1] != NULL)
-				tamProximoBloque++;
-		}
+		tamProximoBloque = string_length(archivoSeparado[i]);
+		if (archivoSeparado[i + 1] != NULL)
+			tamProximoBloque++;
+	}
 
 	free(bufferInterno);
 
@@ -188,3 +188,122 @@ int buscarBloqueAEscribir(char * nombreNodo) {
 	return buscarBloqueLibre(configBitMap);
 }
 
+/*-------------------------Leer archivo-------------------------*/
+char * leerArchivo(char * rutaArchivo) {
+
+	listaTemporal = list_create();
+
+	//Busco el nombre del directorio
+	char ** separado = string_split(rutaArchivo, "/");
+
+	int posicion;
+
+	for (posicion = 0; separado[posicion] != NULL; ++posicion) {
+	}
+
+	posicion -= 1;
+
+	//Busco el index del padre
+	int indexPadre;
+
+	if (posicion == 0) {
+		indexPadre = obtenerIndexPadre("root");
+	} else {
+		indexPadre = obtenerIndexPadre(separado[posicion - 1]);
+	}
+
+	//Busco la configuracion del archivo
+	char * rutaFS = string_new();
+	string_append(&rutaFS, RUTA_METADATA);
+	string_append(&rutaFS, "metadata/archivos/");
+	char * indexPadreChar = string_itoa(indexPadre);
+	string_append(&rutaFS, indexPadreChar);
+	string_append(&rutaFS, "/");
+	string_append(&rutaFS, separado[posicion]);
+
+	t_config * configArchivo = config_create(rutaFS);
+
+	//Busco los bloques en los nodos
+	int cantidadDeBloques = (config_keys_amount(configArchivo) - 2) / 3;
+
+	int i;
+
+	for (i = 0; i < cantidadDeBloques; ++i) {
+
+		char ** nodoBloqueOriginal = buscarBloque(configArchivo, i, 0);
+		char ** nodoBloqueCopia = buscarBloque(configArchivo, i, 1);
+
+		t_tarea * tarea = nodoMenosSaturado(nodoBloqueOriginal,
+				nodoBloqueCopia);
+
+		list_add(tablaTareas, tarea);
+
+		enviarSolicitudLecturaArchTemp(buscarSocketPorNombre(tarea->nomNodo),tarea->bloque, i);
+
+		destruirSubstring(nodoBloqueOriginal);
+		destruirSubstring(nodoBloqueCopia);
+	}
+
+	//Espero que lleguen todos los bloques
+	while (list_size(listaTemporal) < i)
+		;
+
+	//Creo el archivo temporal en base a la lista
+	bool odenarArchivo(t_respuestaLecturaArchTemp *primero,
+			t_respuestaLecturaArchTemp *segundo) {
+		return primero->orden < segundo->orden;
+	}
+
+	list_sort(listaTemporal, (void*) odenarArchivo);
+
+	char * archivoTemporal = string_new();
+	for (i = 0; i < list_size(listaTemporal); i++) {
+		t_respuestaLecturaArchTemp * bloque = list_get(listaTemporal, i);
+		string_append(&archivoTemporal, (char*) bloque->data);
+	}
+
+	//Libero memoria
+	destruirSubstring(separado);
+	free(rutaFS);
+	free(indexPadreChar);
+	config_destroy(configArchivo);
+
+	void destruirLista(t_respuestaLecturaArchTemp * regitro) {
+		free(regitro->data);
+		free(regitro);
+	}
+	list_destroy_and_destroy_elements(listaTemporal, (void*) destruirLista);
+
+	return archivoTemporal;
+}
+
+t_tarea * nodoMenosSaturado(char ** nodoBloqueOriginal, char ** nodoBloqueCopia) {
+
+	t_tarea * tarea = malloc(sizeof(t_tarea));
+
+	int cumplenOriginal = cantidadTareas(nodoBloqueOriginal);
+
+	int cumplenCopia = cantidadTareas(nodoBloqueCopia);
+
+	if (cumplenOriginal > cumplenCopia) {
+		int tamNombre = strlen(nodoBloqueCopia[0]) + 1;
+		tarea->nomNodo = malloc(tamNombre);
+		memcpy(tarea->nomNodo, nodoBloqueCopia[0], tamNombre);
+		tarea->bloque = atoi(nodoBloqueCopia[1]);
+	} else {
+		int tamNombre = strlen(nodoBloqueOriginal[0]) + 1;
+		tarea->nomNodo = malloc(tamNombre);
+		memcpy(tarea->nomNodo, nodoBloqueOriginal[0], tamNombre);
+		tarea->bloque = atoi(nodoBloqueOriginal[1]);
+	}
+
+	return tarea;
+}
+
+int cantidadTareas(char ** nodoBloqueOriginal) {
+	bool cantidadDeTareas(char ** tarea) {
+		return string_equals_ignore_case(tarea[0], nodoBloqueOriginal[0]);
+	}
+
+	return list_count_satisfying(tablaTareas, (void*) cantidadDeTareas);
+}

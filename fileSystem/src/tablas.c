@@ -230,6 +230,24 @@ void guardoBytesPorBloque(int numeroBloque, int tamBuffer,
 	free(totalDeBytes);
 }
 
+char ** buscarBloque(t_config * configArchivo, int bloque, int copia) {
+	char * key = string_new();
+	string_append(&key, "BLOQUE");
+	char * bloqueChar = string_itoa(bloque);
+	string_append(&key, bloqueChar);
+	string_append(&key, "COPIA");
+	char * copiaChar = string_itoa(copia);
+	string_append(&key, copiaChar);
+
+	char ** bloqueEncontrado = config_get_array_value(configArchivo,key);
+
+	free(key);
+	free(bloqueChar);
+	free(copiaChar);
+
+	return bloqueEncontrado;
+}
+
 /*-------------------------Tabla de nodos-------------------------*/
 void crearTablaNodos(char * rutaTablaNodos) {
 	tablaNodos = malloc(sizeof(t_tabla_nodo));
@@ -241,6 +259,9 @@ void crearTablaNodos(char * rutaTablaNodos) {
 	tablaNodos->nomNodos = list_create();
 
 	crearArchivoTablaNodos(rutaTablaNodos);
+
+	tablaTareas = list_create();
+
 }
 
 void crearArchivoTablaNodos(char * ruta) {
@@ -464,6 +485,17 @@ int buscarSocketPorNombre(char * nombreNodo) {
 			(void*) esSocketBuscado);
 
 	return registroSocket->socket;
+}
+
+char* buscarNombrePorSocket(int socket) {
+	bool esNombreBuscado(t_tabla_sockets* nodo) {
+		return (nodo->socket == socket);
+	}
+
+	t_tabla_sockets * registroSocket = list_find(tablaSockets,
+			(void*) esNombreBuscado);
+
+	return registroSocket->nombre;
 }
 
 /*-------------------------Tabla de Bitmap-------------------------*/
