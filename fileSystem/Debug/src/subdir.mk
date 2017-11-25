@@ -6,16 +6,19 @@
 C_SRCS += \
 ../src/consola.c \
 ../src/fileSystem.c \
+../src/interfaz.c \
 ../src/tablas.c 
 
 OBJS += \
 ./src/consola.o \
 ./src/fileSystem.o \
+./src/interfaz.o \
 ./src/tablas.o 
 
 C_DEPS += \
 ./src/consola.d \
 ./src/fileSystem.d \
+./src/interfaz.d \
 ./src/tablas.d 
 
 

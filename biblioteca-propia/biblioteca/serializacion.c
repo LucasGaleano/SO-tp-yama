@@ -52,8 +52,51 @@ void serializarBloque(t_paquete* unPaquete, char* bloque) {
 	memcpy(unPaquete->buffer->data, bloque, tamBloque);
 }
 
-void serializarSolicitudLecturaBloque(t_paquete* unPaquete, int numBloque) {
+void serializarBloqueArchTemp(t_paquete* unPaquete, char* bloque, int orden) {
+	int tamBloque = strlen(bloque) + sizeof(int) + 1;
 
+	unPaquete->buffer = malloc(sizeof(t_stream));
+	unPaquete->buffer->size = tamBloque;
+
+	unPaquete->buffer->data = malloc(tamBloque);
+
+	int desplazamiento = 0;
+	memcpy(unPaquete->buffer->data + desplazamiento, bloque, strlen(bloque)+1);
+	desplazamiento += strlen(bloque)+1;
+	memcpy(unPaquete->buffer->data + desplazamiento, &orden, sizeof(int));
+}
+
+void serializarSolicitudLecturaBloque(t_paquete* unPaquete, int numBloque) {
+	serializarNumero(unPaquete, numBloque);
+}
+
+void serializarSolicitudLecturaBloqueArchTemp(t_paquete* unPaquete,
+		int numBloque, int orden) {
+	int tamNumBloque = sizeof(int) + sizeof(int);
+	unPaquete->buffer = malloc(sizeof(t_stream));
+	unPaquete->buffer->size = tamNumBloque;
+	unPaquete->buffer->data = malloc(tamNumBloque);
+	int desplazamiento = 0;
+	memcpy(unPaquete->buffer->data + desplazamiento, &numBloque, sizeof(int));
+	desplazamiento += sizeof(int);
+	memcpy(unPaquete->buffer->data + desplazamiento, &orden, sizeof(int));
+
+}
+
+void serializarRespuestaEscrituraBloque(t_paquete* unPaquete, bool exito,
+		int numBloque) {
+	int tamNumBloque = sizeof(int) + sizeof(bool);
+	unPaquete->buffer = malloc(sizeof(t_stream));
+	unPaquete->buffer->size = tamNumBloque;
+	unPaquete->buffer->data = malloc(tamNumBloque);
+	int desplazamiento = 0;
+	memcpy(unPaquete->buffer->data + desplazamiento, &exito, sizeof(bool));
+	desplazamiento += sizeof(bool);
+	memcpy(unPaquete->buffer->data + desplazamiento, &numBloque, sizeof(int));
+
+}
+
+void serializarNumero(t_paquete* unPaquete, int numBloque) {
 	int tamNumBloque = sizeof(int);
 	unPaquete->buffer = malloc(sizeof(t_stream));
 	unPaquete->buffer->size = tamNumBloque;
@@ -64,7 +107,7 @@ void serializarSolicitudLecturaBloque(t_paquete* unPaquete, int numBloque) {
 void serializarSolicitudEscrituraBloque(t_paquete* unPaquete, void* bloque,
 		int numBloque) {
 
-	int tamBloque = strlen((char*) bloque) +1;
+	int tamBloque = strlen((char*) bloque) + 1;
 	int tamTotal = tamBloque + sizeof(int);
 	unPaquete->buffer = malloc(sizeof(t_stream));
 	unPaquete->buffer->size = tamTotal;
@@ -440,16 +483,50 @@ t_nodo_info * deserializarInfoDataNode(t_stream * buffer) {
 
 void* deserializarBloque(t_stream* buffer) {
 
-	void* bloque = malloc(buffer->size);
+	void * bloque = malloc(buffer->size);
 	memcpy(bloque, buffer->data, buffer->size);
 	return bloque;
 
 }
 
+t_respuestaLecturaArchTemp * deserializarBloqueArchTemp(t_stream* buffer) {
+
+	t_respuestaLecturaArchTemp* respuesta = malloc(sizeof(t_respuestaLecturaArchTemp));
+
+	int desplazamiento = 0;
+
+	respuesta->data = strdup(buffer->data);
+
+	desplazamiento += (strlen(respuesta->data) + 1);
+
+	int tamBloque = sizeof(int);
+
+	memcpy(&respuesta->orden, buffer->data + desplazamiento, tamBloque);
+
+	return respuesta;
+}
+
 int deserializarSolicitudLecturaBloque(t_stream* buffer) {
+	return deserializarNumero(buffer);
+}
 
+t_lecturaArchTemp * deserializarSolicitudLecturaBloqueArchTemp(t_stream * buffer) {
+	t_lecturaArchTemp * pedido = malloc(sizeof(t_lecturaArchTemp));
+	memcpy(&pedido->numBloque, buffer->data, sizeof(int));
+	memcpy(&pedido->orden, buffer->data + sizeof(int), sizeof(int));
+	return pedido;
+
+}
+
+t_respuestaEscritura * deserializarRespuestaEscrituraBloque(t_stream* buffer) {
+	t_respuestaEscritura* respuesta = malloc(sizeof(t_pedidoEscritura));
+	memcpy(&respuesta->exito, buffer->data, sizeof(bool));
+	memcpy(&respuesta->numBloque, buffer->data + sizeof(bool), sizeof(int));
+	return respuesta;
+}
+
+int deserializarNumero(t_stream* buffer) {
 	return *(int*) (buffer->data);
-
 }
 
 t_pedidoEscritura* deserializarSolicitudEscrituraBloque(t_stream* buffer) {
@@ -664,3 +741,4 @@ void * abrirArchivo(char * rutaArchivo, size_t * tamArc, FILE ** archivo) {
 
 	return dataArchivo;
 }
+

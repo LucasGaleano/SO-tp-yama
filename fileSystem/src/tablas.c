@@ -179,6 +179,75 @@ t_config * crearArchivoTablaArchivo(char * origen, char *destino, char * nombre,
 	return configTablaArchivo;
 }
 
+void agregarRegistroTablaArchivos(char * nodoElegido, int bloqueAEscribir,
+		int bloqueDelArchivo, int numeroCopia, t_config * configTablaArchivo) {
+
+	char * key = string_new();
+	char * valor = string_new();
+
+	char * numeroBloqueAEscribirChar = string_itoa(bloqueAEscribir);
+	char * numeroBloqueDelArchivoChar = string_itoa(bloqueDelArchivo);
+	char * numeroCopiaChar = string_itoa(numeroCopia);
+
+	string_append(&key, "BLOQUE");
+	string_append(&key, numeroBloqueDelArchivoChar);
+	string_append(&key, "COPIA");
+	string_append(&key, numeroCopiaChar);
+
+	string_append(&valor, "[");
+	string_append(&valor, nodoElegido);
+	string_append(&valor, ", ");
+	string_append(&valor, numeroBloqueAEscribirChar);
+	string_append(&valor, "]");
+
+	config_set_value(configTablaArchivo, key, valor);
+
+	config_save(configTablaArchivo);
+
+	free(key);
+	free(valor);
+	free(numeroBloqueAEscribirChar);
+	free(numeroBloqueDelArchivoChar);
+	free(numeroCopiaChar);
+}
+
+void guardoBytesPorBloque(int numeroBloque, int tamBuffer,
+		t_config * configTablaArchivo) {
+	char * bytesPorBloques = string_new();
+	char * numeroBloqueChar = string_itoa(numeroBloque);
+	char * totalDeBytes = string_itoa(tamBuffer);
+
+	string_append(&bytesPorBloques, "BLOQUE");
+	string_append(&bytesPorBloques, numeroBloqueChar);
+	string_append(&bytesPorBloques, "BYTES");
+
+	config_set_value(configTablaArchivo, bytesPorBloques, totalDeBytes);
+
+	config_save(configTablaArchivo);
+
+	free(bytesPorBloques);
+	free(numeroBloqueChar);
+	free(totalDeBytes);
+}
+
+char ** buscarBloque(t_config * configArchivo, int bloque, int copia) {
+	char * key = string_new();
+	string_append(&key, "BLOQUE");
+	char * bloqueChar = string_itoa(bloque);
+	string_append(&key, bloqueChar);
+	string_append(&key, "COPIA");
+	char * copiaChar = string_itoa(copia);
+	string_append(&key, copiaChar);
+
+	char ** bloqueEncontrado = config_get_array_value(configArchivo,key);
+
+	free(key);
+	free(bloqueChar);
+	free(copiaChar);
+
+	return bloqueEncontrado;
+}
+
 /*-------------------------Tabla de nodos-------------------------*/
 void crearTablaNodos(char * rutaTablaNodos) {
 	tablaNodos = malloc(sizeof(t_tabla_nodo));
@@ -190,6 +259,9 @@ void crearTablaNodos(char * rutaTablaNodos) {
 	tablaNodos->nomNodos = list_create();
 
 	crearArchivoTablaNodos(rutaTablaNodos);
+
+	tablaTareas = list_create();
+
 }
 
 void crearArchivoTablaNodos(char * ruta) {
@@ -413,6 +485,17 @@ int buscarSocketPorNombre(char * nombreNodo) {
 			(void*) esSocketBuscado);
 
 	return registroSocket->socket;
+}
+
+char* buscarNombrePorSocket(int socket) {
+	bool esNombreBuscado(t_tabla_sockets* nodo) {
+		return (nodo->socket == socket);
+	}
+
+	t_tabla_sockets * registroSocket = list_find(tablaSockets,
+			(void*) esNombreBuscado);
+
+	return registroSocket->nombre;
 }
 
 /*-------------------------Tabla de Bitmap-------------------------*/

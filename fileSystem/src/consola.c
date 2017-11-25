@@ -1,5 +1,4 @@
 #include "consola.h"
-#include "fileSystem.h"//TODO esto vuela
 
 /*------------------------------Consola------------------------------*/
 void iniciarConsola() {
@@ -599,11 +598,13 @@ void modificar(char * linea) {
 void mostrarContenidoArchivo(char * linea) {
 	char * path_archivo = obtenerParametro(linea, 1);
 
-	printf("Me llego el path_archivo: %s y muestro su contenido \n",
-			path_archivo);
+	char* archivoTemporal = leerArchivo(path_archivo);
 
-//Libero memoria
+	printf("%s",archivoTemporal);
+
+	//Libero memoria
 	free(path_archivo);
+	free(archivoTemporal);
 }
 
 void crearDirectorio(char * linea) {
@@ -723,10 +724,32 @@ void crearCopiaBloqueEnNodo(char * linea) {
 void solicitarHash(char * linea) {
 	char * path_archivo_yamafs = obtenerParametro(linea, 1);
 
-	printf("Me llego el path_archivo_yamafs: %s para sacar hash \n",
-			path_archivo_yamafs);
+	//Reconstruyo el archivo que me piden
+	char* archivoTemporal = leerArchivo(path_archivo_yamafs);
 
-//Libero memoria
+	//Creo la carpeta temporal
+	char * rutaFS = string_new();
+	string_append(&rutaFS,RUTA_METADATA);
+	string_append(&rutaFS,"metadata/temporales/");
+
+	mkdir(rutaFS,0777);
+
+	//Creo el archivo temporal
+	string_append(&rutaFS,"hash");
+	FILE* file = fopen(rutaFS, "w+b");
+
+	fwrite(archivoTemporal, strlen(archivoTemporal), 1, file);
+
+	fclose(file);
+
+	//Pido el hash del archivo
+	char * comando = string_new();
+	string_append(&comando,"md5sum ");
+	string_append(&comando,rutaFS);
+
+	system(comando);
+
+	//Libero memoria
 	free(path_archivo_yamafs);
 }
 
