@@ -598,11 +598,13 @@ void modificar(char * linea) {
 void mostrarContenidoArchivo(char * linea) {
 	char * path_archivo = obtenerParametro(linea, 1);
 
-	printf("Me llego el path_archivo: %s y muestro su contenido \n",
-			path_archivo);
+	char* archivoTemporal = leerArchivo(path_archivo);
 
-//Libero memoria
+	printf("%s",archivoTemporal);
+
+	//Libero memoria
 	free(path_archivo);
+	free(archivoTemporal);
 }
 
 void crearDirectorio(char * linea) {

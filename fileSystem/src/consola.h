@@ -14,8 +14,6 @@
 #include "tablas.h"
 #include "interfaz.h"
 
-#define RUTA_METADATA "/home/utnso/Escritorio/"
-
 /*------------------------------Consola------------------------------*/
 void 				iniciarConsola							(void);
 void 				ejecutarComando							(char *, bool *);
