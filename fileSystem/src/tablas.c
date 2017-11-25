@@ -93,13 +93,13 @@ void eliminarDirectorioTabla(char * nombreDirectorio, int padreDirectorio) {
 	free(stringIndex);
 }
 
-void modificarDirectorioTabla(t_directory * registroTabla, char * nombreFinal, int indexPadre) {
+void modificarDirectorioTabla(t_directory * registroTabla, char * nombreFinal,
+		int indexPadre) {
 
-	memcpy(registroTabla->nombre, nombreFinal, string_length(nombreFinal)+1);
+	memcpy(registroTabla->nombre, nombreFinal, string_length(nombreFinal) + 1);
 	registroTabla->padre = indexPadre;
 
-	char * registro = armarRegistroDirectorio(nombreFinal,
-			indexPadre);
+	char * registro = armarRegistroDirectorio(nombreFinal, indexPadre);
 
 	char * stringIndex = string_itoa(registroTabla->index);
 
@@ -107,31 +107,24 @@ void modificarDirectorioTabla(t_directory * registroTabla, char * nombreFinal, i
 
 	config_save(configTablaDirectorios);
 
-
 	free(stringIndex);
 	free(registro);
 }
 
-
 /*-------------------------Tabla de archivos-------------------------*/
-void crearArchivoTablaArchivo(char * origen, char *destino) {
+t_config * crearArchivoTablaArchivo(char * origen, char *destino, char * nombre) {
 	//Copio informacion del archivo
 	struct stat statArch;
 
 	stat(origen, &statArch);
 
 	//Busco el nombre del archivo
-	char ** listaOrigen = string_split(origen, "/");
-
-	int posicion;
-
-	for (posicion = 0; listaOrigen[posicion] != NULL; ++posicion) {
-	}
-
-	char * nombreArchivo = listaOrigen[posicion - 1];
+	char * nombreArchivo = nombre;
 
 	//Busco el nombre del archivo
 	char ** listaDestino = string_split(destino, "/");
+
+	int posicion;
 
 	for (posicion = 0; listaDestino[posicion] != NULL; ++posicion) {
 	}
@@ -178,8 +171,12 @@ void crearArchivoTablaArchivo(char * origen, char *destino) {
 	config_save(configTablaArchivo);
 
 	//Libero memoria
-	config_destroy(configTablaArchivo);
-	//destruirSubstring(separado);
+	free(indexPadreString);
+	free(tamArcString);
+	destruirSubstring(listaDestino);
+	free(rutaArchivo);
+
+	return configTablaArchivo;
 }
 
 /*-------------------------Tabla de nodos-------------------------*/
@@ -191,6 +188,8 @@ void crearTablaNodos(char * rutaTablaNodos) {
 
 	tablaNodos->infoDeNodo = list_create();
 	tablaNodos->nomNodos = list_create();
+
+	tablaBitmapPorNodo = list_create();
 
 	crearArchivoTablaNodos(rutaTablaNodos);
 }
@@ -246,6 +245,9 @@ void agregarNodoTablaNodos(t_nodo_info * info) {
 	char * nombre = malloc(string_length(info->nombre) + 1);
 	memcpy(nombre, info->nombre, string_length(info->nombre) + 1);
 	list_add(tablaNodos->nomNodos, nombre);
+
+	//Creo su bitMaps
+	crearArchivoTablaBitmap(info);
 
 	persistirTablaNodos();
 }
@@ -383,6 +385,17 @@ char * eliminarNodoTablaSockets(int cliente_desconectado) {
 	return nom;
 }
 
+int buscarSocketPorNombre(char * nombreNodo) {
+	bool esSocketBuscado(t_tabla_sockets* nodo) {
+		return string_equals_ignore_case(nodo->nombre, nombreNodo);
+	}
+
+	t_tabla_sockets * registroSocket = list_find(tablaSockets,
+			(void*) esSocketBuscado);
+
+	return registroSocket->socket;
+}
+
 /*-------------------------Tabla de Bitmap-------------------------*/
 void crearArchivoTablaBitmap(t_nodo_info * info) {
 	//Abro el archivo para usarlo
@@ -400,13 +413,21 @@ void crearArchivoTablaBitmap(t_nodo_info * info) {
 	//Creo la estructura de configuracion
 	t_config * configTablaBitmap = config_create(rutaArchivo);
 
+	t_tabla_bitMaps * registroTabla = malloc(sizeof(t_tabla_bitMaps));
+	registroTabla->configTablaBitmap = configTablaBitmap;
+	int tamNombreNodo = string_length(info->nombre) + 1;
+	registroTabla->nombre = malloc(tamNombreNodo);
+	strcpy(registroTabla->nombre, info->nombre);
+
+	list_add(tablaBitmapPorNodo, registroTabla);
+
 	//Seteo valores de bitmap en 0
 	int i;
 	for (i = 0; i < info->total; ++i) {
 		char * nombre = string_new();
 		string_append(&nombre, "Bloque");
 		char * numeroNodo = string_itoa(i);
-		char * estado = string_itoa(0);
+		char * estado = string_itoa(true);
 		string_append(&nombre, numeroNodo);
 		config_set_value(configTablaBitmap, nombre, estado);
 		free(nombre);
@@ -417,7 +438,35 @@ void crearArchivoTablaBitmap(t_nodo_info * info) {
 	config_save(configTablaBitmap);
 
 	free(rutaArchivo);
-	config_destroy(configTablaBitmap);
+}
+
+int buscarBloqueLibre(t_config * tablaBitMaps) {
+	int cantBloquesBitMaps = config_keys_amount(tablaBitMaps);
+	int i;
+	bool encontreBloqueLibre = false;
+
+	for (i = 0; i < cantBloquesBitMaps && !encontreBloqueLibre; ++i) {
+		char * nombreBloque = string_new();
+		string_append(&nombreBloque, "Bloque");
+		char * numeroNodo = string_itoa(i);
+		string_append(&nombreBloque, numeroNodo);
+
+		int estado = config_get_int_value(tablaBitMaps, nombreBloque);
+
+		if (estado == 1) {
+			encontreBloqueLibre = true;
+			char * nuevoEstado = string_itoa(false);
+			config_set_value(tablaBitMaps, nombreBloque, nuevoEstado);
+			config_save(tablaBitMaps);
+			free(nuevoEstado);
+			i --;
+		}
+
+		free(nombreBloque);
+		free(numeroNodo);
+	}
+
+	return i;
 }
 
 /*-------------------------Funciones auxiliares-------------------------*/

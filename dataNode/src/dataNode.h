@@ -16,8 +16,14 @@
 #include <biblioteca/paquetes.h>
 
 #define PATHCONFIG "./configuraciones/nodo.cfg"
+#define recibirPaquetes true
+#define TAMBLOQUE 1024
 
-#define TAMBLOQUE 8
+
+//---------globales---------
+
+char* rutaDatabin;
+
 
 /**
 * @NAME: getBloque
@@ -31,7 +37,7 @@ char* getBloque (int numBLoque);
 * @DESC: escribe el numero del bloque pedido
 */
 
-void setBloque (int numBLoque, char* bloque);
+int setBloque (int numBLoque, char* bloque);
 
 void recibirSolicitud(t_paquete * unPaquete, int * client_socket);
 
