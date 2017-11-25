@@ -266,8 +266,7 @@ void eliminarArchivo(char * linea) {
 
 	char * rutaDirectorioArchivo = string_new();
 	string_append(&rutaDirectorioArchivo, RUTA_METADATA);
-	string_append(&rutaDirectorioArchivo,
-			"metadata/archivos/");
+	string_append(&rutaDirectorioArchivo, "metadata/archivos/");
 	string_append(&rutaDirectorioArchivo, indexPadreChar);
 
 	int cantArchivos = cantArchivosEnDirectorio(rutaDirectorioArchivo);
@@ -600,7 +599,7 @@ void mostrarContenidoArchivo(char * linea) {
 
 	char* archivoTemporal = leerArchivo(path_archivo);
 
-	printf("%s",archivoTemporal);
+	printf("%s", archivoTemporal);
 
 	//Libero memoria
 	free(path_archivo);
@@ -698,12 +697,34 @@ void copiarArchivoLocalAlYamafs(char * linea) {
 	char * path_archivo_origen = obtenerParametro(linea, 1);
 	char * directorio_filesystem = obtenerParametro(linea, 2);
 
-	printf("Me llego el path_archivo_origen: %s \n", path_archivo_origen);
-	printf("Lo copio en: %s \n", directorio_filesystem);
+	//Busco el nombre del archivo
+	char ** separado = string_split(path_archivo_origen, "/");
 
-//Libero memoria
+	int posicion;
+
+	for (posicion = 0; separado[posicion] != NULL; ++posicion) {
+	}
+
+	posicion -= 1;
+
+	//Reconstruyo el archivo que me piden
+	char* archivoTemporal = leerArchivo(path_archivo_origen);
+
+	//Creo el archivo temporal
+	string_append(&directorio_filesystem,"/");
+	string_append(&directorio_filesystem,separado[posicion]);
+
+	FILE* file = fopen(directorio_filesystem, "w+b");
+
+	fwrite(archivoTemporal, strlen(archivoTemporal), 1, file);
+
+	fclose(file);
+
+	//Libero memoria
 	free(path_archivo_origen);
 	free(directorio_filesystem);
+	free(archivoTemporal);
+	destruirSubstring(separado);
 }
 
 void crearCopiaBloqueEnNodo(char * linea) {
@@ -729,13 +750,13 @@ void solicitarHash(char * linea) {
 
 	//Creo la carpeta temporal
 	char * rutaFS = string_new();
-	string_append(&rutaFS,RUTA_METADATA);
-	string_append(&rutaFS,"metadata/temporales/");
+	string_append(&rutaFS, RUTA_METADATA);
+	string_append(&rutaFS, "metadata/temporales/");
 
-	mkdir(rutaFS,0777);
+	mkdir(rutaFS, 0777);
 
 	//Creo el archivo temporal
-	string_append(&rutaFS,"hash");
+	string_append(&rutaFS, "hash");
 	FILE* file = fopen(rutaFS, "w+b");
 
 	fwrite(archivoTemporal, strlen(archivoTemporal), 1, file);
@@ -744,8 +765,8 @@ void solicitarHash(char * linea) {
 
 	//Pido el hash del archivo
 	char * comando = string_new();
-	string_append(&comando,"md5sum ");
-	string_append(&comando,rutaFS);
+	string_append(&comando, "md5sum ");
+	string_append(&comando, rutaFS);
 
 	system(comando);
 
@@ -835,7 +856,7 @@ void mostrarInfo(char * linea) {
 	if (posicion == 0) {
 		indexPadre = obtenerIndexPadre("root");
 	} else {
-		indexPadre = obtenerIndexPadre(separado[posicion-1]);
+		indexPadre = obtenerIndexPadre(separado[posicion - 1]);
 	}
 
 	//Abro el archivo de config
@@ -858,26 +879,26 @@ void mostrarInfo(char * linea) {
 	int i;
 	int bloque = 0;
 	int copia = 0;
-	int cantidadBloque = ((config_keys_amount(configArchivo)-2)/3)*2;
+	int cantidadBloque = ((config_keys_amount(configArchivo) - 2) / 3) * 2;
 	for (i = 0; i < cantidadBloque; ++i) {
 		imprimirBloque(configArchivo, bloque, copia);
 		if (copia == 0) {
 			copia++;
 		} else {
 			char * bloqueBytes = string_new();
-			string_append(&bloqueBytes,"BLOQUE");
+			string_append(&bloqueBytes, "BLOQUE");
 			char * numeroBloqueChar = string_itoa(bloque);
 			string_append(&bloqueBytes, numeroBloqueChar);
-			string_append(&bloqueBytes,"BYTES");
+			string_append(&bloqueBytes, "BYTES");
 
 			char * valor = config_get_string_value(configArchivo, bloqueBytes);
 
-			printf("%s = %s \n",bloqueBytes,valor);
+			printf("%s = %s \n", bloqueBytes, valor);
 
 			free(bloqueBytes);
 			free(numeroBloqueChar);
 			copia = 0;
-			bloque ++;
+			bloque++;
 		}
 	}
 
@@ -967,7 +988,8 @@ void listarArchivosDirectorios(char * ruta) {
 
 	dir = opendir(ruta);
 
-	if(dir == NULL)return;
+	if (dir == NULL)
+		return;
 
 	while ((ent = readdir(dir)) != NULL) {
 		if (ent->d_name[0] != '.') {
