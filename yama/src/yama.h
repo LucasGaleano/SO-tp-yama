@@ -13,18 +13,6 @@
 #include <pthread.h>
 
 typedef struct {
-	int job;
-	int master;
-	char * nodo;
-	int bloque;
-	int etapa;
-	char * archivoTemporal;
-	int estado;
-} t_elemento_tabla_estado;
-
-//TODO enum etapa y para estado
-
-typedef struct {
 	char * ip;
 	char * puerto;
 	int retardo;
@@ -33,12 +21,15 @@ typedef struct {
 	int disponibilidad_base;
 } t_configuracion;
 
+
+
+//typedef struct {
+//	char * ;
+//	int disponibilidad_base;
+//} t_sockets;
+
 /*------------------------Configuracion proyecto-------------------------*/
 t_configuracion *   leerArchivoDeConfiguracionYAMA     (char* path);
-
-/*------------------------Manejo de tabla-------------------------*/
-int                 actualizarTablaDeEstados     (t_list* tabla_de_estados, t_elemento_tabla_estado fila_nueva);
-int                 numeroRandom();
 
 /*------------------------Manejo de conexiones-------------------------*/
 void                iniciarServidor                    (char* unPuerto);

@@ -29,8 +29,7 @@ int main(void) {
 	return 0;
 }
 
-void eliminarElemento(){
-}
+
 
 void iniciarServidor(char* unPuerto) {
 	iniciarServer(unPuerto, (void *) procesarPaquete);
@@ -101,21 +100,6 @@ t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 
 	return configuracion;
 }
-
-
-int actualizarTablaDeEstados(t_list* tabla_de_estados, t_elemento_tabla_estado fila_nueva) {
-	return list_add(tabla_de_estados, &fila_nueva);
-}
-
-int numeroRandom() {
-	unsigned short lfsr = 0xACE1u;
-	unsigned bit;
-
-	bit = ((lfsr >> 0) ^ (lfsr >> 2) ^ (lfsr >> 3) ^ (lfsr >> 5)) & 1;
-	return lfsr = (lfsr >> 1) | (bit << 15);
-}
-
-
 
 //int a = 0;
 //	int num = 1;

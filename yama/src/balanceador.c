@@ -52,18 +52,21 @@ int iniciarPlanificador(char * algoritmo) {
 
 	list_add(tabla_jobs, elemento2);
 
-	planificar(tabla_jobs);
+	//planificar(tabla_jobs);
 
 
 	return 0;
 }
 
 
-void planificar(t_list * tabla_jobs){
-	void modificador(t_elemento_tabla_jobs){
-
-	}
-
-	list_iterate(tabla_jobs, (void*)modificador);
-}
+//void planificar(t_list * tabla_jobs){
+//
+//	void mod(t_elemento_tabla_jobs elemento){
+//		if(elemento.puntero){
+//
+//		}
+//	}
+//
+//	list_iterate(tabla_jobs, (void*)modificador);
+//}
 
