@@ -32,7 +32,7 @@ void 							enviarIndicacionAlmacenadoFinal		(int, t_indicacionAlmacenadoFinal *
 
 /*-------------------------Recibir paquetes-------------------------*/
 void 							recibirMensaje						(t_paquete *);
-void 							recibirArchivo						(t_paquete *);
+void* 							recibirArchivo						(t_paquete *);
 void 							recibirBloque						(t_paquete *);
 int 							recibirSolicitudLecturaBloque		(t_paquete *);
 t_pedidoEscritura* 				recibirSolicitudEscrituraBloque		(t_paquete *);
