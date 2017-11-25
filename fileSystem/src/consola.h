@@ -8,8 +8,12 @@
 #include <stdio.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <sys/types.h>
+#include <dirent.h>
 
 #include "tablas.h"
+
+#define RUTA_METADATA "/home/utnso/Escritorio/"
 
 /*------------------------------Consola------------------------------*/
 void 				iniciarConsola							(void);
@@ -22,7 +26,7 @@ void 				formatearFilesystem						(void);
 void 				eliminarArchivo							(char *);
 void 				eliminarDirectorio						(char *);
 void 				eliminarBloque							(char *);
-void 				modificarArchivo						(char *);
+void 				modificar								(char *);
 void 				mostrarContenidoArchivo					(char *);
 void 				crearDirectorio							(char *);
 void 				copiarArchivoLocalAlYamafsInterfaz		(char *);
@@ -37,5 +41,9 @@ char * 				obtenerParametro				(char *, int);
 void 				destruirSubstring				(char **);
 int 				obtenerIndexPadre				(char *);
 bool 				verificarDuplicados				(t_directory *);
-
+char ** 			buscarBloqueABorar				(int, int *, int *, t_config *);
+int 				cantArchivosEnDirectorio		(char *);
+void 				listarArchivosDirectorios		(char *);
+void				modificarArchivo				(char **, char **, int, int, int, char *);
+void 				imprimirBloque					(t_config *, int, int);
 #endif /* CONSOLA_H_ */
