@@ -248,7 +248,8 @@ void enviarSolicitudEscrituraBloque(int server_socket, void* bloque,
 
 }
 
-void enviarRespuestaEscrituraBloque(int server_socket, bool exito, int numBloque) {
+void enviarRespuestaEscrituraBloque(int server_socket, bool exito,
+		int numBloque) {
 
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
@@ -315,7 +316,8 @@ void enviarSolicitudAlmacenadoFinal(int server_socket,
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarIndicacionTransformacion(int server_socket, t_indicacionTransformacion * indicacion) {
+void enviarIndicacionTransformacion(int server_socket,
+		t_indicacionTransformacion * indicacion) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_INDICACION_TRANSFORMACION;
@@ -325,7 +327,8 @@ void enviarIndicacionTransformacion(int server_socket, t_indicacionTransformacio
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarIndicacionReduccionLocal(int server_socket, t_indicacionReduccionLocal * indicacion) {
+void enviarIndicacionReduccionLocal(int server_socket,
+		t_indicacionReduccionLocal * indicacion) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_INDICACION_REDUCCION_LOCAL;
@@ -335,7 +338,8 @@ void enviarIndicacionReduccionLocal(int server_socket, t_indicacionReduccionLoca
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarIndicacionReduccionGlobal(int server_socket, t_indicacionReduccionGlobal * indicacion) {
+void enviarIndicacionReduccionGlobal(int server_socket,
+		t_indicacionReduccionGlobal * indicacion) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_INDICACION_REDUCCION_GLOBAL;
@@ -345,7 +349,8 @@ void enviarIndicacionReduccionGlobal(int server_socket, t_indicacionReduccionGlo
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarIndicacionAlmacenadoFinal(int server_socket, t_indicacionAlmacenadoFinal * indicacion) {
+void enviarIndicacionAlmacenadoFinal(int server_socket,
+		t_indicacionAlmacenadoFinal * indicacion) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_INDICACION_ALMACENADO_FINAL;
@@ -366,60 +371,35 @@ void recibirMensaje(t_paquete * unPaquete) {
 	free(mensaje);
 }
 
-void* recibirArchivo(t_paquete * unPaquete)
-{
+void* recibirArchivo(t_paquete * unPaquete) {
 	return deserializarArchivo(unPaquete->buffer);
 }
 
-/*void recibirArchivo(t_paquete * unPaquete) {
-	void * archivo = deserializarArchivo(unPaquete->buffer);
-
-	printf("Me llego un archivo \n");
-
-	FILE* file = fopen("/home/utnso/Escritorio/pruebaFin.txt", "w+b");
-
-	fwrite(archivo, unPaquete->buffer->size, 1, file);
-
-	fclose(file);
-
-	//Libero memoria
-	free(archivo);
-}*
-
 void * recibirBloque(t_paquete * unPaquete) {
-
 	return deserializarBloque(unPaquete->buffer);;
-
 }
 
 t_respuestaLecturaArchTemp * recibirBloqueArchTemp(t_paquete * unPaquete) {
-
 	return deserializarBloqueArchTemp(unPaquete->buffer);;
-
 }
 
 int recibirSolicitudLecturaBloque(t_paquete* unPaquete) {
-
 	return deserializarSolicitudLecturaBloque(unPaquete->buffer);
 }
 
 t_lecturaArchTemp * recibirSolicitudLecturaBloqueArchTemp(t_paquete* unPaquete) {
-
 	return deserializarSolicitudLecturaBloqueArchTemp(unPaquete->buffer);
 }
 
 t_pedidoEscritura* recibirSolicitudEscrituraBloque(t_paquete* unPaquete) {
-
 	return deserializarSolicitudEscrituraBloque(unPaquete->buffer);
-
 }
 
-t_respuestaEscritura * recibirRespuestaEscrituraBloque(t_paquete* unPaquete){
+t_respuestaEscritura * recibirRespuestaEscrituraBloque(t_paquete* unPaquete) {
 	return deserializarRespuestaEscrituraBloque(unPaquete->buffer);
 }
 
 t_pedidoTransformacion * recibirSolicitudTransformacion(t_paquete * unPaquete) {
-
 	return deserializarSolicitudTransformacion(unPaquete->buffer);
 }
 
@@ -435,18 +415,22 @@ t_pedidoAlmacenadoFinal * recibirSolicitudAlmacenadoFinal(t_paquete * unPaquete)
 	return deserializarSolicitudAlmacenadoFinal(unPaquete->buffer);
 }
 
-t_indicacionTransformacion * recibirIndicacionTransformacion(t_paquete * unPaquete) {
+t_indicacionTransformacion * recibirIndicacionTransformacion(
+		t_paquete * unPaquete) {
 	return deserializarIndicacionTransformacion(unPaquete->buffer);
 }
 
-t_indicacionReduccionLocal * recibirIndicacionReduccionLocal(t_paquete * unPaquete) {
+t_indicacionReduccionLocal * recibirIndicacionReduccionLocal(
+		t_paquete * unPaquete) {
 	return deserializarIndicacionReduccionLocal(unPaquete->buffer);
 }
 
-t_indicacionReduccionGlobal * recibirIndicacionReduccionGlobal(t_paquete * unPaquete) {
+t_indicacionReduccionGlobal * recibirIndicacionReduccionGlobal(
+		t_paquete * unPaquete) {
 	return deserializarIndicacionReduccionGlobal(unPaquete->buffer);
 }
 
-t_indicacionAlmacenadoFinal * recibirIndicacionAlmacenadoFinal(t_paquete * unPaquete) {
+t_indicacionAlmacenadoFinal * recibirIndicacionAlmacenadoFinal(
+		t_paquete * unPaquete) {
 	return deserializarIndicacionAlmacenadoFinal(unPaquete->buffer);
 }

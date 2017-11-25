@@ -35,7 +35,7 @@ void 							enviarIndicacionAlmacenadoFinal			(int, t_indicacionAlmacenadoFinal 
 
 /*-----------------------------------Recibir paquetes-----------------------------------*/
 void 							recibirMensaje							(t_paquete *);
-void 							recibirArchivo							(t_paquete *);
+void * 							recibirArchivo							(t_paquete *);
 void * 							recibirBloque							(t_paquete *);
 t_respuestaLecturaArchTemp * 	recibirBloqueArchTemp					(t_paquete *);
 int 							recibirSolicitudLecturaBloque			(t_paquete *);
@@ -49,6 +49,6 @@ t_pedidoAlmacenadoFinal* 		recibirSolicitudAlmacenadoFinal			(t_paquete *);
 t_indicacionTransformacion* 	recibirIndicacionTransformacion			(t_paquete *);
 t_indicacionReduccionLocal*	 	recibirIndicacionReduccionLocal			(t_paquete *);
 t_indicacionReduccionGlobal*	recibirIndicacionReduccionGlobal		(t_paquete *);
-t_indicacionAlmacenadoFinal* 	recibirIndicacionAlmacenadoFinal		(t_paquete *);>>>>>>> master
+t_indicacionAlmacenadoFinal* 	recibirIndicacionAlmacenadoFinal		(t_paquete *);
 
 #endif /* SRC_PROCESAMIENTOPAQUETES_H_ */
