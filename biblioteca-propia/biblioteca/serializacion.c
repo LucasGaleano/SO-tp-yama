@@ -64,10 +64,10 @@ void serializarSolicitudLecturaBloque(t_paquete* unPaquete, int numBloque) {
 void serializarSolicitudEscrituraBloque(t_paquete* unPaquete, void* bloque,
 		int numBloque) {
 
-	int tamBloque = strlen((char*) bloque);
+	int tamBloque = strlen((char*) bloque) +1;
 	int tamTotal = tamBloque + sizeof(int);
 	unPaquete->buffer = malloc(sizeof(t_stream));
-	unPaquete->buffer->size = tamBloque;
+	unPaquete->buffer->size = tamTotal;
 	unPaquete->buffer->data = malloc(tamTotal);
 
 	int desplazamiento = 0;
