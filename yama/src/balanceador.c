@@ -60,6 +60,10 @@ int iniciarPlanificador(char * algoritmo) {
 
 
 void planificar(t_list * tabla_jobs){
+	void modificador(t_elemento_tabla_jobs){
 
+	}
+
+	list_iterate(tabla_jobs, (void*)modificador);
 }
 

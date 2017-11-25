@@ -20,6 +20,8 @@ int main(void) {
 	string_append(&prueba, "hola");
 	enviarMensaje(socketFS, prueba);
 
+	iniciarPlanificador(config->algoritmo);
+
 	while(1);
 
 	config_destroy(config);
