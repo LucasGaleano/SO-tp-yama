@@ -101,10 +101,12 @@ typedef struct {
 typedef struct {
 	int bloque;
 	char * rutaArchivo;
-	char * nodo;
+	char * nodoBuscado;
+	char * nodoAEscribir;
 }t_lecturaGenerarCopia;
 
 typedef struct {
+	int bloque;
 	void * data;
 	char * rutaArchivo;
 	char * nodo;

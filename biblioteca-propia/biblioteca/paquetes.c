@@ -201,14 +201,14 @@ void enviarBloque(int server_socket, char* bloque) {
 
 }
 
-void enviarBloqueGenerarCopia(int server_socket, char* bloque, char* ruta,
+void enviarBloqueGenerarCopia(int server_socket, int bloque,char* data, char* ruta,
 		char* nodo) {
 
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_BLOQUE_GENERAR_COPIA;
 
-	serializarBloqueGenerarCopia(unPaquete, bloque, ruta, nodo);
+	serializarBloqueGenerarCopia(unPaquete, bloque,data, ruta, nodo);
 
 	enviarPaquetes(server_socket, unPaquete);
 
@@ -237,12 +237,12 @@ void enviarSolicitudLecturaBloque(int server_socket, int numBloque) {
 
 }
 
-void enviarSolicitudLecturaBloqueGenerarCopia(int server_socket, int numBloque, char* ruta, char* nodo) {
+void enviarSolicitudLecturaBloqueGenerarCopia(int server_socket, int numBloque, char* ruta, char* nodoBuscado, char * nodoAEscribir) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_SOLICITUD_LECTURA_BLOQUE_GENERAR_COPIA;
 
-	serializarSolicitudLecturaBloqueGenerarCopia(unPaquete, numBloque, ruta, nodo);
+	serializarSolicitudLecturaBloqueGenerarCopia(unPaquete, numBloque, ruta, nodoBuscado, nodoAEscribir);
 
 	enviarPaquetes(server_socket, unPaquete);
 }

@@ -177,7 +177,8 @@ char * buscarNodoMenosCargado() {
 
 int buscarBloqueAEscribir(char * nombreNodo) {
 	char * rutaConfig = string_new();
-	string_append(&rutaConfig, "/home/utnso/Escritorio/metadata/bitmaps/");
+	string_append(&rutaConfig, RUTA_METADATA);
+	string_append(&rutaConfig, "metadata/bitmaps/");
 	string_append(&rutaConfig, nombreNodo);
 	string_append(&rutaConfig, ".dat");
 
