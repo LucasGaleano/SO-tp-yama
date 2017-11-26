@@ -28,16 +28,14 @@ void procesarPaquete(t_paquete*, int*);
 
 void transformacion (unsigned int, char*);
 
-char** ordenar (char**, int);
-
 inline int sonTodosVerdaderos(int *, int);
 
-void reduccionLocal(char*[], int);
+void reduccionLocal(char**, int, char*);
 
 FILE* aparear(FILE *[], int);
 
 void iniciarEncargado();
 
-void iniciarEsclavo(char *, char *, char*);
+void iniciarEsclavo(char *, char *);
 
 #endif WORKER_H_
