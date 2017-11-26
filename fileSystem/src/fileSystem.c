@@ -39,38 +39,22 @@ int main(int argc, char **argv) {
 void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	switch (unPaquete->codigoOperacion) {
 	case HANDSHAKE:
-		recibirHandshake(unPaquete, client_socket);
-		break;
-	case ENVIAR_MENSAJE:
-		recibirMensaje(unPaquete);
-		break;
-	case ENVIAR_ARCHIVO:
-		recibirArchivo(unPaquete);
+		procesarHandshake(unPaquete, client_socket);
 		break;
 	case ENVIAR_INFO_DATANODE:
-		recibirInfoNodo(unPaquete, *client_socket);
+		procesarInfoNodo(unPaquete, *client_socket);
 		break;
 	case ENVIAR_ERROR:
-		recibirError(unPaquete);
+		procesarError(unPaquete);
 		break;
 	case ENVIAR_BLOQUE_ARCHIVO_TEMPORAL:
-		;
-		t_respuestaLecturaArchTemp * bloque = recibirBloqueArchTemp(unPaquete);
-		list_add(listaTemporal,bloque);
+		procesarBloqueArchivoTemporal(unPaquete);
 		break;
 	case ENVIAR_RESPUESTA_ESCRITURA_BLOQUE:
-		;
-		t_respuestaEscritura * respuesta = recibirRespuestaEscrituraBloque(unPaquete);
-
-		char * nomNodo = buscarNombrePorSocket(*client_socket);
-
-		if(respuesta->exito){
-			printf("Se pudo guardar el bloque: %d en el nodo: %s \n",respuesta->numBloque,nomNodo);
-		}else{
-			printf("No se pudo guardar el bloque: %d en el nodo: %s \n",respuesta->numBloque,nomNodo);
-		}
-
-		free(respuesta);
+		procesarRespuestaEscrituraBloque(unPaquete, *client_socket);
+		break;
+	case ENVIAR_BLOQUE_GENERAR_COPIA:
+		procesarBloqueGenerarCopia(unPaquete);
 		break;
 	default:
 		break;
@@ -78,11 +62,8 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	destruirPaquete(unPaquete);
 }
 
-void recibirHandshake(t_paquete * unPaquete, int * client_socket) {
-	int tipoCliente;
-	memcpy(&tipoCliente, unPaquete->buffer->data, sizeof(int));
-
-	switch (tipoCliente) {
+void procesarHandshake(t_paquete * unPaquete, int * client_socket) {
+	switch (recibirHandshake(unPaquete)) {
 	case DATANODE:
 		break;
 	case YAMA:
@@ -95,9 +76,9 @@ void recibirHandshake(t_paquete * unPaquete, int * client_socket) {
 	}
 }
 
-void recibirInfoNodo(t_paquete * unPaquete, int client_socket) {
-	//Deserializo
-	t_nodo_info * info = deserializarInfoDataNode(unPaquete->buffer);
+void procesarInfoNodo(t_paquete * unPaquete, int client_socket) {
+	//Recibo info
+	t_nodo_info * info = recibirInfoDataNode(unPaquete);
 
 	//Agrego elemento a la lista de nodos por sockets
 	agregarNodoTablaSockets(info->nombre, client_socket);
@@ -110,7 +91,7 @@ void recibirInfoNodo(t_paquete * unPaquete, int client_socket) {
 
 }
 
-void recibirError(t_paquete * unPaquete) {
+void procesarError(t_paquete * unPaquete) {
 	int cliente_desconectado;
 	memcpy(&cliente_desconectado, unPaquete->buffer->data, sizeof(int));
 
@@ -120,6 +101,32 @@ void recibirError(t_paquete * unPaquete) {
 
 }
 
+void procesarBloqueArchivoTemporal(t_paquete * unPaquete) {
+	t_respuestaLecturaArchTemp * bloqueArchTem = recibirBloqueArchTemp(
+			unPaquete);
+	list_add(listaTemporal, bloqueArchTem);
+}
+
+void procesarRespuestaEscrituraBloque(t_paquete * unPaquete, int client_socket) {
+	t_respuestaEscritura * respuesta = recibirRespuestaEscrituraBloque(
+			unPaquete);
+	char * nomNodo = buscarNombrePorSocket(client_socket);
+
+	if (respuesta->exito) {
+		printf("Se pudo guardar el bloque: %d en el nodo: %s \n",
+				respuesta->numBloque, nomNodo);
+	} else {
+		printf("No se pudo guardar el bloque: %d en el nodo: %s \n",
+				respuesta->numBloque, nomNodo);
+	}
+
+	free(respuesta);
+
+}
+
+void procesarBloqueGenerarCopia(t_paquete * unPaquete){
+	void * bloque = recibirBloque(unPaquete);
+}
 /*-------------------------Funciones auxiliares-------------------------*/
 void iniciarServidor(char* unPuerto) {
 	iniciarServer(unPuerto, (void *) procesarPaquete);
