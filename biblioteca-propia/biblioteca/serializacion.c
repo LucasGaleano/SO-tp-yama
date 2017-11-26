@@ -632,7 +632,7 @@ t_respuestaLecturaArchTemp * deserializarBloqueArchTemp(t_stream* buffer) {
 
 	int desplazamiento = 0;
 
-	respuesta->data = strdup(buffer->data);
+	respuesta->data = strdup(buffer->data + desplazamiento);
 
 	desplazamiento += (strlen(respuesta->data) + 1);
 

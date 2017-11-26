@@ -785,6 +785,7 @@ void crearCopiaBloqueEnNodo(char * linea) {
 	char ** bloqueBuscado = buscarBloque(configArchivo,atoi(nro_bloque),i);
 	while(string_equals_ignore_case(bloqueBuscado[0],"#")){
 		i ++;
+		destruirSubstring(bloqueBuscado);
 		bloqueBuscado = buscarBloque(configArchivo,atoi(nro_bloque),i);
 	}
 
@@ -833,8 +834,21 @@ void solicitarHash(char * linea) {
 
 	system(comando);
 
+	//Borro el archivo hash
+	remove(rutaFS);
+
+	//Borro la carpeta temporales
+	char * rutaTemporal = string_new();
+	string_append(&rutaTemporal,RUTA_METADATA);
+	string_append(&rutaTemporal,"metadata/temporales");
+	remove(rutaTemporal);
+
 	//Libero memoria
 	free(path_archivo_yamafs);
+	free(rutaTemporal);
+	free(rutaFS);
+	free(comando);
+	free(archivoTemporal);
 }
 
 void listarArchivos(char * linea) {
