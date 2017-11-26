@@ -157,4 +157,12 @@ typedef struct {
 	char* rutaArchivoReduccionGlobal;
 } t_indicacionAlmacenadoFinal;
 
+//Verificados
+
+
+/*------------------------------Estructuras de comunicacion Yama File System------------------------------*/
+typedef struct {
+	char* rutaArchivo;
+} t_solicitudArchivo;
+
 #endif /* BIBLIOTECA_ESTRUCTURAS_H_ */

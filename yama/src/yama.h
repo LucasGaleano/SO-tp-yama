@@ -21,7 +21,7 @@ typedef struct {
 	int disponibilidad_base;
 } t_configuracion;
 
-
+int socketFS;
 
 //typedef struct {
 //	char * ;

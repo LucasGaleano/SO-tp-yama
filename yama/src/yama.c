@@ -14,15 +14,10 @@ int main(void) {
 		exit(EXIT_FAILURE);
 	}
 
-	int socketFS = conectarCliente(config->ip, config->puerto, YAMA);
-
-	char * prueba = string_new();
-	string_append(&prueba, "hola");
-	enviarMensaje(socketFS, prueba);
+	//Me conecto con el file system
+	socketFS = conectarCliente(config->ip, config->puerto, YAMA);
 
 	iniciarPlanificador(config->algoritmo);
-
-	while(1);
 
 	config_destroy(config);
 //	list_destroy_and_destroy_elements(tabla_de_estados, (void*) eliminarElemento() ); //TODO PREGUNTAR SI ESTA BIEN LIBERAR DESPUES DE USAR
@@ -48,6 +43,11 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		break;
 	case ENVIAR_ERROR:
 		recibirError(unPaquete);
+		break;
+	case ENVIAR_INDICACION_TRANSFORMACION:
+		;
+		t_solicitudArchivo * nomArchivo = recibirSolicitudArchivo(unPaquete);
+		enviarSolicitudInformacionArchivo(socketFS,nomArchivo);
 		break;
 	default:
 		break;
@@ -100,18 +100,3 @@ t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 
 	return configuracion;
 }
-
-//int a = 0;
-//	int num = 1;
-//	int numAnt = 2;
-//	bool guardoAnt = false;
-//	while(num != numAnt){
-//		a += 1;
-//		if(guardoAnt){
-//			numAnt = num;
-//		}
-//		num = rand();
-//		guardoAnt = true;
-//		printf("Num: %d y NumAnt: %d\n", num, numAnt);
-//	}
-//	printf("ENCONTRE NUMEROS REPEDITOS EN POS: %d Num: %d y NumAnt: %d\n",a, num, numAnt);
