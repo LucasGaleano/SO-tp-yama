@@ -125,6 +125,7 @@ void ejecutarComando(char * linea, bool * ejecutar) {
 	if (string_starts_with(linea, "prueba")) {
 		almacenarArchivo("/home/utnso/Escritorio/prueba.txt", "user",
 				"texto2.txt", TEXTO);
+
 		return;
 	}
 
@@ -768,7 +769,7 @@ void crearCopiaBloqueEnNodo(char * linea) {
 
 	//Pido la info del bloque buscado
 	int socket = buscarSocketPorNombre(bloqueBuscado[0]);
-	enviarSolicitudLecturaBloqueGenerarCopia(socket,atoi(bloqueBuscado[1]),path_archivo,bloqueBuscado[1]);
+	enviarSolicitudLecturaBloqueGenerarCopia(socket,atoi(bloqueBuscado[1]),path_archivo,bloqueBuscado[0],id_nodo);
 
 	//Libero memoria
 	free(path_archivo);
@@ -778,6 +779,7 @@ void crearCopiaBloqueEnNodo(char * linea) {
 	free(rutaFS);
 	free(indexChar);
 	config_destroy(configArchivo);
+	destruirSubstring(bloqueBuscado);
 }
 
 void solicitarHash(char * linea) {
