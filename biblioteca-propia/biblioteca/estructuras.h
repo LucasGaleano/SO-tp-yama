@@ -45,9 +45,11 @@ enum cod_op{
 	ENVIAR_ERROR,
 
 	ENVIAR_BLOQUE,
+	ENVIAR_BLOQUE_GENERAR_COPIA,
 	ENVIAR_BLOQUE_ARCHIVO_TEMPORAL,
 
 	ENVIAR_SOLICITUD_LECTURA_BLOQUE,
+	ENVIAR_SOLICITUD_LECTURA_BLOQUE_GENERAR_COPIA,
 	ENVIAR_SOLICITUD_LECTURA_ARCHIVO_TEMPORAL,
 
 	ENVIAR_SOLICITUD_ESCRITURA_BLOQUE,
@@ -95,6 +97,24 @@ typedef struct {
 	void * data;
 	int orden;
 }t_respuestaLecturaArchTemp;
+
+typedef struct {
+	int bloque;
+	char * rutaArchivo;
+	char * nodo;
+}t_lecturaGenerarCopia;
+
+typedef struct {
+	void * data;
+	char * rutaArchivo;
+	char * nodo;
+}t_respuestaLecturaGenerarCopia;
+
+typedef struct {
+	char * nombre;
+	int total;
+	int libre;
+} t_nodo_info;
 
 /*------------------------------Estructuras de comunicacion Yama Master------------------------------*/
 typedef struct {
