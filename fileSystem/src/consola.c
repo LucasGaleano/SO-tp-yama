@@ -732,14 +732,52 @@ void crearCopiaBloqueEnNodo(char * linea) {
 	char * nro_bloque = obtenerParametro(linea, 2);
 	char * id_nodo = obtenerParametro(linea, 3);
 
-	printf("Me llego el path_archivo para copiar: %s \n", path_archivo);
-	printf("Me llego el nro_bloque para copiar: %s \n", nro_bloque);
-	printf("Me llego el id_nodo en donde copiar: %s \n", id_nodo);
+	//Busco el nombre del directorio
+	char ** separado = string_split(path_archivo, "/");
 
-//Libero memoria
+	int posicion;
+
+	for (posicion = 0; separado[posicion] != NULL; ++posicion) {
+	}
+
+	posicion -= 1;
+
+	//Busco el index del padre
+	int indexPadre;
+
+	if (posicion == 0) {
+		indexPadre = obtenerIndexPadre("root");
+	} else {
+		indexPadre = obtenerIndexPadre(separado[posicion - 1]);
+	}
+
+	//Abro el archivo de config
+	char * rutaFS = string_new();
+	string_append(&rutaFS, RUTA_METADATA);
+	string_append(&rutaFS, "metadata/archivos/");
+	char * indexChar = string_itoa(indexPadre);
+	string_append(&rutaFS, indexChar);
+	string_append(&rutaFS, "/");
+	string_append(&rutaFS, separado[posicion]);
+
+	t_config * configArchivo = config_create(rutaFS);
+
+	//Busco el bloque a copiar
+	char ** bloqueBuscado = buscarBloque(configArchivo,atoi(nro_bloque),0);
+	if(bloqueBuscado == NULL)bloqueBuscado = buscarBloque(configArchivo,atoi(nro_bloque),1);
+
+	//Pido la info del bloque buscado
+	int socket = buscarSocketPorNombre(bloqueBuscado[0]);
+	enviarSolicitudLecturaBloqueGenerarCopia(socket,atoi(bloqueBuscado[1]),path_archivo,bloqueBuscado[1]);
+
+	//Libero memoria
 	free(path_archivo);
 	free(nro_bloque);
 	free(id_nodo);
+	destruirSubstring(separado);
+	free(rutaFS);
+	free(indexChar);
+	config_destroy(configArchivo);
 }
 
 void solicitarHash(char * linea) {
