@@ -20,12 +20,15 @@
 t_log* logFileSystem;
 
 /*------------------------Procesamiento paquetes-------------------------*/
-void 				procesarPaquete					(t_paquete *, int *);
-void 				recibirHandshake				(t_paquete *, int *);
-void 				recibirInfoNodo					(t_paquete *, int);
-void 				recibirError					(t_paquete *);
+void 				procesarPaquete						(t_paquete *, int *);
+void 				procesarHandshake					(t_paquete *, int *);
+void 				procesarInfoNodo					(t_paquete *, int);
+void 				procesarError						(t_paquete *);
+void 				procesarBloqueArchivoTemporal		(t_paquete *);
+void				procesarRespuestaEscrituraBloque	(t_paquete *, int);
+void 				procesarBloqueGenerarCopia			(t_paquete *);
 
 /*-------------------------Funciones auxiliares-------------------------*/
-void 				iniciarServidor					(char*);
+void 				iniciarServidor						(char*);
 
 #endif /* FILESYSTEM_H_ */
