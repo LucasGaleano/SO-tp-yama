@@ -73,6 +73,7 @@ char* getBloque(int numBloque) {
 	struct stat sb;
 	char *map;
 	char *bloque = malloc(TAM_BLOQUE);
+
 	int fd = open(rutaDatabin, O_RDONLY); //abrir archivo data.bin
 	fstat(fd, &sb);
 	map = mmap(NULL, //donde comienza a guardar el mapeo, NULL significa "donde quiera el S.O"
