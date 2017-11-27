@@ -247,6 +247,8 @@ void ignoroEstadoAnterior() {
 
 void consideroEstadoAnterior() {
 	printf("Considero estado anterior \n");
+	crearTablaNodosSegunArchivo(RUTA_METADATA);
+	crearTablaDirectorioSegunArchivo(RUTA_METADATA);
 }
 
 /*-------------------------Funciones auxiliares-------------------------*/

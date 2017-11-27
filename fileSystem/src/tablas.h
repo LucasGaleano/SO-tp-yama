@@ -59,6 +59,7 @@ bool bitMapDirectorio[100];
 
 /*-------------------------Tabla de directorios-------------------------*/
 void 				crearTablaDirectorios			(char *);
+void 				crearTablaDirectorioSegunArchivo(char *);
 void 				crearArchivoTablaDirectorios	(char *);
 void 				agregarDirectorioTabla			(t_directory *, char *);
 void 				eliminarDirectorioTabla			(char *, int);
@@ -73,6 +74,7 @@ char ** 			buscarBloque					(t_config *, int, int);
 /*-------------------------Tabla de nodos-------------------------*/
 void	 			crearTablaNodos					(char *);
 void 				crearArchivoTablaNodos			(char *);
+void 				crearTablaNodosSegunArchivo		(char *);
 void 				agregarNodoTablaNodos			(t_nodo_info *);
 void 				eliminarNodoTablaNodos			(char *);
 void 				liberarBloqueTablaNodos			(char *, int);

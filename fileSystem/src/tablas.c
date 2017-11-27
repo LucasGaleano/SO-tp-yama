@@ -19,6 +19,52 @@ void crearTablaDirectorios(char * rutaTablaDirectorios) {
 	agregarDirectorioTabla(registro, "root");
 }
 
+void crearTablaDirectorioSegunArchivo(char * ruta) {
+	tablaDirectorios = list_create();
+
+	//Abro el archivo para usarlo
+	char * rutaArchivo = string_new();
+	string_append(&rutaArchivo, ruta);
+	string_append(&rutaArchivo, "metadata/directorios.dat");
+
+	//Creo la estructura de configuracion
+	configTablaDirectorios = config_create(rutaArchivo);
+
+	//Lleno el bitmap
+	llenarBitmap();
+
+	int i;
+
+	for (i = 0; i < 100; ++i) {
+		char * key = string_itoa(i);
+		char * valor = config_get_string_value(configTablaDirectorios,key);
+		if (valor != NULL) {
+			char ** directorio = config_get_array_value(configTablaDirectorios,key);
+
+			t_directory * registro = malloc(sizeof(t_directory));
+
+			strncpy(registro->nombre, directorio[0], sizeof(registro->nombre) - 1);
+
+			registro->padre = atoi(directorio[1]);
+
+			registro->index = i;
+
+			bitMapDirectorio[i] = false;
+
+			list_add(tablaDirectorios,registro);
+
+			destruirSubstring(directorio);
+
+		}
+		free(key);
+
+	}
+
+	//Libero memoria
+	free(rutaArchivo);
+
+}
+
 void crearArchivoTablaDirectorios(char * ruta) {
 	//Abro el archivo para usarlo y si no existe lo creo
 	char * rutaArchivo = string_new();
@@ -282,6 +328,89 @@ void crearArchivoTablaNodos(char * ruta) {
 	config_save(configTablaNodo);
 
 	free(rutaArchivo);
+}
+
+void crearTablaNodosSegunArchivo(char * ruta) {
+	//Abro el archivo para usarlo
+	char * rutaArchivo = string_new();
+	string_append(&rutaArchivo, ruta);
+	string_append(&rutaArchivo, "metadata/nodos.bin");
+
+	//Creo la estructura de configuracion
+	configTablaNodo = config_create(rutaArchivo);
+
+	//Creo la lista
+	tablaNodos = malloc(sizeof(t_tabla_nodo));
+
+	//Tamanio
+	tablaNodos->tamanio = config_get_int_value(configTablaNodo, "TAMANIO");
+
+	//Libre
+	tablaNodos->libres = config_get_int_value(configTablaNodo, "LIBRE");
+
+	//Nombre de nodos
+	tablaNodos->nomNodos = list_create();
+
+	char ** nomNodos = config_get_array_value(configTablaNodo, "NODOS");
+	int i;
+	for (i = 0; nomNodos[i] != NULL; i++) {
+		list_add(tablaNodos->nomNodos, nomNodos[i]);
+	}
+
+	//Info de cada nodo
+	tablaNodos->infoDeNodo = list_create();
+
+	char * nombreNodo = string_new();
+	string_append(&nombreNodo, "Nodo");
+	int numeroNodo = 1;
+	char * numeroNodoChar = string_itoa(numeroNodo);
+	string_append(&nombreNodo, numeroNodoChar);
+
+	char * nombreNodoTotal = string_new();
+	string_append(&nombreNodoTotal, nombreNodo);
+	string_append(&nombreNodoTotal, "Total");
+
+	char * nombreNodoLibre = string_new();
+	string_append(&nombreNodoLibre, nombreNodo);
+	string_append(&nombreNodoLibre, "Libre");
+
+	while (config_has_property(configTablaNodo, nombreNodoTotal)) {
+		t_nodo_info * nodo = malloc(sizeof(t_nodo_info));
+		nodo->libre = config_get_int_value(configTablaNodo, nombreNodoLibre);
+		nodo->total = config_get_int_value(configTablaNodo, nombreNodoTotal);
+		nodo->nombre = strdup(nombreNodo);
+
+		list_add(tablaNodos->infoDeNodo, nodo);
+
+		numeroNodo++;
+
+		free(nombreNodoLibre);
+		free(nombreNodoTotal);
+		free(nombreNodo);
+		free(numeroNodoChar);
+		free(nodo->nombre);
+		free(nodo);
+
+		nombreNodo = string_new();
+		string_append(&nombreNodo, "Nodo");
+		numeroNodoChar = string_itoa(numeroNodo);
+		string_append(&nombreNodo, numeroNodoChar);
+
+		nombreNodoTotal = string_new();
+		string_append(&nombreNodoTotal, nombreNodo);
+		string_append(&nombreNodoTotal, "Total");
+
+		nombreNodoLibre = string_new();
+		string_append(&nombreNodoLibre, nombreNodo);
+		string_append(&nombreNodoLibre, "Libre");
+
+	}
+	free(nombreNodoLibre);
+	free(nombreNodoTotal);
+	free(nombreNodo);
+	free(numeroNodoChar);
+	free(rutaArchivo);
+	destruirSubstring(nomNodos);
 }
 
 void agregarNodoTablaNodos(t_nodo_info * info) {
