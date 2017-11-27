@@ -28,6 +28,11 @@ void 				procesarBloqueArchivoTemporal		(t_paquete *);
 void				procesarRespuestaEscrituraBloque	(t_paquete *, int);
 void 				procesarBloqueGenerarCopia			(t_paquete *);
 
+/*-------------------------Manejos de estado-------------------------*/
+void 				manejoDeEstado						(char *);
+void 				ignoroEstadoAnterior				(void);
+void 				consideroEstadoAnterior				(void);
+
 /*-------------------------Funciones auxiliares-------------------------*/
 void 				iniciarServidor						(char*);
 

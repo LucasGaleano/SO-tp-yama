@@ -25,12 +25,7 @@ void crearArchivoTablaDirectorios(char * ruta) {
 	string_append(&rutaArchivo, ruta);
 	string_append(&rutaArchivo, "/directorios.dat");
 
-	FILE* file = fopen(rutaArchivo, "r");
-
-	if (file == NULL) {
-		mkdir("/home/utnso/Escritorio/metadata", 0777);
-		file = fopen(rutaArchivo, "w+b");
-	}
+	FILE* file = fopen(rutaArchivo, "w+b");
 
 	//Cierro el archivo
 	fclose(file);
@@ -112,7 +107,8 @@ void modificarDirectorioTabla(t_directory * registroTabla, char * nombreFinal,
 }
 
 /*-------------------------Tabla de archivos-------------------------*/
-t_config * crearArchivoTablaArchivo(char * origen, char *destino, char * nombre, int tipoArchivo) {
+t_config * crearArchivoTablaArchivo(char * origen, char *destino, char * nombre,
+		int tipoArchivo) {
 	//Copio informacion del archivo
 	struct stat statArch;
 
@@ -239,7 +235,7 @@ char ** buscarBloque(t_config * configArchivo, int bloque, int copia) {
 	char * copiaChar = string_itoa(copia);
 	string_append(&key, copiaChar);
 
-	char ** bloqueEncontrado = config_get_array_value(configArchivo,key);
+	char ** bloqueEncontrado = config_get_array_value(configArchivo, key);
 
 	free(key);
 	free(bloqueChar);
@@ -270,34 +266,20 @@ void crearArchivoTablaNodos(char * ruta) {
 	string_append(&rutaArchivo, ruta);
 	string_append(&rutaArchivo, "/nodos.bin");
 
-	FILE* file = fopen(rutaArchivo, "r");
+	FILE* file = fopen(rutaArchivo, "w+b");
 
-	if (file == NULL) {
-		mkdir("/home/utnso/Escritorio/metadata", 0777);
-		file = fopen(rutaArchivo, "w+b");
+	//Cierro el archivo
+	fclose(file);
 
-		//Cierro el archivo
-		fclose(file);
+	//Creo la estructura de configuracion
+	configTablaNodo = config_create(rutaArchivo);
 
-		//Creo la estructura de configuracion
-		configTablaNodo = config_create(rutaArchivo);
+	//Seteo las variables en cero
+	config_set_value(configTablaNodo, "TAMANIO", "0");
+	config_set_value(configTablaNodo, "LIBRE", "0");
+	config_set_value(configTablaNodo, "NODOS", "[]");
 
-		//Seteo las variables en cero
-		config_set_value(configTablaNodo, "TAMANIO", "0");
-		config_set_value(configTablaNodo, "LIBRE", "0");
-		config_set_value(configTablaNodo, "NODOS", "[]");
-
-		config_save(configTablaNodo);
-
-	} else {
-
-		//Creo la estructura de configuracion
-		configTablaNodo = config_create(rutaArchivo);
-
-		//Cierro el archivo
-		fclose(file);
-
-	}
+	config_save(configTablaNodo);
 
 	free(rutaArchivo);
 }
@@ -311,19 +293,19 @@ void agregarNodoTablaNodos(t_nodo_info * info) {
 
 	list_add(tablaNodos->infoDeNodo, info);
 
-	//Agrego a la tabla de nodos los nombres
+//Agrego a la tabla de nodos los nombres
 	char * nombre = malloc(string_length(info->nombre) + 1);
 	memcpy(nombre, info->nombre, string_length(info->nombre) + 1);
 	list_add(tablaNodos->nomNodos, nombre);
 
-	//Creo su bitMaps
+//Creo su bitMaps
 	crearArchivoTablaBitmap(info);
 
 	persistirTablaNodos();
 }
 
 void eliminarNodoTablaNodos(char * nomNodo) {
-	//Elimino de la tabla de nodos de la lista de nombres
+//Elimino de la tabla de nodos de la lista de nombres
 	bool esSocketBuscado(char * socket) {
 		return string_equals_ignore_case(socket, nomNodo);
 	}
@@ -331,7 +313,7 @@ void eliminarNodoTablaNodos(char * nomNodo) {
 	char * nombre = list_remove_by_condition(tablaNodos->nomNodos,
 			(void*) esSocketBuscado);
 
-	//Elimino de la tabla de nodos de la lista de info
+//Elimino de la tabla de nodos de la lista de info
 	bool esSocketBuscadoInfo(t_nodo_info * socket) {
 		return string_equals_ignore_case(socket->nombre, nomNodo);
 	}
@@ -339,7 +321,7 @@ void eliminarNodoTablaNodos(char * nomNodo) {
 	t_nodo_info * info = list_remove_by_condition(tablaNodos->infoDeNodo,
 			(void*) esSocketBuscadoInfo);
 
-	//Recalculo el tamanio total y tamanio libre
+//Recalculo el tamanio total y tamanio libre
 	int nuevoTamanio = tablaNodos->tamanio - info->total;
 	int nuevoLibres = tablaNodos->libres - info->libre;
 
@@ -348,18 +330,18 @@ void eliminarNodoTablaNodos(char * nomNodo) {
 
 	persistirTablaNodos();
 
-	//Libero memoria
+//Libero memoria
 	free(nombre);
 	free(info->nombre);
 	free(info);
 	free(nomNodo);
 }
 
-void liberarBloqueTablaNodos(char * nomNodo, int bloque){
+void liberarBloqueTablaNodos(char * nomNodo, int bloque) {
 	int libre = tablaNodos->libres + 1;
 	memcpy(&tablaNodos->libres, &libre, sizeof(int));
 
-	//Modifico de la tabla de nodos de la lista de info
+//Modifico de la tabla de nodos de la lista de info
 	bool esSocketBuscadoInfo(t_nodo_info * nodo) {
 		return string_equals_ignore_case(nodo->nombre, nomNodo);
 	}
@@ -370,26 +352,26 @@ void liberarBloqueTablaNodos(char * nomNodo, int bloque){
 	int libreNodo = info->libre + 1;
 	memcpy(&info->libre, &libreNodo, sizeof(int));
 
-	//Modifico su bitMap
+//Modifico su bitMap
 	liberarBloquebitMap(nomNodo, bloque);
 
 	persistirTablaNodos();
 }
 
 void persistirTablaNodos() {
-	//Persisto el tamanio de la tabla
+//Persisto el tamanio de la tabla
 	int tamanio = tablaNodos->tamanio;
 	char * stringTamanio = string_itoa(tamanio);
 	config_set_value(configTablaNodo, "TAMANIO", stringTamanio);
 	free(stringTamanio);
 
-	//Persisto los bloquees libres de la tabla
+//Persisto los bloquees libres de la tabla
 	int libres = tablaNodos->libres;
 	char * stringLibres = string_itoa(libres);
 	config_set_value(configTablaNodo, "LIBRE", stringLibres);
 	free(stringLibres);
 
-	//Persisto los nombres de los nodos
+//Persisto los nombres de los nodos
 	char* nomNodos = string_new();
 
 	string_append(&nomNodos, "[");
@@ -414,7 +396,7 @@ void persistirTablaNodos() {
 
 	free(nomNodos);
 
-	//Persisto la info de cada nodo
+//Persisto la info de cada nodo
 	for (i = 0; i < tablaNodos->infoDeNodo->elements_count; i++) {
 		t_nodo_info * info = list_get(tablaNodos->infoDeNodo, i);
 
@@ -500,7 +482,7 @@ char* buscarNombrePorSocket(int socket) {
 
 /*-------------------------Tabla de Bitmap-------------------------*/
 void crearArchivoTablaBitmap(t_nodo_info * info) {
-	//Abro el archivo para usarlo
+//Abro el archivo para usarlo
 	char * rutaArchivo = string_new();
 	string_append(&rutaArchivo, "/home/utnso/Escritorio/metadata/bitmaps/");
 	string_append(&rutaArchivo, info->nombre);
@@ -509,13 +491,13 @@ void crearArchivoTablaBitmap(t_nodo_info * info) {
 	mkdir("/home/utnso/Escritorio/metadata/bitmaps", 0777);
 	FILE* file = fopen(rutaArchivo, "w+b");
 
-	//Cierro el archivo
+//Cierro el archivo
 	fclose(file);
 
-	//Creo la estructura de configuracion
+//Creo la estructura de configuracion
 	t_config * configTablaBitmap = config_create(rutaArchivo);
 
-	//Seteo valores de bitmap en 0
+//Seteo valores de bitmap en 0
 	int i;
 	for (i = 0; i < info->total; ++i) {
 		char * nombre = string_new();
@@ -554,7 +536,7 @@ int buscarBloqueLibre(t_config * tablaBitMaps) {
 			config_set_value(tablaBitMaps, nombreBloque, nuevoEstado);
 			config_save(tablaBitMaps);
 			free(nuevoEstado);
-			i --;
+			i--;
 		}
 
 		free(nombreBloque);
@@ -566,7 +548,7 @@ int buscarBloqueLibre(t_config * tablaBitMaps) {
 	return i;
 }
 
-void liberarBloquebitMap(char * nomNodo, int bloque){
+void liberarBloquebitMap(char * nomNodo, int bloque) {
 	char * rutaBitMap = string_new();
 	string_append(&rutaBitMap, "/home/utnso/Escritorio/metadata/bitmaps/");
 	string_append(&rutaBitMap, nomNodo);
@@ -575,16 +557,16 @@ void liberarBloquebitMap(char * nomNodo, int bloque){
 	t_config * configBitMap = config_create(rutaBitMap);
 
 	char * key = string_new();
-	string_append(&key,"Bloque");
+	string_append(&key, "Bloque");
 	char * bloqueChar = string_itoa(bloque);
-	string_append(&key,bloqueChar);
+	string_append(&key, bloqueChar);
 	char * valor = string_itoa(true);
 
 	config_set_value(configBitMap, key, valor);
 
 	config_save(configBitMap);
 
-	//Libero memoria
+//Libero memoria
 	free(rutaBitMap);
 	config_destroy(configBitMap);
 	free(key);
