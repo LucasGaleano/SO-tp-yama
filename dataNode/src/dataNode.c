@@ -3,7 +3,7 @@ bool recibirSolicitudes;
 int main(void) {
 	recibirSolicitudes = true;
 	t_config* conf;
-	char* bloque = malloc(TAMBLOQUE);
+	char* bloque = malloc(TAM_BLOQUE);
 	t_log_level logLevel = LOG_LEVEL_INFO; //elijo enum de log
 	t_log* logger = log_create("dataNode.log", "dataNode", true, logLevel); //creo archivo log
 //LEER ARCHIVO DE CONFIGURACION ---------------------------------------------------------
@@ -37,7 +37,7 @@ void recibirSolicitud(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_SOLICITUD_LECTURA_BLOQUE:
 		;
 		int numBloque;
-		char* bloque = malloc(TAMBLOQUE);
+		char* bloque = malloc(TAM_BLOQUE);
 		numBloque = recibirSolicitudLecturaBloque(unPaquete);
 		bloque = getBloque(numBloque);
 		if (bloque == NULL) {
@@ -72,7 +72,7 @@ void recibirSolicitud(t_paquete * unPaquete, int * client_socket) {
 char* getBloque(int numBloque) {
 	struct stat sb;
 	char *map;
-	char *bloque = malloc(TAMBLOQUE);
+	char *bloque = malloc(TAM_BLOQUE);
 	int fd = open(rutaDatabin, O_RDONLY); //abrir archivo data.bin
 	fstat(fd, &sb);
 	map = mmap(NULL, //donde comienza a guardar el mapeo, NULL significa "donde quiera el S.O"
@@ -88,7 +88,7 @@ char* getBloque(int numBloque) {
 	}
 	int i;
 	int j = 0;
-	for (i = numBloque * TAMBLOQUE; i < (numBloque * TAMBLOQUE + TAMBLOQUE);
+	for (i = numBloque * TAM_BLOQUE; i < (numBloque * TAM_BLOQUE + TAM_BLOQUE);
 			i++) {
 		bloque[j] = map[i]; //leer
 		j++;
@@ -117,9 +117,9 @@ int setBloque(int numBloque, char* bloque) {
 		perror("[-] Error mapeando el archivo");
 		return -1;
 	}
-	int i = numBloque * TAMBLOQUE;
+	int i = numBloque * TAM_BLOQUE;
 	int j = 0;
-	for (; i < (numBloque * TAMBLOQUE + TAMBLOQUE); i++) {
+	for (; i < (numBloque * TAM_BLOQUE + TAM_BLOQUE); i++) {
 		map[i] = bloque[j]; //escribe
 		j++;
 	}
