@@ -15,7 +15,7 @@
 #include <biblioteca/paquetes.h>
 #define PATHCONFIG "./configuraciones/nodo.cfg"
 #define recibirPaquetes true
-#define TAMBLOQUE 1048576
+
 //---------globales---------
 char* rutaDatabin;
 /**
