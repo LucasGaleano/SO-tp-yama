@@ -72,33 +72,25 @@ Signals.
 
 */
 
+// Funciones
+
 int leerConfiguracion();
-void mandarRutaInicial(char* ruta);
-
 void gestionarTransformacion();
-void mandarDatosTransformacion(t_indicacionTransformacion * indicacion, char* rutasRepetidas[], int tamRepetidas);
+void mandarDatosTransformacion(t_indicacionTransformacion * indicacion, char* rutasRepetidas[], int tamRepetidas, int conexion);
 bool chequearExistencia(char* array[],int tamanio, char* elemento);
-
 void gestionarReduccionLocal();
-
-void mandarDatosReduccionLocal(t_pedidoReduccionLocal * pedido);
-
-
-void gestionarReduccionGlobal(t_pedidoReduccionGlobal pedido);
-
-
+void mandarDatosReduccionLocal(t_indicacionReduccionLocal * indicacion, int worker);
+void gestionarReduccionGlobal();
+void mandarDatosReduccionGlobal(t_indicacionReduccionGlobal * indicacion , int conexionEncargado);
 void signal_capturer(int numeroSenial);
-
-
-
-
-void avisarWorker();
-
 void procesarPaquete(t_paquete * unPaquete, int * client_socket);
+
+
 // Variables globales
 
 t_list * pedidosDeTransformacion ;
-t_list * pedidosDeRedcuccionLocal;
+t_list * pedidosDeReduccionLocal;
+t_list * pedidosDeReduccionGlobal;
 int tareasRealizadasEnParalelo;
 int tareasTotalesReduccionLocal;
 int cantidadDeFallos;
@@ -107,8 +99,9 @@ char* rutaScriptReductor ;
 char* rutaArchivoParaArrancar ;
 char* rutaParaAlmacenarArchivo;
 int conexionYama;
-int conexionWorker;
-
+bool * finDeSolicitudesDeTransformacion;
+bool * finDeSolicitudesDeReduccionLocal;
+bool * finDeSolicitudesGlobales;
 
 // Resultado de operaciones
 
@@ -121,41 +114,71 @@ struct metricas {
 
 };
 
-int cont = 0;
 
 
 int main(int argc, char **argv) {
 
+
+	clock_t inicioPrograma = clock();
+	printf(" inicio");
 	pedidosDeTransformacion = list_create();
-	pedidosDeRedcuccionLocal = list_create();
+	pedidosDeReduccionLocal = list_create();
+	pedidosDeReduccionGlobal = list_create();
 	rutaScriptTransformador = argv [1];
 	rutaScriptReductor = argv [2];
 	rutaArchivoParaArrancar = argv [3];
 	rutaParaAlmacenarArchivo = argv [4];
 
-	clock_t inicioPrograma = clock();
 
-	bool finDeMensajes = true;
+	finDeSolicitudesDeTransformacion = malloc(sizeof(bool));
+	*finDeSolicitudesDeTransformacion = false;
 
 	conexionYama = leerConfiguracion();
 
 	signal(SIGFPE,signal_capturer);
 
+
 	enviarMensaje(conexionYama,rutaArchivoParaArrancar);
 
 
-	while(finDeMensajes){
+	while(*finDeSolicitudesDeTransformacion == false){
 
 	gestionarSolicitudes(conexionYama, (void *) procesarPaquete);
 
 	}
 
 
+	finDeSolicitudesDeReduccionLocal= malloc (sizeof(bool));
+	finDeSolicitudesDeReduccionLocal = false;
+
+	while(*finDeSolicitudesDeReduccionLocal == false){
+
+		gestionarSolicitudes(conexionYama,(void *) procesarPaquete);
+
+	}
+
+	finDeSolicitudesGlobales = malloc(sizeof(bool));
+	finDeSolicitudesGlobales = false;
+
+	while(*finDeSolicitudesGlobales == false){
+
+		gestionarSolicitudes(conexionYama, (void *) procesarPaquete);
+
+	}
+
+	gestionarSolicitudes(conexionYama, (void*) procesarPaquete); //para almacenado final
+
+
+
+
+
 
 	printf("El proceso Master termino en: %d", (clock()-inicioPrograma)*1000/CLOCKS_PER_SEC);
 
+	list_destroy(pedidosDeTransformacion);
+	list_destroy(pedidosDeReduccionLocal);
+	list_destroy(pedidosDeReduccionGlobal);
 	return EXIT_SUCCESS;
-
 
 }
 
@@ -184,22 +207,19 @@ int leerConfiguracion(){
 }
 
 
-
-void mandarRutaInicial(char* ruta){
-
-}
-
-
-
 void gestionarTransformacion(){
 
+
+	int conexionWorker;
 	int cantPedidos = list_size(pedidosDeTransformacion);
 	int posActual = 0;
 	pthread_t hiloTransformar[cantPedidos];
 	t_indicacionTransformacion * indicacionesDeTransformacion[cantPedidos];
 	char* rutasRepetidas[cantPedidos];
 	int numeroRepetidas = 0;
-	while(posActual < cantPedidos){
+	int conexionesWorker[cantPedidos];
+	while(posActual < cantPedidos)
+	{
 
 		char* rutasAux[cantPedidos];
 		t_pedidoTransformacion * pedido = list_get(pedidosDeTransformacion, posActual);
@@ -209,7 +229,10 @@ void gestionarTransformacion(){
 		indicacion->bytes = 2; // cómo sé cuántos bytes ocupados hay en un bloque?
 		indicacion->rutaArchivoTemporal = pedido->rutaArchivoTemporal;
 		*indicacionesDeTransformacion[posActual] = *indicacion;
+		conexionWorker = conectarCliente(indicacion->ip,indicacion->puerto,WORKER);
 		rutasAux[posActual] = indicacion->rutaArchivoTemporal;
+		conexionesWorker[posActual]=conexionWorker;
+
 		if(posActual >= 1)
 			{
 			if(chequearExistencia(rutasAux,posActual,indicacion->rutaArchivoTemporal))
@@ -224,11 +247,12 @@ void gestionarTransformacion(){
 
 	while(posActual <= cantPedidos)
 	{
-	pthread_create(hiloTransformar[posActual],NULL,(void *) mandarDatosTransformacion, (*indicacionesDeTransformacion[posActual], rutasRepetidas, numeroRepetidas));
-	posActual++;
+
+		pthread_create(hiloTransformar[posActual],NULL,(void *) mandarDatosTransformacion, (*indicacionesDeTransformacion[posActual], rutasRepetidas, numeroRepetidas, conexionesWorker[posActual]));
+		posActual++;
 	}
 	int i=0;
-	for(i;i<cantPedidos; i++)
+	for(;cantPedidos>i;i++)
 	{
 		pthread_join(hiloTransformar[i],NULL);
 	}
@@ -252,61 +276,139 @@ bool chequearExistencia(char* array[],int tamanio, char* elemento){
 }
 
 
-void mandarDatosTransformacion(t_indicacionTransformacion * indicacion, char* rutasRepetidas[], int tamRepetidas){
+void mandarDatosTransformacion(t_indicacionTransformacion * indicacion, char* rutasRepetidas[], int tamRepetidas, int conexion){
 
 	if(chequearExistencia(rutasRepetidas, tamRepetidas, indicacion->rutaArchivoTemporal))
 	{
 		pthread_mutex_t mutexArchivo;
 		pthread_mutex_lock(&mutexArchivo);
-		avisarWorker(rutaArchivoParaArrancar, rutaScriptReductor); //aca iria en realidad la estructura indicacion con la ruta que requiere mutue exclusion
+		enviarIndicacionTransformacion(conexion,indicacion);
 		pthread_mutex_unlock(&mutexArchivo);
 	} else {
 
-		avisarWorker(rutaArchivoParaArrancar, rutaScriptReductor);
+		enviarIndicacionTransformacion(conexion,indicacion);
 	}
+	 //   recibirMensaje(conexion,algo)  --> CONFIRMACION DEL WORKER
 
 
 }
 
 void gestionarReduccionLocal(){
 
-		pthread_t hiloReduLocal;
-	while(list_is_empty(pedidosDeRedcuccionLocal)){
-		t_pedidoReduccionLocal * pedido = list_remove(pedidosDeTransformacion , list_size(pedidosDeTransformacion));
-		pthread_create(hiloReduLocal,NULL,(void *) mandarDatosReduccionLocal, pedido);
-		pthread_join(hiloReduLocal, NULL); // No va ni en pedo esto
+	int cantidadDeSolicitudes = list_size(pedidosDeReduccionLocal);
+	pthread_t hiloReduLocal[cantidadDeSolicitudes];
+	int posActual = 0;
+	int conexionWorker;
+
+	while(posActual<cantidadDeSolicitudes)
+	{
+
+		t_indicacionReduccionLocal * pedido = list_get(pedidosDeTransformacion , list_size(pedidosDeTransformacion));
+		t_pedidoReduccionLocal * indicacion = malloc (sizeof (t_pedidoReduccionLocal));  // hay que cambiarle el nombre a esto
+		indicacion->archivoReduccionLocal = pedido->archivoTemporalReduccionLocal;
+		indicacion->archivoTransformacion = pedido->archivoTemporalTransformacion;
+		conexionWorker = conectarCliente(pedido->ip,pedido->puerto,WORKER);
+		pthread_create(hiloReduLocal[posActual],NULL,(void *) mandarDatosTransformacion, (indicacion,conexionWorker));
+		posActual ++;
+
+	}
+
+	int i=0;
+	for(;i<cantidadDeSolicitudes; i++)
+	{
+		pthread_join(hiloReduLocal[i],NULL);
+	}
+
+	enviarMensaje(conexionYama,"salio todo piola la reduccion"); // aca iria solo un número, sería 0 para todo bien y a partir de 1 para señales
+
+
+}
+
+
+void mandarDatosReduccionLocal(t_indicacionReduccionLocal * indicacion, int worker)
+	{
+
+
+		enviarIndicacionReduccionLocal(worker, indicacion);
+		 //   recibirMensaje(conexion,algo)  --> CONFIRMACION DEL WORKER
+
 
 
 	}
 
 
+void gestionarReduccionGlobal()
+	{
+
+		int cantidadSolicitudes = list_size(pedidosDeReduccionGlobal);
+		int posActual = 0;
+		t_indicacionReduccionGlobal * indicaciones[cantidadSolicitudes];
+		int conexionWorker;
+		pthread_t hiloReduGlobal[cantidadSolicitudes] ;
+		while(posActual < cantidadSolicitudes)
+		{
+			t_indicacionReduccionGlobal * indicacion = malloc (sizeof(t_indicacionReduccionGlobal));
+			t_pedidoReduccionGlobal * pedido = list_get(pedidosDeReduccionGlobal,posActual);
+			indicacion->archivoDeReduccionGlobal = pedido->ArchivoResultadoReduccionGlobal;
+			indicacion->archivoDeReduccionLocal = pedido->archivoReduccionPorWorker;
+			indicacion->encargado = pedido->workerEncargdo;
+			indicacion->ip = pedido->ip;
+			indicacion->puerto = pedido->puerto;
+			//hay que borrar NODO de indicacion. No sirve.
+
+			indicaciones[posActual] = indicacion;
+
+			if ( indicacion -> encargado == "1")
+			{
+				conexionWorker= conectarCliente(indicacion->ip,indicacion->puerto, WORKER);
+			}
+
+			posActual ++;
+
+		}
+
+		posActual = 0;
+		while(posActual < cantidadSolicitudes)
+		{
+			pthread_create(hiloReduGlobal[posActual],NULL,(void*) mandarDatosReduccionGlobal, (indicaciones[posActual],conexionWorker));
+			posActual++;
+
+		}
+
+		int i = 0;
+		for(; i < cantidadSolicitudes; i++)
+		{
+			pthread_join (hiloReduGlobal[i],NULL);
+		}
+
+		enviarMensaje(conexionYama, "salio piola la reduGlobal");
+
+	}
+
+void mandarDatosReduccionGlobal(t_indicacionReduccionGlobal * indicacion , int conexionEncargado)
+{
+	enviarIndicacionReduccionGlobal(conexionEncargado,indicacion);
 }
 
 
-void mandarDatosReduccionLocal(t_pedidoReduccionLocal * pedido){
+void gestionarAlmacenadoFinal(t_pedidoAlmacenadoFinal * pedido)
+{
 
-	pthread_mutex_t mutexArchivo;
-	pthread_mutex_lock(&mutexArchivo);
-	avisarWorker(rutaArchivoParaArrancar, rutaScriptReductor); // aca iria comunicacion con worker
-	pthread_mutex_unlock(&mutexArchivo);
+	t_indicacionAlmacenadoFinal * indicacion = malloc (sizeof(t_indicacionAlmacenadoFinal));
+	indicacion->rutaArchivoReduccionGlobal = pedido->archivoReduccionGlobal; //HAY QUE SACARLE IP Y PUERTO A INDICACION
+	//indicacion->rutaAlmacenadoFinal = rutaArchivoParaAlmacenar     ---> es la ruta que viene por el main . Mandar al worker???
+	int conexionWorker = conectarCliente(pedido->ip,pedido->puerto,WORKER);
 
-}
-void gestionarReduccionGlobal(t_pedidoReduccionGlobal a){
-	avisarWorker();
-	gestionarSolicitudes(conexionWorker, (void *) procesarPaquete);
-}
+	enviarIndicacionAlmacenadoFinal(conexionWorker,indicacion);
+	enviarMensaje(conexionYama, "termino todo wacho");
 
-void avisarWorker(){};
-
-
-void gestionarAlmacenadoFinal(t_pedidoAlmacenadoFinal pedido){
-	avisarWorker();
 }
 
 void signal_capturer(int numeroSenial){
 
 	switch (numeroSenial)
 	{
+
 		case 8:
 			enviarMensaje(conexionYama,"division por 0");
 			break;
@@ -318,6 +420,7 @@ void signal_capturer(int numeroSenial){
 			break;
 		default:
 			break;
+
 	}
 
 	return;
@@ -333,43 +436,49 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) { // contesto a
 	case ENVIAR_SOLICITUD_TRANSFORMACION:
 		 ;
 		t_pedidoTransformacion * indicacionTransformacion = recibirSolicitudTransformacion(unPaquete);
-		int continuarRecibiendoPedidosTransformacion = 1; //recibirMensaje(unPaquete); // hay que castear a entero
+		char* continuarRecibiendoPedidosTransformacion = "1";// recibirMensaje(unPaquete); // preg facu
 		list_add(pedidosDeTransformacion,indicacionTransformacion); //leno lista con pedidos
-		if (continuarRecibiendoPedidosTransformacion == 0){
+		if (continuarRecibiendoPedidosTransformacion == "0")
+		{
 			gestionarTransformacion();
+			*finDeSolicitudesDeTransformacion = true;
 		}
 		break;// sale para volver a pedir
 
 
-	case ENVIAR_SOLICITUD_REDUCCION_LOCAL:
+	case ENVIAR_SOLICITUD_REDUCCION_LOCAL: //guarda, acá recibe una INDICACIONDEREDULOCAL, no una solicitud
 
 		 ;
-		t_pedidoReduccionLocal * indicacionReduLocal = recibirSolicitudReduccionLocal(unPaquete);
-		int continuarRecibiendoPedidosDeReduLocal = 1; //recibirMensaje(unPaquete); // hay que castear a entero
-		list_add(pedidosDeRedcuccionLocal,indicacionReduLocal);
-		if(continuarRecibiendoPedidosDeReduLocal == 0){
+		t_indicacionReduccionLocal * indicacionReduLocal = recibirSolicitudReduccionLocal(unPaquete); //ACA TIENE QUE RECIBIR LA INDICACION
+		char* continuarRecibiendoPedidosDeReduLocal= "1";//recibirMensaje(unPaquete); // aca que onda? --> preguntar facu
+		list_add(pedidosDeReduccionLocal,indicacionReduLocal);
+
+		if(continuarRecibiendoPedidosDeReduLocal == "0")
+		{
 			gestionarReduccionLocal();
+			*finDeSolicitudesDeReduccionLocal = true;
 		}
 		break;
 
 
 	case ENVIAR_SOLICITUD_REDUCCION_GLOBAL:
-	//	 ;
-		// t_pedidoReduccionGlobal * indicacionReduGlobal = recibirSolicitudReduccionGlobal(unPaquete);
-	//	 gestionarReduccionGlobal(indicacionReduGlobal);
-		 enviarMensaje(conexionYama,"todo okey");
+	 ;
+		t_pedidoReduccionGlobal * pedidoReduGlobal = recibirSolicitudReduccionGlobal(unPaquete);
+	    list_add(pedidosDeReduccionGlobal, pedidoReduGlobal);
+	    char* continuarRecibiendo = "1";//recibirMensaje(unPaquete);
+	    if(continuarRecibiendo == "0"){
+	    	*finDeSolicitudesGlobales = true;
+
+	    }
+
+
 		break;
 
 
 	case ENVIAR_SOLICITUD_ALMACENADO_FINAL:
-	//	 ;
-	//	 t_pedidoAlmacenadoFinal * indicacionAlmacenamientoFinal = recibirSolicitudAlmacenadoFinal(unPaquete);
-	//	 gestionarAlmacenadoFinal(indicacionAlmacenamientoFinal);
-		break;
-
-
-	case ENVIAR_ERROR:
-
+		 ;
+		 t_pedidoAlmacenadoFinal * indicacionAlmacenamientoFinal = recibirSolicitudAlmacenadoFinal(unPaquete);
+		 gestionarAlmacenadoFinal(indicacionAlmacenamientoFinal);
 		break;
 
 
