@@ -86,6 +86,7 @@ void 				agregarNodoTablaSockets			(char *, int);
 char * 				eliminarNodoTablaSockets		(int);
 int 				buscarSocketPorNombre			(char *);
 char * 				buscarNombrePorSocket			(int);
+void 				modificarNodoTablaSockets		(char *, int);
 
 /*-------------------------Tabla de Bitmap-------------------------*/
 void 				crearArchivoTablaBitmap			(t_nodo_info *);

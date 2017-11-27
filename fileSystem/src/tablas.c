@@ -37,13 +37,15 @@ void crearTablaDirectorioSegunArchivo(char * ruta) {
 
 	for (i = 0; i < 100; ++i) {
 		char * key = string_itoa(i);
-		char * valor = config_get_string_value(configTablaDirectorios,key);
+		char * valor = config_get_string_value(configTablaDirectorios, key);
 		if (valor != NULL) {
-			char ** directorio = config_get_array_value(configTablaDirectorios,key);
+			char ** directorio = config_get_array_value(configTablaDirectorios,
+					key);
 
 			t_directory * registro = malloc(sizeof(t_directory));
 
-			strncpy(registro->nombre, directorio[0], sizeof(registro->nombre) - 1);
+			strncpy(registro->nombre, directorio[0],
+					sizeof(registro->nombre) - 1);
 
 			registro->padre = atoi(directorio[1]);
 
@@ -51,7 +53,7 @@ void crearTablaDirectorioSegunArchivo(char * ruta) {
 
 			bitMapDirectorio[i] = false;
 
-			list_add(tablaDirectorios,registro);
+			list_add(tablaDirectorios, registro);
 
 			destruirSubstring(directorio);
 
@@ -336,6 +338,8 @@ void crearTablaNodosSegunArchivo(char * ruta) {
 	string_append(&rutaArchivo, ruta);
 	string_append(&rutaArchivo, "metadata/nodos.bin");
 
+	tablaTareas = list_create();
+
 	//Creo la estructura de configuracion
 	configTablaNodo = config_create(rutaArchivo);
 
@@ -354,7 +358,8 @@ void crearTablaNodosSegunArchivo(char * ruta) {
 	char ** nomNodos = config_get_array_value(configTablaNodo, "NODOS");
 	int i;
 	for (i = 0; nomNodos[i] != NULL; i++) {
-		list_add(tablaNodos->nomNodos, nomNodos[i]);
+		char * nomNodo = strdup(nomNodos[i]);
+		list_add(tablaNodos->nomNodos, nomNodo);
 	}
 
 	//Info de cada nodo
@@ -422,12 +427,12 @@ void agregarNodoTablaNodos(t_nodo_info * info) {
 
 	list_add(tablaNodos->infoDeNodo, info);
 
-//Agrego a la tabla de nodos los nombres
+	//Agrego a la tabla de nodos los nombres
 	char * nombre = malloc(string_length(info->nombre) + 1);
 	memcpy(nombre, info->nombre, string_length(info->nombre) + 1);
 	list_add(tablaNodos->nomNodos, nombre);
 
-//Creo su bitMaps
+	//Creo su bitMaps
 	crearArchivoTablaBitmap(info);
 
 	persistirTablaNodos();
@@ -607,6 +612,17 @@ char* buscarNombrePorSocket(int socket) {
 			(void*) esNombreBuscado);
 
 	return registroSocket->nombre;
+}
+
+void modificarNodoTablaSockets(char * nombreNodo, int client_socket) {
+	bool esNodoBuscado(char * nodo) {
+		return string_equals_ignore_case(nodo, nombreNodo);
+	}
+
+	t_tabla_sockets * registro = list_find(tablaNodos->nomNodos,
+			(void*) esNodoBuscado);
+
+	registro->socket = client_socket;
 }
 
 /*-------------------------Tabla de Bitmap-------------------------*/

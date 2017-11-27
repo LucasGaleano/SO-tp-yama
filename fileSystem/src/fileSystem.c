@@ -78,24 +78,33 @@ void procesarInfoNodo(t_paquete * unPaquete, int client_socket) {
 	//Recibo info
 	t_nodo_info * info = recibirInfoDataNode(unPaquete);
 
+	//Verifico si existe
+	bool esNodoBuscado(char * nodo) {
+		return string_equals_ignore_case(info->nombre, nodo);
+	}
+	bool yaExiste = list_any_satisfy(tablaNodos->nomNodos,
+			(void*) esNodoBuscado);
+
+	if (!yaExiste) {
+		//Agrego elemento a la tabla de nodos
+		agregarNodoTablaNodos(info);
+
+		//Creo una tabla de Bitmap del nodo
+		crearArchivoTablaBitmap(info);
+	}
+
 	//Agrego elemento a la lista de nodos por sockets
 	agregarNodoTablaSockets(info->nombre, client_socket);
-
-	//Agrego elemento a la tabla de nodos
-	agregarNodoTablaNodos(info);
-
-	//Creo una tabla de Bitmap del nodo
-	crearArchivoTablaBitmap(info);
 
 }
 
 void procesarError(t_paquete * unPaquete) {
-	int cliente_desconectado;
-	memcpy(&cliente_desconectado, unPaquete->buffer->data, sizeof(int));
+	//int cliente_desconectado;
+	//memcpy(&cliente_desconectado, unPaquete->buffer->data, sizeof(int));
 
-	char * nomNodo = eliminarNodoTablaSockets(cliente_desconectado);
+	//char * nomNodo = eliminarNodoTablaSockets(cliente_desconectado);
 
-	eliminarNodoTablaNodos(nomNodo);
+	//eliminarNodoTablaNodos(nomNodo);
 
 }
 
