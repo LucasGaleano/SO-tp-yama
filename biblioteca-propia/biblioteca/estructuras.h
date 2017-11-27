@@ -39,28 +39,36 @@ enum emisor {
 enum cod_op{
 	HANDSHAKE=0,
 
-	ENVIAR_MENSAJE=1,
-	ENVIAR_ARCHIVO=2,
-	ENVIAR_INFO_DATANODE=3,
-	ENVIAR_ERROR=4,
-	ENVIAR_BLOQUE=5,
+	ENVIAR_MENSAJE,
+	ENVIAR_ARCHIVO,
+	ENVIAR_INFO_DATANODE,
+	ENVIAR_ERROR,
 
-	ENVIAR_SOLICITUD_LECTURA_BLOQUE=6,
-	ENVIAR_SOLICITUD_ESCRITURA_BLOQUE=7,
+	ENVIAR_BLOQUE,
+	ENVIAR_BLOQUE_GENERAR_COPIA,
+	ENVIAR_BLOQUE_ARCHIVO_TEMPORAL,
 
-	ENVIAR_SOLICITUD_TRANSFORMACION=8,
+	ENVIAR_SOLICITUD_LECTURA_BLOQUE,
+	ENVIAR_SOLICITUD_LECTURA_BLOQUE_GENERAR_COPIA,
+	ENVIAR_SOLICITUD_LECTURA_ARCHIVO_TEMPORAL,
 
-	ENVIAR_SOLICITUD_REDUCCION_LOCAL=9,
-	ENVIAR_SOLICITUD_REDUCCION_GLOBAL=10,
+	ENVIAR_SOLICITUD_ESCRITURA_BLOQUE,
 
-	ENVIAR_SOLICITUD_ALMACENADO_FINAL=11,
+	ENVIAR_RESPUESTA_ESCRITURA_BLOQUE,
 
-	ENVIAR_INDICACION_TRANSFORMACION=12,
+	ENVIAR_SOLICITUD_TRANSFORMACION,
 
-	ENVIAR_INDICACION_REDUCCION_LOCAL=13,
-	ENVIAR_INDICACION_REDUCCION_GLOBAL=14,
+	ENVIAR_SOLICITUD_REDUCCION_LOCAL,
+	ENVIAR_SOLICITUD_REDUCCION_GLOBAL,
 
-	ENVIAR_INDICACION_ALMACENADO_FINAL=15,
+	ENVIAR_SOLICITUD_ALMACENADO_FINAL,
+
+	ENVIAR_INDICACION_TRANSFORMACION,
+
+	ENVIAR_INDICACION_REDUCCION_LOCAL,
+	ENVIAR_INDICACION_REDUCCION_GLOBAL,
+
+	ENVIAR_INDICACION_ALMACENADO_FINAL,
 
 };
 
@@ -74,6 +82,39 @@ typedef struct {
 	void* data;
 	int numBloque;
 }t_pedidoEscritura;
+
+typedef struct {
+	bool exito;
+	int numBloque;
+}t_respuestaEscritura;
+
+typedef struct {
+	int numBloque;
+	int orden;
+}t_lecturaArchTemp;
+
+typedef struct {
+	void * data;
+	int orden;
+}t_respuestaLecturaArchTemp;
+
+typedef struct {
+	int bloque;
+	char * rutaArchivo;
+	char * nodo;
+}t_lecturaGenerarCopia;
+
+typedef struct {
+	void * data;
+	char * rutaArchivo;
+	char * nodo;
+}t_respuestaLecturaGenerarCopia;
+
+typedef struct {
+	char * nombre;
+	int total;
+	int libre;
+} t_nodo_info;
 
 /*------------------------------Estructuras de comunicacion Yama Master------------------------------*/
 typedef struct {

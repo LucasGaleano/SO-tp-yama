@@ -17,6 +17,6 @@ Siempre trabajar en una RAMA_PROPIA y cuando se considera cumplida la tarea, hac
 
 * KEVIN -kevenvarela@gmail.com
 * FACU - facundoahumada93@hotmail.com
-* FEDE - fede.lloves@gmail.com
+* GASTÓN - castineira.gaston96@gmail.com
 * LUCAS - l.a.galeano2@gmail.com
 * MATIAS - matias_gasparini@hotmail.com

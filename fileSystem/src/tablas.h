@@ -10,6 +10,8 @@
 
 #include <biblioteca/sockets.h>
 
+#define RUTA_METADATA "/home/utnso/Escritorio/"
+
 /*---------	---------------Estructuras-------------------------*/
 //Tabla de sockets
 typedef struct {
@@ -38,11 +40,17 @@ typedef struct {
 	int padre;
 } t_directory;
 
+//Registro tabla de Tareas
+typedef struct {
+	char * nomNodo;
+	int bloque;
+} t_tarea;
 
 /*------------------------Variables globales-------------------------*/
 t_list * tablaSockets;
 t_tabla_nodo * tablaNodos;
 t_list * tablaDirectorios;
+t_list * tablaTareas;
 
 t_config * configTablaDirectorios;
 t_config * configTablaNodo;
@@ -58,6 +66,9 @@ void 				modificarDirectorioTabla		(t_directory *, char *, int);
 
 /*-------------------------Tabla de archivos-------------------------*/
 t_config *			crearArchivoTablaArchivo		(char *, char *, char *, int);
+void 				agregarRegistroTablaArchivos	(char *, int,int, int, t_config *);
+void 				guardoBytesPorBloque			(int, int, t_config *);
+char ** 			buscarBloque					(t_config *, int, int);
 
 /*-------------------------Tabla de nodos-------------------------*/
 void	 			crearTablaNodos					(char *);
@@ -72,6 +83,7 @@ void 				crearTablaSockets				(void);
 void 				agregarNodoTablaSockets			(char *, int);
 char * 				eliminarNodoTablaSockets		(int);
 int 				buscarSocketPorNombre			(char *);
+char * 				buscarNombrePorSocket			(int);
 
 /*-------------------------Tabla de Bitmap-------------------------*/
 void 				crearArchivoTablaBitmap			(t_nodo_info *);
