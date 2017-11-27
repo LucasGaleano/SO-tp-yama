@@ -20,10 +20,16 @@ int main(void) {
 	string_append(&prueba, "hola");
 	enviarMensaje(socketFS, prueba);
 
+	iniciarPlanificador(config->algoritmo);
+
 	while(1);
 
+	config_destroy(config);
+//	list_destroy_and_destroy_elements(tabla_de_estados, (void*) eliminarElemento() ); //TODO PREGUNTAR SI ESTA BIEN LIBERAR DESPUES DE USAR
 	return 0;
 }
+
+
 
 void iniciarServidor(char* unPuerto) {
 	iniciarServer(unPuerto, (void *) procesarPaquete);
@@ -87,28 +93,13 @@ t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 	configuracion->retardo = config_get_int_value(config, "RETARDO_PLANIFICACION");
 	configuracion->algoritmo = config_get_string_value(config, "ALGORITMO_BALANCEO");
 	configuracion->puerto_yama = config_get_string_value(config, "PUERTO_YAMA");
+	configuracion->disponibilidad_base = config_get_int_value(config, "DISPONIBILIDAD_BASE");
 
-	printf("Se levanto el proceso YAMA con: YAMA_PUERTO: %s  FS_IP: %s - FS_PUERTO: %s - RETARDO: %d - ALGORITMO: %s \n",
-			configuracion->puerto_yama, configuracion->ip, configuracion->puerto, configuracion->retardo, configuracion->algoritmo);
+	printf("Se levanto el proceso YAMA con: YAMA_PUERTO: %s  FS_IP: %s - FS_PUERTO: %s - RETARDO: %d - ALGORITMO: %s - DISPONIBILIDAD BASE: %d \n",
+			configuracion->puerto_yama, configuracion->ip, configuracion->puerto, configuracion->retardo, configuracion->algoritmo, configuracion->disponibilidad_base);
 
 	return configuracion;
 }
-
-t_list* tabla_de_estados = createList();
-
-int actualizarTablaDeEstados(t_list* tabla_de_estados, t_elemento_tabla_estado fila_nueva) {
-	return list_add(tabla_de_estados, &fila_nueva);
-}
-
-int numeroRandom() {
-	unsigned short lfsr = 0xACE1u;
-	unsigned bit;
-
-	bit = ((lfsr >> 0) ^ (lfsr >> 2) ^ (lfsr >> 3) ^ (lfsr >> 5)) & 1;
-	return lfsr = (lfsr >> 1) | (bit << 15);
-}
-
-
 
 //int a = 0;
 //	int num = 1;
