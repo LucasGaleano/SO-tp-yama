@@ -201,6 +201,19 @@ void enviarBloque(int server_socket, char* bloque) {
 
 }
 
+void enviarBloqueGenerarCopia(int server_socket, char* bloque, char* ruta,
+		char* nodo) {
+
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_BLOQUE_GENERAR_COPIA;
+
+	serializarBloqueGenerarCopia(unPaquete, bloque, ruta, nodo);
+
+	enviarPaquetes(server_socket, unPaquete);
+
+}
+
 void enviarBloqueArchTemp(int server_socket, char* bloque, int orden) {
 
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
@@ -222,6 +235,16 @@ void enviarSolicitudLecturaBloque(int server_socket, int numBloque) {
 
 	enviarPaquetes(server_socket, unPaquete);
 
+}
+
+void enviarSolicitudLecturaBloqueGenerarCopia(int server_socket, int numBloque, char* ruta, char* nodo) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_SOLICITUD_LECTURA_BLOQUE_GENERAR_COPIA;
+
+	serializarSolicitudLecturaBloqueGenerarCopia(unPaquete, numBloque, ruta, nodo);
+
+	enviarPaquetes(server_socket, unPaquete);
 }
 
 void enviarSolicitudLecturaArchTemp(int server_socket, int numBloque, int orden) {
@@ -362,29 +385,40 @@ void enviarIndicacionAlmacenadoFinal(int server_socket,
 
 /*-------------------------Recibir-------------------------*/
 
-void recibirMensaje(t_paquete * unPaquete) {
-	char * mensaje = deserializarMensaje(unPaquete->buffer);
+int recibirHandshake(t_paquete * unPaquete){
+	return deserializarHandshake(unPaquete->buffer);
+}
 
-	printf("Me llego este mensaje: %s \n", mensaje);
-
-	//Libero memoria
-	free(mensaje);
+char * recibirMensaje(t_paquete * unPaquete) {
+	return deserializarMensaje(unPaquete->buffer);
 }
 
 void* recibirArchivo(t_paquete * unPaquete) {
 	return deserializarArchivo(unPaquete->buffer);
 }
 
+t_nodo_info* recibirInfoDataNode(t_paquete * unPaquete){
+	return deserializarInfoDataNode(unPaquete->buffer);
+}
+
 void * recibirBloque(t_paquete * unPaquete) {
-	return deserializarBloque(unPaquete->buffer);;
+	return deserializarBloque(unPaquete->buffer);
+}
+
+t_respuestaLecturaGenerarCopia* recibirBloqueGenerarCopia(t_paquete * unPaquete) {
+	return deserializarBloqueGenerarCopia(unPaquete->buffer);
 }
 
 t_respuestaLecturaArchTemp * recibirBloqueArchTemp(t_paquete * unPaquete) {
-	return deserializarBloqueArchTemp(unPaquete->buffer);;
+	return deserializarBloqueArchTemp(unPaquete->buffer);
 }
 
 int recibirSolicitudLecturaBloque(t_paquete* unPaquete) {
 	return deserializarSolicitudLecturaBloque(unPaquete->buffer);
+}
+
+t_lecturaGenerarCopia *	recibirSolicitudLecturaBloqueGenerarCopia(t_paquete* unPaquete) {
+	return deserializarSolicitudLecturaBloqueGenerarCopia(unPaquete->buffer);
 }
 
 t_lecturaArchTemp * recibirSolicitudLecturaBloqueArchTemp(t_paquete* unPaquete) {
