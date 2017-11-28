@@ -15,8 +15,7 @@
 #define TAM_BLOQUE 1048576 //1024 * 1024, un mega
 #define PUERTO_REDUCCION_GLOBAL 9999
 
-int main(void)
-{
+int main(void) {
 
 	t_config *conf;
 
@@ -33,22 +32,19 @@ int main(void)
 	return EXIT_SUCCESS;
 }
 
-void procesarPaquete(t_paquete * unPaquete, int * client_socket)
-{
+void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	int pid = 0;
 	t_indicacionTransformacion *auxTransf;
 	t_indicacionReduccionLocal *auxRedL;
 	t_indicacionReduccionGlobal *auxRedG;
-	switch (unPaquete->codigoOperacion)
-	{
+	switch (unPaquete->codigoOperacion) {
 	case HANDSHAKE:
 		recibirHandshake(unPaquete, client_socket);
 		break;
 	case ENVIAR_INDICACION_TRANSFORMACION:
 		auxTransf = recibirIndicacionTransformacion(unPaquete);
 		pid = fork();
-		if (pid == 0)
-		{
+		if (pid == 0) {
 			transformacion(auxTransf->bloque, auxTransf->rutaArchivoTemporal);
 			_exit(EXIT_SUCCESS);
 		}
@@ -65,12 +61,12 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket)
 	case ENVIAR_INDICACION_REDUCCION_GLOBAL:
 		auxRedG = recibirIndicacionReduccionGlobal(unPaquete);
 		pid = fork();
-		if (pid == 0)
-		{
+		if (pid == 0) {
 			if (auxRedG->encargado)
 				iniciarEncargado();
 			else
-				iniciarEsclavo(auxRedG->puerto, auxRedG->ip, auxRedG->archivoDeReduccionLocal);
+				iniciarEsclavo(auxRedG->ip,
+						auxRedG->archivoDeReduccionLocal);
 			_exit(EXIT_SUCCESS);
 		}
 		break;
@@ -82,13 +78,10 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket)
 	destruirPaquete(unPaquete);
 }
 
-void recibirHandshake(t_paquete * unPaquete, int * client_socket)
-{
+void recibirHandshake(t_paquete * unPaquete, int * client_socket) {
 	int tipoCliente;
 	memcpy(&tipoCliente, unPaquete->buffer->data, sizeof(int));
-
-	switch (tipoCliente)
-	{
+	switch (tipoCliente) {
 	case WORKER:
 	case MASTER:
 		break;
@@ -98,157 +91,95 @@ void recibirHandshake(t_paquete * unPaquete, int * client_socket)
 	}
 }
 
-//Funcion de ordenamiento universal para las tres etapas.
-
-char** ordenar(char** palabras, int cant_palabras)
-{
-	int i, j;
-	char canje[TAM_MAX] = { '\0' };
-	for (i = 0; i < (cant_palabras - 1); i++)
-	{
-		for (j = 0; j < (cant_palabras - i - 1); j++)
-		{
-			if (strcmp(palabras[j], palabras[j + 1]) > 0)
-			{
-				strcpy(canje, palabras[j]);
-				strcpy(palabras[j], palabras[j + 1]);
-				strcpy(palabras[j + 1], canje);
-			}
-		}
-	}
-	return palabras;
-}
-
 void transformacion(unsigned int bloque, char* ruta) {
 
-	//aplicar tranformacion aca
+	//aplicar transformacion
 
-	FILE *a_ordenar = fopen("/home/utnso/Escritorio/Nuevo.txt", "r");
-	int j;
-	if (a_ordenar == NULL)
-		_exit(EXIT_FAILURE);
-	FILE *salida = fopen(ruta, "w");
-	if (salida == NULL)
-	{
-		fclose(a_ordenar);
-		_exit(EXIT_FAILURE);
-	}
-	char** palabras = NULL;
-	char leido[TAM_MAX] = { '\0' };
-	int i = 0;
+	char* aux = "sort salidaDeTransformacion > ";
 
-	while (fgets(leido, TAM_MAX, a_ordenar) != NULL)
-	{
-		palabras = (char**) realloc(palabras, (i + 1) * sizeof(char*));
-		palabras[i] = (char*) calloc(TAM_MAX, sizeof(char));
-		strcpy(palabras[i], leido);
-		if (palabras[i][strlen(palabras[i]) - 1] != '\n')
-			palabras[i][strlen(palabras[i])] = '\n';
+	char* comando = (char*) malloc((strlen(aux) + strlen(ruta)) * sizeof(char));
 
-		i++;
-	}
-	palabras = ordenar(palabras, i);
-	for (j = 0; j < i; j++)
-	{
-		fputs(palabras[j], salida);
-		free(palabras[j]);
-	}
-	fclose(a_ordenar);
-	fclose(salida);
-	free(palabras);
+	strcat(comando, aux);
+	strcat(comando, ruta);
+
+	system(comando);
+
+	//remove("salidaDeTransformacion");
+
+	free(comando);
 }
 
 inline int sonTodosVerdaderos(int *fdt, int cant)
-{
-	int i;
-	for (i = 0; i < cant; i++)
-	{
-		if (fdt[i] == 0)
-			return 0;
-	}
-	return 1;
-}
+ {
+ int i;
+ for (i = 0; i < cant; i++)
+ {
+ if (fdt[i] == 0)
+ return 0;
+ }
+ return 1;
+ }
 
-FILE* aparear(FILE* archi[], int cant)
-{
-	char** palabras = NULL;
-	int i = 0, j = 0;
+void reduccionLocal(char** rutas, int cant, char* rutaFinal) {
+	FILE** loc = (FILE**)calloc(cant, sizeof(FILE*));
+	FILE* apareado = fopen(rutaFinal, "w");
+	if (apareado == NULL)
+		_exit(EXIT_FAILURE);
+	int i = 0, j = 0, esPrimero = 0;
 	int* fdt = calloc(cant, sizeof(int)); //Para saber si ya llego a EOF. 0 para no, 1 para si
-	char leido[TAM_MAX];
+	char** leido = (char**) calloc(cant, sizeof(char*));
 	char* ret;
-	FILE* devolucion = NULL;
-	while (!sonTodosVerdaderos(fdt, cant))
-	{
-		if (fdt[i % cant] == 1)
-		{
-			i++;
-			continue;
-		}
-		ret = fgets(leido, TAM_MAX, archi[i % cant]);
-		if (ret == NULL)
-		{
-			fdt[i % cant] = 1;
-			i++;
-			continue;
-		}
-		palabras = (char**) realloc(palabras, (j + 1) * sizeof(char*));
-		palabras[j] = (char*) calloc(TAM_MAX, sizeof(char));
-		strcpy(palabras[j], leido);
-		if (palabras[j][strlen(palabras[j]) - 1] != '\n')
-			palabras[j][strlen(palabras[j])] = '\n';
-
-		j++;
-		palabras = ordenar(palabras, j);
-		i++;
-	}
-	free(fdt);
-	devolucion = fopen("/home/utnso/Escritorio/apareado.txt", "w");
-	for (i = 0; i < j; i++)
-	{
-		fputs(palabras[i], devolucion);
-		free(palabras[i]);
-	}
-	free(palabras);
-	return devolucion;
-}
-
-void reduccion(char* rutas[], int cant)
-{
-	FILE* loc[cant];
-	FILE* apareado = NULL;
-	int i;
-	for (i = 0; i < cant; i++)
-	{
+	for (i = 0; i < cant; i++) {
 		loc[i] = fopen(rutas[i], "r");
-		if (loc[i] == NULL)
-			_exit(EXIT_FAILURE);
+		 if (loc[i] == NULL)
+		 {
+			 fclose(apareado);
+			 _exit(EXIT_FAILURE);
+		 }
+		leido[i] = (char*) calloc(TAM_MAX, sizeof(char));
+		fgets(leido[i], TAM_MAX, loc[i]);
 	}
-
-	apareado = aparear(loc, cant);
+	for (i = 0; !sonTodosVerdaderos(fdt, cant); i++) {
+		if (fdt[i % cant] == 1)
+			continue;
+		for (j = 0; j < cant; j++) {
+			if (strcmp(leido[i % cant], leido[j]) < 0 || j == (i % cant))
+				esPrimero++;
+		}
+		if (esPrimero == cant) {
+			fputs(leido[i % cant], apareado);
+			ret = fgets(leido[i % cant], TAM_MAX, loc[i % cant]);
+			if (ret == NULL) {
+				fdt[i % cant] = 1;
+				leido[i % cant][0] = 255; //Le asigno el ASCII mas grande para que pueda comparar el resto, sino compara el ultimo registro y tira bucle infinito
+			}
+		}
+		esPrimero = 0;
+	}
 
 	//Por aca va la reduccion
 
-	for (i = 0; i < cant; i++)
-	{
+	for (i = 0; i < cant; i++) {
 		fclose(loc[i]);
-		remove(loc[i]);
+		free(leido[i]);
+		remove(rutas[i]);
 	}
 	fclose(apareado);
+	free(loc);
+	free(fdt);
+	free(leido);
 
 }
 
-void recibirDatos(t_paquete * unPaquete)
-{
+void recibirDatos(t_paquete * unPaquete) {
 	void* paq = recibirArchivo(unPaquete);
 }
 
-void iniciarEncargado()
-{
+void iniciarEncargado() {
 	iniciarServer(PUERTO_REDUCCION_GLOBAL, (void*) recibirDatos);
 }
 
-void iniciarEsclavo(char* puerto, char* ip, char* rutaLocal)
-{
+void iniciarEsclavo(char* ip, char* rutaLocal) {
 	int socket = conectarCliente(ip, PUERTO_REDUCCION_GLOBAL, WORKER);
 	enviarArchivo(socket, rutaLocal);
 }
