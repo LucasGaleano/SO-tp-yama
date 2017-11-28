@@ -102,24 +102,39 @@ int conexionYama;
 bool * finDeSolicitudesDeTransformacion;
 bool * finDeSolicitudesDeReduccionLocal;
 bool * finDeSolicitudesGlobales;
-
+int tareasTransformacion;
+int tareasReduccion;
+pthread_mutex_t variableTareasReduccionLocal;
+pthread_mutex_t variableTareasTransformacion;
+pthread_mutex_t mutexMetricas;
 // Resultado de operaciones
 
-struct metricas {
+typedef struct
+{
 	float tiempoTotal;
 	float promedioJobs;
-	unsigned short int tareasEnParalelo;
-	unsigned short int tareasPrincipalesDelJob;
-	unsigned short int fallosDelJob;
+	int cantMaximaTareasTransformacionParalelas;
+	int cantMaximaTareasReduccionLocalParalelas;
+	int cantidadTareasTotalesTransformacion;
+	int cantidadTareasTotalesReduccionLocal;
+	int cantidadTareasTotalesReduccionGlobal;
+	int fallosDelJob;
 
-};
+} metricas;
 
-
+metricas tablaMetricas;
+float tiempoTransformacion;
+float tiempoReduccionLocal;
+float tiempoReduccionGlobal;
 
 int main(int argc, char **argv) {
 
 
-	clock_t inicioPrograma = clock();
+	struct timeval tiempoInicio;
+	struct timeval tiempoFin;
+	float total;
+	gettimeofday(&tiempoInicio, NULL);
+
 	printf(" inicio");
 	pedidosDeTransformacion = list_create();
 	pedidosDeReduccionLocal = list_create();
@@ -170,14 +185,19 @@ int main(int argc, char **argv) {
 
 
 
+	gettimeofday(&tiempoFin, NULL);
 
+	total = (tiempoFin.tv_sec - tiempoInicio.tv_sec) *1000 + (tiempoFin.tv_usec - tiempoInicio.tv_usec) / 1000;
 
+	tablaMetricas.tiempoTotal = total;
+	tablaMetricas.promedioJobs = (tiempoReduccionGlobal + tiempoReduccionLocal + tiempoTransformacion) / 3;
 
-	printf("El proceso Master termino en: %d", (clock()-inicioPrograma)*1000/CLOCKS_PER_SEC);
 
 	list_destroy(pedidosDeTransformacion);
 	list_destroy(pedidosDeReduccionLocal);
 	list_destroy(pedidosDeReduccionGlobal);
+
+
 	return EXIT_SUCCESS;
 
 }
@@ -209,6 +229,9 @@ int leerConfiguracion(){
 
 void gestionarTransformacion(){
 
+	struct timeval t0;
+	struct timeval t1;
+	gettimeofday(&t0,NULL);
 
 	int conexionWorker;
 	int cantPedidos = list_size(pedidosDeTransformacion);
@@ -258,6 +281,14 @@ void gestionarTransformacion(){
 	}
 
 	enviarMensaje(conexionYama,"salio todo piola la transformacion");
+	gettimeofday(&t1,NULL);
+
+	tiempoTransformacion = (t1.tv_sec - t0.tv_sec) *1000 + (t1.tv_usec - t0.tv_usec) / 1000;
+
+	pthread_mutex_lock(&mutexMetricas);
+	tablaMetricas.cantidadTareasTotalesTransformacion = cantPedidos;
+	pthread_mutex_unlock(&mutexMetricas);
+
 
 }
 
@@ -280,13 +311,43 @@ void mandarDatosTransformacion(t_indicacionTransformacion * indicacion, char* ru
 
 	if(chequearExistencia(rutasRepetidas, tamRepetidas, indicacion->rutaArchivoTemporal))
 	{
+		pthread_mutex_lock (&variableTareasTransformacion);
+		tareasTransformacion ++;
+
+		if(tareasTransformacion > tablaMetricas.cantMaximaTareasTransformacionParalelas)
+		{
+			tablaMetricas.cantMaximaTareasTransformacionParalelas = tareasTransformacion;
+		}
+		pthread_mutex_unlock (&variableTareasTransformacion);
+
 		pthread_mutex_t mutexArchivo;
 		pthread_mutex_lock(&mutexArchivo);
 		enviarIndicacionTransformacion(conexion,indicacion);
 		pthread_mutex_unlock(&mutexArchivo);
+
+		pthread_mutex_lock (&variableTareasTransformacion);
+		tareasTransformacion --;
+		pthread_mutex_unlock (&variableTareasTransformacion);
+
 	} else {
 
+		pthread_mutex_lock (&variableTareasTransformacion);
+				tareasTransformacion ++;
+
+				if(tareasTransformacion > tablaMetricas.cantMaximaTareasTransformacionParalelas)
+				{
+					tablaMetricas.cantMaximaTareasTransformacionParalelas = tareasTransformacion;
+				}
+
+		pthread_mutex_unlock (&variableTareasTransformacion);
+
 		enviarIndicacionTransformacion(conexion,indicacion);
+
+		pthread_mutex_lock (&variableTareasTransformacion);
+
+			tareasTransformacion --;
+
+		pthread_mutex_unlock (&variableTareasTransformacion);
 	}
 	 //   recibirMensaje(conexion,algo)  --> CONFIRMACION DEL WORKER
 
@@ -295,6 +356,9 @@ void mandarDatosTransformacion(t_indicacionTransformacion * indicacion, char* ru
 
 void gestionarReduccionLocal(){
 
+	struct timeval t0;
+	struct timeval t1;
+	gettimeofday(&t0,NULL);
 	int cantidadDeSolicitudes = list_size(pedidosDeReduccionLocal);
 	pthread_t hiloReduLocal[cantidadDeSolicitudes];
 	int posActual = 0;
@@ -321,25 +385,43 @@ void gestionarReduccionLocal(){
 
 	enviarMensaje(conexionYama,"salio todo piola la reduccion"); // aca iria solo un número, sería 0 para todo bien y a partir de 1 para señales
 
+	gettimeofday(&t1,NULL);
+	tiempoReduccionLocal = (t1.tv_sec - t0.tv_sec) *1000 + (t1.tv_usec - t0.tv_usec) / 1000;
 
+	pthread_mutex_lock (&mutexMetricas);
+	tablaMetricas.cantidadTareasTotalesReduccionLocal = cantidadDeSolicitudes;
+	pthread_mutex_unlock(&mutexMetricas);
 }
 
 
 void mandarDatosReduccionLocal(t_indicacionReduccionLocal * indicacion, int worker)
 	{
 
+		pthread_mutex_lock (&variableTareasReduccionLocal);
+		tareasReduccion ++;
+
+		if(tablaMetricas.cantMaximaTareasReduccionLocalParalelas < tareasReduccion)
+		{
+			tablaMetricas.cantMaximaTareasReduccionLocalParalelas = tareasReduccion;
+		}
+
+		pthread_mutex_unlock (&variableTareasTransformacion);
 
 		enviarIndicacionReduccionLocal(worker, indicacion);
 		 //   recibirMensaje(conexion,algo)  --> CONFIRMACION DEL WORKER
 
-
-
+		pthread_mutex_lock (&variableTareasReduccionLocal);
+		tareasReduccion --;
+		pthread_mutex_unlock (&variableTareasReduccionLocal);
 	}
 
 
 void gestionarReduccionGlobal()
 	{
 
+		struct timeval t0;
+		struct timeval t1;
+		gettimeofday (&t0,NULL);
 		int cantidadSolicitudes = list_size(pedidosDeReduccionGlobal);
 		int posActual = 0;
 		t_indicacionReduccionGlobal * indicaciones[cantidadSolicitudes];
@@ -382,7 +464,12 @@ void gestionarReduccionGlobal()
 		}
 
 		enviarMensaje(conexionYama, "salio piola la reduGlobal");
+		gettimeofday(t1,NULL);
 
+		tiempoReduccionGlobal = (t1.tv_sec - t0.tv_sec) *1000 + (t1.tv_usec - t0.tv_usec) / 1000;
+		pthread_mutex_lock(&mutexMetricas);
+		tablaMetricas.cantidadTareasTotalesReduccionGlobal = cantidadSolicitudes;
+		pthread_mutex_unlock(&mutexMetricas);
 	}
 
 void mandarDatosReduccionGlobal(t_indicacionReduccionGlobal * indicacion , int conexionEncargado)
