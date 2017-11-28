@@ -617,7 +617,7 @@ void mostrarContenidoArchivo(char * linea) {
 
 	char* archivoTemporal = leerArchivo(path_archivo);
 
-	printf("%s", archivoTemporal);
+	printf("%s \n", archivoTemporal);
 
 	//Libero memoria
 	free(path_archivo);
