@@ -85,16 +85,19 @@ void procesarInfoNodo(t_paquete * unPaquete, int client_socket) {
 	bool yaExiste = list_any_satisfy(tablaNodos->nomNodos,
 			(void*) esNodoBuscado);
 
+	//Agrego elemento a la lista de nodos por sockets
+	agregarNodoTablaSockets(info->nombre, client_socket);
+
 	if (!yaExiste) {
 		//Agrego elemento a la tabla de nodos
 		agregarNodoTablaNodos(info);
 
 		//Creo una tabla de Bitmap del nodo
 		crearArchivoTablaBitmap(info);
+	} else {
+		free(info->nombre);
+		free(info);
 	}
-
-	//Agrego elemento a la lista de nodos por sockets
-	agregarNodoTablaSockets(info->nombre, client_socket);
 
 }
 
@@ -256,10 +259,23 @@ void ignoroEstadoAnterior() {
 
 void consideroEstadoAnterior() {
 	printf("Considero estado anterior \n");
-	crearTablaNodosSegunArchivo(RUTA_METADATA);
-	crearTablaDirectorioSegunArchivo(RUTA_METADATA);
-}
 
+	//Verifico que la carpeta metadata exista
+	char * ruta = string_new();
+	string_append(&ruta, RUTA_METADATA);
+	string_append(&ruta, "metadata");
+
+	if (mkdir(ruta, 0777) == -1) {
+		crearTablaNodosSegunArchivo(RUTA_METADATA);
+		crearTablaDirectorioSegunArchivo(RUTA_METADATA);
+	} else {
+		//Creo las nuevas tablas administrativas
+		crearTablaNodos(ruta);
+		crearTablaDirectorios(ruta);
+	}
+
+	free(ruta);
+}
 /*-------------------------Funciones auxiliares-------------------------*/
 void iniciarServidor(char* unPuerto) {
 	iniciarServer(unPuerto, (void *) procesarPaquete);
