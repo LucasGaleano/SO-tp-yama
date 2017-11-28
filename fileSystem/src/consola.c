@@ -125,6 +125,7 @@ void ejecutarComando(char * linea, bool * ejecutar) {
 	if (string_starts_with(linea, "prueba")) {
 		almacenarArchivo("/home/utnso/Escritorio/prueba.txt", "user",
 				"texto2.txt", TEXTO);
+
 		return;
 	}
 
@@ -423,17 +424,6 @@ void eliminarBloque(char * linea) {
 		return;
 	}
 
-	//Armo la copia del bloque a buscar
-	char * keyCopia = string_new();
-	string_append(&keyCopia, "BLOQUE");
-	string_append(&keyCopia, nro_bloque);
-	string_append(&keyCopia, "COPIA");
-	if (nro_copia == 0) {
-		string_append(&keyCopia, "1");
-	} else {
-		string_append(&keyCopia, "0");
-	}
-
 	//Verifico que el bloque no este borrado
 	char * verificador = config_get_string_value(configArchivo, key);
 	if (string_equals_ignore_case(verificador, "###")) {
@@ -450,14 +440,42 @@ void eliminarBloque(char * linea) {
 		free(indexPadreChar);
 		config_destroy(configArchivo);
 		free(key);
-		free(keyCopia);
 
 		return;
 	}
 
 	//Verifico que el bloque no sea el ultimo
-	char * verificador2 = config_get_string_value(configArchivo, keyCopia);
-	if (string_equals_ignore_case(verificador2, "###")) {
+	bool noPuedoBorar = true;
+
+	//Armo la copia del bloque a buscar
+	char * keyCopia = string_new();
+	string_append(&keyCopia, "BLOQUE");
+	string_append(&keyCopia, nro_bloque);
+	string_append(&keyCopia, "COPIA");
+	int i = 0;
+	char * numeroCopia = string_itoa(i);
+	string_append(&keyCopia, numeroCopia);
+
+	while(config_has_property(configArchivo,keyCopia)){
+		char * verificador2 = config_get_string_value(configArchivo,keyCopia);
+		if(!string_equals_ignore_case(verificador2, "###") && !string_equals_ignore_case(key,keyCopia)){
+			noPuedoBorar=false;
+		}
+		free(keyCopia);
+		free(numeroCopia);
+		i ++;
+		keyCopia = string_new();
+		string_append(&keyCopia, "BLOQUE");
+		string_append(&keyCopia, nro_bloque);
+		string_append(&keyCopia, "COPIA");
+		numeroCopia = string_itoa(i);
+		string_append(&keyCopia, numeroCopia);
+	}
+
+	free(numeroCopia);
+
+
+	if (noPuedoBorar) {
 		printf(
 				"rm -b: no se puede borrar el bloque: %s copia: %s del archivo «./%s»: El bloque es el ultimo del sistema \n",
 				nro_bloque, nro_copia, path_archivo);
@@ -763,12 +781,19 @@ void crearCopiaBloqueEnNodo(char * linea) {
 	t_config * configArchivo = config_create(rutaFS);
 
 	//Busco el bloque a copiar
-	char ** bloqueBuscado = buscarBloque(configArchivo,atoi(nro_bloque),0);
-	if(bloqueBuscado == NULL)bloqueBuscado = buscarBloque(configArchivo,atoi(nro_bloque),1);
+	int i = 0;
+	char ** bloqueBuscado = buscarBloque(configArchivo,atoi(nro_bloque),i);
+	while(string_equals_ignore_case(bloqueBuscado[0],"#")){
+		i ++;
+		destruirSubstring(bloqueBuscado);
+		bloqueBuscado = buscarBloque(configArchivo,atoi(nro_bloque),i);
+	}
+
+	printf("Es el bloque buscado: %s %s \n",bloqueBuscado[0],bloqueBuscado[1]);
 
 	//Pido la info del bloque buscado
 	int socket = buscarSocketPorNombre(bloqueBuscado[0]);
-	enviarSolicitudLecturaBloqueGenerarCopia(socket,atoi(bloqueBuscado[1]),path_archivo,bloqueBuscado[1]);
+	enviarSolicitudLecturaBloqueGenerarCopia(socket,atoi(bloqueBuscado[1]),path_archivo,bloqueBuscado[0],id_nodo);
 
 	//Libero memoria
 	free(path_archivo);
@@ -778,6 +803,7 @@ void crearCopiaBloqueEnNodo(char * linea) {
 	free(rutaFS);
 	free(indexChar);
 	config_destroy(configArchivo);
+	destruirSubstring(bloqueBuscado);
 }
 
 void solicitarHash(char * linea) {
@@ -808,8 +834,21 @@ void solicitarHash(char * linea) {
 
 	system(comando);
 
+	//Borro el archivo hash
+	remove(rutaFS);
+
+	//Borro la carpeta temporales
+	char * rutaTemporal = string_new();
+	string_append(&rutaTemporal,RUTA_METADATA);
+	string_append(&rutaTemporal,"metadata/temporales");
+	remove(rutaTemporal);
+
 	//Libero memoria
 	free(path_archivo_yamafs);
+	free(rutaTemporal);
+	free(rutaFS);
+	free(comando);
+	free(archivoTemporal);
 }
 
 void listarArchivos(char * linea) {

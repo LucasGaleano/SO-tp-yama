@@ -18,11 +18,11 @@ void 							serializarArchvivo							(t_paquete *, char *);
 void 							serializarInfoDataNode						(t_paquete *, char *, int, int);
 
 void 							serializarSolicitudLecturaBloque			(t_paquete*, int);
-void 							serializarSolicitudLecturaBloqueGenerarCopia(t_paquete*, int, char*, char*);
+void 							serializarSolicitudLecturaBloqueGenerarCopia(t_paquete*, int, char*, char*, char*);
 void 							serializarSolicitudLecturaBloqueArchTemp	(t_paquete*, int, int);
 
 void 							serializarBloque							(t_paquete*, char*);
-void 							serializarBloqueGenerarCopia				(t_paquete*, char *, char *, char *);
+void 							serializarBloqueGenerarCopia				(t_paquete*, int, char *, char *, char *);
 void 							serializarBloqueArchTemp					(t_paquete*, char*, int);
 
 void 							serializarSolicitudEscrituraBloque			(t_paquete*, void*, int);

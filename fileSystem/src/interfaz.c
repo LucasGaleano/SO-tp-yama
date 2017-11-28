@@ -88,12 +88,17 @@ void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
 	char ** archivoSeparado = string_split((char *) archivo + *desplazamiento,
 			"\n");
 
+	bool esUltimoBloque = false;
+
 	int i = 0;
 
 	int tamProximoBloque = string_length(archivoSeparado[i]);
 
-	if (archivoSeparado[i + 1] != NULL)
+	if (archivoSeparado[i + 1] != NULL) {
 		tamProximoBloque++;
+	} else {
+		esUltimoBloque = true;
+	}
 
 	if (tamProximoBloque > TAM_BLOQUE)
 		return NULL;
@@ -103,7 +108,7 @@ void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
 	char * bufferInterno = string_new();
 
 	string_append(&bufferInterno, archivoSeparado[i]);
-	string_append(&bufferInterno, "\n");
+	if(!esUltimoBloque)string_append(&bufferInterno, "\n");
 
 	string_append((char**) &buffer, bufferInterno);
 
@@ -113,8 +118,11 @@ void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
 
 	if (archivoSeparado[i] != NULL) {
 		tamProximoBloque = string_length(archivoSeparado[i]);
-		if (archivoSeparado[i + 1] != NULL)
+		if (archivoSeparado[i + 1] != NULL) {
 			tamProximoBloque++;
+		} else {
+			esUltimoBloque = true;
+		}
 	}
 
 	free(bufferInterno);
@@ -124,7 +132,8 @@ void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
 
 		char * bufferInterno = string_new();
 		string_append(&bufferInterno, archivoSeparado[i]);
-		string_append(&bufferInterno, "\n");
+		if (!esUltimoBloque)
+			string_append(&bufferInterno, "\n");
 
 		string_append((char**) &buffer, bufferInterno);
 
@@ -177,7 +186,8 @@ char * buscarNodoMenosCargado() {
 
 int buscarBloqueAEscribir(char * nombreNodo) {
 	char * rutaConfig = string_new();
-	string_append(&rutaConfig, "/home/utnso/Escritorio/metadata/bitmaps/");
+	string_append(&rutaConfig, RUTA_METADATA);
+	string_append(&rutaConfig, "metadata/bitmaps/");
 	string_append(&rutaConfig, nombreNodo);
 	string_append(&rutaConfig, ".dat");
 
@@ -238,7 +248,8 @@ char * leerArchivo(char * rutaArchivo) {
 
 		list_add(tablaTareas, tarea);
 
-		enviarSolicitudLecturaArchTemp(buscarSocketPorNombre(tarea->nomNodo),tarea->bloque, i);
+		enviarSolicitudLecturaArchTemp(buscarSocketPorNombre(tarea->nomNodo),
+				tarea->bloque, i);
 
 		destruirSubstring(nodoBloqueOriginal);
 		destruirSubstring(nodoBloqueCopia);
