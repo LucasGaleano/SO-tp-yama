@@ -8,7 +8,9 @@
 #include <commons/string.h>
 #include <string.h>
 
+
 t_list* tabla_de_estados;
+
 
 enum etapa{
 	TRANSFORMACION,
@@ -32,7 +34,7 @@ typedef struct {
 	int estado;
 } t_elemento_tabla_estado;
 
-/*------------------------Manejo de tabla-------------------------*/
+/*------------------------Manejo de tabla estado-------------------------*/
 #include "tablas.h"
 
 

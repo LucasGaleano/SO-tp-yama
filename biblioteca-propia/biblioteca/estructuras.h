@@ -40,6 +40,7 @@ enum cod_op{
 	HANDSHAKE=0,
 
 	ENVIAR_MENSAJE,
+	ENVIAR_RUTA_ARCHIVO,
 	ENVIAR_ARCHIVO,
 	ENVIAR_INFO_DATANODE,
 	ENVIAR_ERROR,
@@ -69,6 +70,8 @@ enum cod_op{
 	ENVIAR_INDICACION_REDUCCION_GLOBAL,
 
 	ENVIAR_INDICACION_ALMACENADO_FINAL,
+
+	RESPUESTA_INFO_ARCHIVO
 
 };
 
@@ -176,6 +179,12 @@ typedef struct {
 	char* puerto;
 	char* rutaArchivoReduccionGlobal;
 } t_indicacionAlmacenadoFinal;
+
+typedef struct{
+	char * ubicacion1;
+	char * ubicacion2;
+	int tamanioArchivo;
+} t_informacion_bloque;
 
 //Verificados
 

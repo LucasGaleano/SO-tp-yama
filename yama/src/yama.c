@@ -8,6 +8,8 @@ int main(void) {
 
 	//Creo el thread para escuchar conexiones
 	pthread_t threadServerYama;
+	idJob = 0;
+	cola_master = queue_create();
 
 	if (pthread_create(&threadServerYama, NULL, (void*) iniciarServidor, config->puerto_yama)) {
 		perror("Error el crear el thread servidor.");
@@ -24,8 +26,6 @@ int main(void) {
 	return 0;
 }
 
-
-
 void iniciarServidor(char* unPuerto) {
 	iniciarServer(unPuerto, (void *) procesarPaquete);
 }
@@ -33,7 +33,7 @@ void iniciarServidor(char* unPuerto) {
 void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	switch (unPaquete->codigoOperacion) {
 	case HANDSHAKE:
-		recibirHandshake(unPaquete, client_socket);
+		recibirHandshake(unPaquete);
 		break;
 	case ENVIAR_MENSAJE:
 		recibirMensaje(unPaquete);
@@ -46,8 +46,16 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		break;
 	case ENVIAR_INDICACION_TRANSFORMACION:
 		;
-		t_solicitudArchivo * nomArchivo = recibirSolicitudArchivo(unPaquete);
-		enviarSolicitudInformacionArchivo(socketFS,nomArchivo);
+		queue_push(cola_master, client_socket);
+		char * nomArchivo = recibirMensaje(unPaquete);
+		enviarRutaArchivo(socketFS, nomArchivo);
+		break;
+	case RESPUESTA_INFO_ARCHIVO:
+		int socket_master = queue_pop(cola_master);
+		t_list * listaDeBloques = recibirListaDeBloques(unPaquete);
+		long id_job = generarJob();
+		crearRegistro(id_job, socket_master, ) //TODO ARREGLAR CON FACU LAS ESTRUCTURAS
+		enviarListaBloques(socket_master, listaDeBloques);
 		break;
 	default:
 		break;
@@ -55,14 +63,16 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	destruirPaquete(unPaquete);
 }
 
-void recibirHandshake(t_paquete * unPaquete, int * client_socket) {
+int recibirHandshake(t_paquete * unPaquete) {
 	int tipoCliente;
 	memcpy(&tipoCliente, unPaquete->buffer->data, sizeof(int));
 	switch (tipoCliente) {
-	case MASTER:
+ 	case MASTER:
+		return 0;
 		break;
 	default:
-		*client_socket = -1;
+		//TODO ENVIAR ERROR A MASTER
+		return -1;
 		break;
 	}
 }
@@ -71,7 +81,7 @@ void recibirError(t_paquete * unPaquete) {
 	int cliente_desconectado;
 	memcpy(&cliente_desconectado, unPaquete->buffer->data, sizeof(int));
 
-// HACER ALGO
+// todo HACER ALGO ANTE EL ERROR
 
 }
 
@@ -100,3 +110,11 @@ t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 
 	return configuracion;
 }
+
+long generarJob(){
+	idJob += 1;
+	return idJob;
+}
+
+
+

@@ -48,6 +48,8 @@ int 							recibirHandshake							(t_paquete *);
 
 char * 							recibirMensaje								(t_paquete *);
 
+char * 							recibirRutaArchivo							(t_paquete *);
+
 void * 							recibirArchivo								(t_paquete *);
 
 t_nodo_info *					recibirInfoDataNode							(t_paquete *);

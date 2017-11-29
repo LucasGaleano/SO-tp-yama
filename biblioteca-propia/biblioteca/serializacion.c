@@ -496,6 +496,10 @@ void serializarIndicacionAlmacenadoFinal(t_paquete * unPaquete,
 
 }
 
+void serializarListaDeBloques(t_paquete* unPaquete, t_list* listaBloques){
+//	TODO SERIALIZAR LA LISTA DE BLOQUES
+}
+
 /*-------------------------Deserializacion-------------------------*/
 int deserializarNumero(t_stream* buffer) {
 	return *(int*) (buffer->data);
@@ -829,6 +833,10 @@ t_indicacionAlmacenadoFinal * deserializarIndicacionAlmacenadoFinal(
 			buffer->data + desplazamiento);
 
 	return indicacion;
+}
+
+t_list * deserializarListaDeBloques(t_stream * buffer){
+   return list_create();//	TODO DESERIALIZAR LA LISTA DE BLOQUES
 }
 
 /*-------------------------Funciones auxiliares-------------------------*/

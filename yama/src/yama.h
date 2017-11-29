@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <commons/config.h>
 #include <commons/collections/list.h>
+#include <commons/collections/queue.h>
 #include <biblioteca/sockets.h>
 #include <biblioteca/estructurasMasterYama.h>
 #include <biblioteca/estructurasWorkerMaster.h>
@@ -22,6 +23,9 @@ typedef struct {
 } t_configuracion;
 
 int socketFS;
+t_queue* cola_master;
+
+long idJob;
 
 //typedef struct {
 //	char * ;
@@ -36,10 +40,13 @@ void                iniciarServidor                    (char* unPuerto);
 
 /*------------------------Procesamiento paquetes-------------------------*/
 void 				procesarPaquete					(t_paquete *, int *);
-void 				recibirHandshake				(t_paquete *, int *);
 void 				recibirInfoNodo					(t_paquete *, int);
 void 				recibirError					(t_paquete *);
 
+
+void 				enviarRutaArchivo				(int, char *);
+
+long 			    generarJob                      ();
 
 
 #endif /* YAMA_H_ */
