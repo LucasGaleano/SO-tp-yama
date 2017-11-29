@@ -1,142 +1,4 @@
-#include <pthread.h>
-#include <signal.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <signal.h>
-#include <commons/config.h>
-#include <commons/collections/list.h>
-#include <biblioteca/sockets.h>
-#include <commons/string.h>
-#include <time.h>
-#include <biblioteca/estructuras.h>
-#include <commons/log.h>
-
-/*
-
-Señales extraidas de /usr/bin/include/bits/signum.h
-
-
-
-#define SIG_ERR	((__sighandler_t) -1)		 Error return.
-#define SIG_DFL	((__sighandler_t) 0)		 Default action.
-#define SIG_IGN	((__sighandler_t) 1)		 Ignore signal.
-
-Signals.
-#define	SIGHUP		1	 Hangup (POSIX).
-#define	SIGINT		2	 Interrupt (ANSI).
-#define	SIGQUIT		3	 Quit (POSIX).
-#define	SIGILL		4	 Illegal instruction (ANSI).
-#define	SIGTRAP		5	 Trace trap (POSIX).
-#define	SIGABRT		6	 Abort (ANSI).
-#define	SIGIOT		6	 IOT trap (4.2 BSD).
-#define	SIGBUS		7	 BUS error (4.2 BSD).
-#define	SIGFPE		8	 Floating-point exception (ANSI).
-#define	SIGKILL		9	 Kill, unblockable (POSIX).
-#define	SIGUSR1		10	 User-defined signal 1 (POSIX).
-#define	SIGSEGV		11	 Segmentation violation (ANSI).
-#define	SIGUSR2		12	 User-defined signal 2 (POSIX).
-#define	SIGPIPE		13	 Broken pipe (POSIX).
-#define	SIGALRM		14	 Alarm clock (POSIX).
-#define	SIGTERM		15	 Termination (ANSI).
-#define	SIGSTKFLT	16	 Stack fault.
-#define	SIGCLD		SIGCHLD	 Same as SIGCHLD (System V).
-#define	SIGCHLD		17	 Child status has changed (POSIX).
-#define	SIGCONT		18	 Continue (POSIX).
-#define	SIGSTOP		19	 Stop, unblockable (POSIX).
-#define	SIGTSTP		20	 Keyboard stop (POSIX).
-#define	SIGTTIN		21	 Background read from tty (POSIX).
-#define	SIGTTOU		22	 Background write to tty (POSIX).
-#define	SIGURG		23	 Urgent condition on socket (4.2 BSD).
-#define	SIGXCPU		24	 CPU limit exceeded (4.2 BSD).
-#define	SIGXFSZ		25	 File size limit exceeded (4.2 BSD).
-#define	SIGVTALRM	26	 Virtual alarm clock (4.2 BSD).
-#define	SIGPROF		27	 Profiling alarm clock (4.2 BSD).
-#define	SIGWINCH	28	Window size change (4.3 BSD, Sun).
-#define	SIGPOLL		SIGIO	 Pollable event occurred (System V).
-#define	SIGIO		29	 I/O now possible (4.2 BSD).
-#define	SIGPWR		30	 Power failure restart (System V).
-#define SIGSYS		31	 Bad system call.
-#define SIGUNUSED	31
-
-*/
-
-// Funciones
-
-typedef struct
-{
-	int conexion;
-	t_indicacionTransformacion * ind;
-
-}transformacion;
-
-typedef struct
-{
-	int conexion;
-	t_pedidoReduccionLocal * ind;
-} reduLocal;
-
-typedef struct
-{
-	int conexion;
-	t_pedidoReduccionGlobal reduGlobal;
-} reduGlobal;
-
-int leerConfiguracion();
-void gestionarTransformacion();
-void mandarDatosTransformacion(transformacion t);
-void gestionarReduccionLocal();
-void mandarDatosReduccionLocal(reduLocal * reduccion);
-void gestionarReduccionGlobal();
-void mandarDatosReduccionGlobal();
-void signal_capturer(int numeroSenial);
-void procesarPaquete(t_paquete * unPaquete, int * client_socket);
-
-// Variables globales
-
-t_log * logMaster;
-t_list * pedidosDeTransformacion ;
-t_list * pedidosDeReduccionLocal;
-t_list * pedidosDeReduccionGlobal;
-int tareasRealizadasEnParalelo;
-int tareasTotalesReduccionLocal;
-int cantidadDeFallos;
-char* rutaScriptTransformador ;
-char* rutaScriptReductor ;
-char* rutaArchivoParaArrancar ;
-char* rutaParaAlmacenarArchivo;
-int conexionYama;
-bool * finDeSolicitudesDeTransformacion;
-bool * finDeSolicitudesDeReduccionLocal;
-bool * finDeSolicitudesGlobales;
-int tareasTransformacion;
-int tareasReduccion;
-pthread_mutex_t variableTareasReduccionLocal;
-pthread_mutex_t variableTareasTransformacion;
-pthread_mutex_t mutexMetricas;
-
-// Resultado de operaciones
-
-typedef struct
-{
-	float tiempoTotal;
-	float promedioJobs;
-	int cantMaximaTareasTransformacionParalelas;
-	int cantMaximaTareasReduccionLocalParalelas;
-	int cantidadTareasTotalesTransformacion;
-	int cantidadTareasTotalesReduccionLocal;
-	int cantidadTareasTotalesReduccionGlobal;
-	int fallosDelJob; // 0 para todo mal y 1 para todo bien D:
-
-} metricas;
-
-
-metricas tablaMetricas;
-float tiempoTransformacion;
-float tiempoReduccionLocal;
-float tiempoReduccionGlobal;
+#include "master.h"
 
 int main(int argc, char **argv) {
 
@@ -145,23 +7,22 @@ int main(int argc, char **argv) {
 	struct timeval tiempoFin;
 	float total;
 	gettimeofday(&tiempoInicio, NULL);
-
-	printf(" inicio");
 	pedidosDeTransformacion = list_create();
 	pedidosDeReduccionLocal = list_create();
 	pedidosDeReduccionGlobal = list_create();
+	finDeSolicitudes = false;
+
 	if(argv[1]==NULL)
 	{
 		log_error(logMaster,"no se ingreso primer parametro");
 	}
+
 	rutaScriptTransformador = argv [1];
 	rutaScriptReductor = argv [2];
 	rutaArchivoParaArrancar = argv [3];
 	rutaParaAlmacenarArchivo = argv [4];
 
 
-	finDeSolicitudesDeTransformacion = malloc(sizeof(bool));
-	*finDeSolicitudesDeTransformacion = false;
 
 	conexionYama = leerConfiguracion();
 
@@ -171,26 +32,19 @@ int main(int argc, char **argv) {
 	enviarMensaje(conexionYama,rutaArchivoParaArrancar);
 
 
-	while(*finDeSolicitudesDeTransformacion == false){
+	while(finDeSolicitudes == false){
 
 	gestionarSolicitudes(conexionYama, (void *) procesarPaquete);
 
 	}
 
-
-	finDeSolicitudesDeReduccionLocal= malloc (sizeof(bool));
-	finDeSolicitudesDeReduccionLocal = false;
-
-	while(*finDeSolicitudesDeReduccionLocal == false){
+	while(finDeSolicitudes == false){
 
 		gestionarSolicitudes(conexionYama,(void *) procesarPaquete);
 
 	}
 
-	finDeSolicitudesGlobales = malloc(sizeof(bool));
-	finDeSolicitudesGlobales = false;
-
-	while(*finDeSolicitudesGlobales == false){
+	while(finDeSolicitudes == false){
 
 		gestionarSolicitudes(conexionYama, (void *) procesarPaquete);
 
@@ -229,16 +83,8 @@ int leerConfiguracion(){
     printf("%s", ip);
 
     int socketYama = conectarCliente(ip, puerto, MASTER);
-    char * mensaje = string_new();
-    string_append(&mensaje,"Hola puto te re cabio");
 
-    enviarMensaje(socketYama, mensaje);
-    while(1){
-
-    }
     return socketYama;
-
-
 }
 
 
@@ -399,7 +245,7 @@ void mandarDatosReduccionLocal(reduLocal * reduccion)
 
 		pthread_mutex_unlock (&variableTareasTransformacion);
 
-		enviarIndicacionReduccionLocal(reduccion->conexion, reduccion->ind); // acá va el cambio de estructura
+		enviarSolicitudReduccionLocal(reduccion->conexion, reduccion->ind); // acá va el cambio de estructura
 		 //   recibirMensaje(conexion,algo)  --> CONFIRMACION DEL WORKER
 
 		pthread_mutex_lock (&variableTareasReduccionLocal);
@@ -520,7 +366,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) { // contesto a
 		if (string_equals_ignore_case(continuarRecibiendoPedidosTransformacion, "0"))
 		{
 			gestionarTransformacion();
-			*finDeSolicitudesDeTransformacion = true;
+			finDeSolicitudes = true;
 		}
 		break;// sale para volver a pedir
 
@@ -535,7 +381,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) { // contesto a
 		if(string_equals_ignore_case(continuarRecibiendoPedidosDeReduLocal,"0"))
 		{
 			gestionarReduccionLocal();
-			*finDeSolicitudesDeReduccionLocal = true;
+			finDeSolicitudes = true;
 		}
 		break;
 
@@ -550,7 +396,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) { // contesto a
 	    {
 
 	    	gestionarReduccionGlobal();
-	    	*finDeSolicitudesGlobales = true;
+	    	finDeSolicitudes = true;
 
 	    }
 
