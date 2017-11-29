@@ -123,8 +123,8 @@ void ejecutarComando(char * linea, bool * ejecutar) {
 
 	//PRUEBA
 	if (string_starts_with(linea, "prueba")) {
-		almacenarArchivo("/home/utnso/Escritorio/prueba.txt", "user",
-				"texto2.txt", TEXTO);
+		almacenarArchivo("/home/utnso/Escritorio/nombres.csv", "base",
+				"prueba", TEXTO);
 
 		return;
 	}

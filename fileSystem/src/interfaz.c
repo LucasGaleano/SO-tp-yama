@@ -9,60 +9,61 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 
 	void * archivo = abrirArchivo(rutaArchivo, &tamArch, &archivofd);
 
-	int desplazamiento = 0;
-
-	int numeroBloque = 0;
+//	int desplazamiento = 0;
+//
+//	int numeroBloque = 0;
 
 	t_config * configTablaArchivo = crearArchivoTablaArchivo(rutaArchivo,
 			rutaDestino, nomArchivo, tipoArchivo);
 
-	while (desplazamiento < tamArch) {
-		void * buffer;
-		switch (tipoArchivo) {
-		case BINARIO:
-			buffer = dividirBloqueArchivoBinario(archivo, &desplazamiento);
-			break;
-		case TEXTO:
-			buffer = dividirBloqueArchivoTexto(archivo, &desplazamiento);
-			break;
-		default:
-			printf("No puedo enviar el archivo xq no conosco su tipo de dato");
-			return;
-			break;
-		}
-
-		//Genero el bloque original
-		char * nodoElegido = buscarNodoMenosCargado();
-		int socketNodoElegido = buscarSocketPorNombre(nodoElegido);
-		int bloqueAEscribir = buscarBloqueAEscribir(nodoElegido);
-
-		agregarRegistroTablaArchivos(nodoElegido, bloqueAEscribir, numeroBloque,
-				0, configTablaArchivo);
-
-		enviarSolicitudEscrituraBloque(socketNodoElegido, buffer,
-				bloqueAEscribir);
-
-		//Genero la copia
-		char * nodoElegidoCopia = buscarNodoMenosCargado();
-		int socketNodoElegidoCopia = buscarSocketPorNombre(nodoElegidoCopia);
-		int bloqueAEscribirCopia = buscarBloqueAEscribir(nodoElegidoCopia);
-
-		agregarRegistroTablaArchivos(nodoElegidoCopia, bloqueAEscribirCopia,
-				numeroBloque, 1, configTablaArchivo);
-
-		enviarSolicitudEscrituraBloque(socketNodoElegidoCopia, buffer,
-				bloqueAEscribirCopia);
-
-		//Bytes guardados en un bloque
-		int tamBuffer = strlen((char*) buffer);
-		guardoBytesPorBloque(numeroBloque, tamBuffer, configTablaArchivo);
-
-		//Actualizo el numero de bloques
-		numeroBloque++;
-
-		//Libero memoria
-		free(buffer);
-	}
+	dividirBloqueArchivoTexto2(archivo, configTablaArchivo);
+//	while (desplazamiento < tamArch) {
+//		void * buffer;
+//		switch (tipoArchivo) {
+//		case BINARIO:
+//			buffer = dividirBloqueArchivoBinario(archivo, &desplazamiento);
+//			break;
+//		case TEXTO:
+//			buffer = dividirBloqueArchivoTexto(archivo, &desplazamiento);
+//			break;
+//		default:
+//			printf("No puedo enviar el archivo xq no conosco su tipo de dato");
+//			return;
+//			break;
+//		}
+//
+//		//Genero el bloque original
+//		char * nodoElegido = buscarNodoMenosCargado();
+//		int socketNodoElegido = buscarSocketPorNombre(nodoElegido);
+//		int bloqueAEscribir = buscarBloqueAEscribir(nodoElegido);
+//
+//		agregarRegistroTablaArchivos(nodoElegido, bloqueAEscribir, numeroBloque,
+//				0, configTablaArchivo);
+//
+//		enviarSolicitudEscrituraBloque(socketNodoElegido, buffer,
+//				bloqueAEscribir);
+//
+//		//Genero la copia
+//		char * nodoElegidoCopia = buscarNodoMenosCargado();
+//		int socketNodoElegidoCopia = buscarSocketPorNombre(nodoElegidoCopia);
+//		int bloqueAEscribirCopia = buscarBloqueAEscribir(nodoElegidoCopia);
+//
+//		agregarRegistroTablaArchivos(nodoElegidoCopia, bloqueAEscribirCopia,
+//				numeroBloque, 1, configTablaArchivo);
+//
+//		enviarSolicitudEscrituraBloque(socketNodoElegidoCopia, buffer,
+//				bloqueAEscribirCopia);
+//
+//		//Bytes guardados en un bloque
+//		int tamBuffer = strlen(buffer);
+//		guardoBytesPorBloque(numeroBloque, tamBuffer, configTablaArchivo);
+//
+//		//Actualizo el numero de bloques
+//		numeroBloque++;
+//
+//		//Libero memoria
+//		free(buffer);
+//	}
 	config_destroy(configTablaArchivo);
 }
 
@@ -83,84 +84,91 @@ void * dividirBloqueArchivoBinario(void * archivo, int * desplazamiento) {
 	return buffer;
 }
 
-void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
+char * generarBloque2(void * archivo) {
+	char *text_to_iterate = string_duplicate(archivo);
 
-	char ** archivoSeparado = string_split((char *) archivo + *desplazamiento,
-			"\n");
+	char *next = text_to_iterate;
+	char *str = text_to_iterate;
 
-	bool esUltimoBloque = false;
+	char* token = strtok_r(str, "\n", &next);
 
-	int i = 0;
+	char * bloque = string_new();
+	string_append(&bloque, token);
 
-	int tamProximoBloque = string_length(archivoSeparado[i]);
+	free(text_to_iterate);
 
-	if (archivoSeparado[i + 1] != NULL) {
-		tamProximoBloque++;
-	} else {
-		esUltimoBloque = true;
+	return bloque;
+}
+
+char * generarBloque(void * archivo) {
+	int a = 0;
+	int restoArchivo = strlen(archivo);
+
+	if (string_starts_with(archivo + a, "\n"))
+		a++;
+
+	while (!string_starts_with(archivo + a, "\n") && (restoArchivo > 0)) {
+		a++;
+		restoArchivo--;
 	}
 
-	if (tamProximoBloque > TAM_BLOQUE)
-		return NULL;
+	char * bloque = malloc((sizeof(char) * a) + 1);
+	memcpy(bloque, archivo, a);
+	char * nulo = "\0";
+	memcpy(bloque + a, nulo, 1);
+	return bloque;
+}
+
+void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
+
+	int tamArchivo = strlen(archivo);
+
+	int tamRestante = tamArchivo - *desplazamiento;
 
 	char * buffer = string_new();
 
-	char * bufferInterno = string_new();
+	int tamBuffer = 0;
 
-	string_append(&bufferInterno, archivoSeparado[i]);
-	if(!esUltimoBloque)string_append(&bufferInterno, "\n");
+	//Genero el bloque
+	char * bloqueAGurdar = generarBloque(archivo + *desplazamiento);
+	int tamBloqueAGuardar = strlen(bloqueAGurdar);
 
-	string_append((char**) &buffer, bufferInterno);
-
-	i++;
-
-	int tamBuffer = tamProximoBloque;
-
-	if (archivoSeparado[i] != NULL) {
-		tamProximoBloque = string_length(archivoSeparado[i]);
-		if (archivoSeparado[i + 1] != NULL) {
-			tamProximoBloque++;
-		} else {
-			esUltimoBloque = true;
-		}
+	//Pregunto si es el ultimo bloque
+	if ((tamRestante - tamBloqueAGuardar) != 0) {
+		tamBloqueAGuardar++;
 	}
 
-	free(bufferInterno);
+	while (tamRestante > 0 && (tamBuffer + tamBloqueAGuardar) < 1000000) {
+		//Guardo el bloque al buffer
+		string_append(&buffer, bloqueAGurdar);
 
-	while (TAM_BLOQUE >= (tamBuffer + tamProximoBloque)
-			&& archivoSeparado[i + 1] != NULL && archivoSeparado[i] != NULL) {
-
-		char * bufferInterno = string_new();
-		string_append(&bufferInterno, archivoSeparado[i]);
-		if (!esUltimoBloque)
-			string_append(&bufferInterno, "\n");
-
-		string_append((char**) &buffer, bufferInterno);
-
-		i++;
-
-		tamBuffer += tamProximoBloque;
-
-		if (archivoSeparado[i + 1] != NULL) {
-			tamProximoBloque = string_length(archivoSeparado[i + 1]);
-			if (archivoSeparado[i + 2] != NULL)
-				tamProximoBloque++;
+		//Pregunto si es el ultimo bloque
+		if ((tamRestante - tamBloqueAGuardar) != 0) {
+			string_append(&buffer, "\n");
 		}
 
-		free(bufferInterno);
+		printf("Este es el buffer %s", bloqueAGurdar);
+
+		tamRestante -= tamBloqueAGuardar;
+
+		*desplazamiento = *desplazamiento + tamBloqueAGuardar;
+
+		tamBuffer += tamBloqueAGuardar;
+
+		free(bloqueAGurdar);
+
+		//Genero el bloque
+		bloqueAGurdar = generarBloque(archivo + *desplazamiento);
+		tamBloqueAGuardar = strlen(bloqueAGurdar);
+
+		//Pregunto si es el ultimo bloque
+		if ((tamRestante - tamBloqueAGuardar) != 0) {
+			tamBloqueAGuardar++;
+		}
+
 	}
 
-	if (TAM_BLOQUE >= (tamBuffer + tamProximoBloque)) {
-		buffer = realloc(buffer, tamBuffer + tamProximoBloque);
-		memcpy(buffer + tamBuffer, archivoSeparado[i], tamProximoBloque);
-		tamBuffer += tamProximoBloque;
-
-	}
-
-	*desplazamiento += tamBuffer;
-
-	//Libero memoria
-	destruirSubstring(archivoSeparado);
+	free(bloqueAGurdar);
 
 	return buffer;
 }
@@ -169,12 +177,16 @@ char * buscarNodoMenosCargado() {
 	bool nodoMenosCargado(t_nodo_info * cargado, t_nodo_info * menosCargado) {
 		int cargadoNum = cargado->total - cargado->libre;
 		int menosCargadoNum = menosCargado->total - menosCargado->libre;
-		return cargadoNum < menosCargadoNum;
+		return (cargadoNum < menosCargadoNum);
 	}
 
 	list_sort(tablaNodos->infoDeNodo, (void*) nodoMenosCargado);
 
-	t_nodo_info * nodo = list_get(tablaNodos->infoDeNodo, 0);
+	bool tieneNodos(t_nodo_info * nodo) {
+		return nodo->libre > 0;
+	}
+
+	t_nodo_info * nodo = list_find(tablaNodos->infoDeNodo, (void*) tieneNodos);
 
 	//Actualizo tabla de nodos
 	tablaNodos->libres--;
@@ -239,7 +251,6 @@ char * leerArchivo(char * rutaArchivo) {
 	int i;
 
 	for (i = 0; i < cantidadDeBloques; ++i) {
-
 		char ** nodoBloqueOriginal = buscarBloque(configArchivo, i, 0);
 		char ** nodoBloqueCopia = buscarBloque(configArchivo, i, 1);
 
@@ -317,4 +328,118 @@ int cantidadTareas(char ** nodoBloqueOriginal) {
 	}
 
 	return list_count_satisfying(tablaTareas, (void*) cantidadDeTareas);
+}
+
+/*------------------------------------------------------------------------------------------------------------------------*/
+
+int leerHastaSaltoLinea(void * archivo) {
+	int tamBloqueHastaSaltoLinea = 0;
+	int restoArchivo = strlen(archivo);
+
+	if (string_starts_with(archivo + tamBloqueHastaSaltoLinea, "\n"))
+		tamBloqueHastaSaltoLinea++;
+
+	while (!string_starts_with(archivo + tamBloqueHastaSaltoLinea, "\n")
+			&& (restoArchivo > 0)) {
+		tamBloqueHastaSaltoLinea++;
+		restoArchivo--;
+	}
+	return tamBloqueHastaSaltoLinea;
+}
+
+int tamBloque(void * archivo) {
+	int tamBloque = 0;
+	int tamRestanteArchivo = strlen(archivo + tamBloque);
+
+	printf("Llegue hasta aca 2\n");
+
+	//Sumo hasta que el tam sea menor que el bloque
+	while ((tamBloque + leerHastaSaltoLinea(archivo + tamBloque)) < TAM_BLOQUE
+			&& tamRestanteArchivo > 0) {
+		tamBloque += leerHastaSaltoLinea(archivo + tamBloque);
+		tamRestanteArchivo = strlen(archivo + tamBloque);
+		printf("TamRestante es: %d \n",tamRestanteArchivo);
+
+	}
+
+	return tamBloque;
+}
+
+//Hacerlo en hilo
+void enviarBuffer(t_hilo_enviar * valores) {
+	void * buffer = malloc(valores->tamLectura);
+	memcpy(buffer, valores->archivo, valores->tamLectura);
+	enviarSolicitudEscrituraBloque(buscarSocketPorNombre(valores->nomNodo),
+			buffer, valores->bloqueAEscribir);
+}
+
+void dividirBloqueArchivoTexto2(void * archivo, t_config * configTablaArchivo) {
+
+	int desplazamiento = 0;
+	int tamArchivo = strlen(archivo);
+	int tamRestante = tamArchivo - desplazamiento;
+	int numBloque = 0;
+
+	printf("Llegue hasta aca \n");
+
+	while (tamRestante > 0) {
+		int tamBuffer = tamBloque(archivo + desplazamiento);
+
+		tamRestante -= tamBuffer;
+
+		//Genero el bloque original
+		char * nodoElegido = buscarNodoMenosCargado();
+
+		int bloqueAEscribir = buscarBloqueAEscribir(nodoElegido);
+
+		agregarRegistroTablaArchivos(nodoElegido, bloqueAEscribir, numBloque, 0,
+				configTablaArchivo);
+
+		//Creo el thread para enviar datos
+		pthread_t threadEnvioArchivos1;
+
+		t_hilo_enviar * valores1 = malloc(sizeof(t_hilo_enviar));
+
+		valores1->archivo = archivo;
+		valores1->bloqueAEscribir = bloqueAEscribir;
+		valores1->nomNodo = nodoElegido;
+		valores1->tamLectura = tamBuffer;
+
+		if (pthread_create(&threadEnvioArchivos1, NULL, (void*) enviarBuffer,
+				valores1)) {
+			perror("Error el crear el thread para enviar archivos.");
+			exit(EXIT_FAILURE);
+		}
+
+		//Genero el bloque copia
+		char * nodoElegidoCopia = buscarNodoMenosCargado();
+
+		int bloqueAEscribirCopia = buscarBloqueAEscribir(nodoElegidoCopia);
+
+		agregarRegistroTablaArchivos(nodoElegidoCopia, bloqueAEscribirCopia,
+				numBloque, 1, configTablaArchivo);
+
+		//Creo el thread para enviar datos
+		pthread_t threadEnvioArchivos2;
+
+		t_hilo_enviar * valores2 = malloc(sizeof(t_hilo_enviar));
+
+		valores2->archivo = archivo;
+		valores2->bloqueAEscribir = bloqueAEscribirCopia;
+		valores2->nomNodo = nodoElegidoCopia;
+		valores2->tamLectura = tamBuffer;
+
+		if (pthread_create(&threadEnvioArchivos2, NULL, (void*) enviarBuffer,
+				valores2)) {
+			perror("Error el crear el thread para enviar archivos.");
+			exit(EXIT_FAILURE);
+		}
+
+		//Bytes guardados en un bloque
+		guardoBytesPorBloque(numBloque, tamBuffer, configTablaArchivo);
+
+		desplazamiento += tamBuffer;
+
+		numBloque++;
+	}
 }
