@@ -1,5 +1,5 @@
-#ifndef _MASTER.H_
-#define _MASTER.H_
+#ifndef _MASTER_H_
+#define _MASTER_H_
 
 #include <pthread.h>
 #include <signal.h>
@@ -17,10 +17,15 @@
 #include <biblioteca/estructuras.h>
 #include <commons/log.h>
 
+#define FIN "0"
+#define ERROR "-1"
+#define SIGUE "1"
+#define SALIOBIEN "2"
+
 typedef struct
 {
 	int conexion;
-	t_indicacionTransformacion * ind;
+	t_pedidoTransformacion * ind;
 
 }transformacion;
 
@@ -33,18 +38,22 @@ typedef struct
 typedef struct
 {
 	int conexion;
-	t_pedidoReduccionGlobal reduGlobal;
+	t_pedidoReduccionGlobal * reduGlobal;
 } reduGlobal;
 
 int leerConfiguracion();
+void liberarListas();
 void gestionarTransformacion();
-void mandarDatosTransformacion(transformacion t);
+void mandarDatosTransformacion(transformacion * t);
 void gestionarReduccionLocal();
 void mandarDatosReduccionLocal(reduLocal * reduccion);
 void gestionarReduccionGlobal();
 void mandarDatosReduccionGlobal();
 void signal_capturer(int numeroSenial);
 void procesarPaquete(t_paquete * unPaquete, int * client_socket);
+void gestionarAlmacenadoFinal(t_indicacionAlmacenadoFinal * pedido);
+t_log* log_create(char* file, char *program_name, bool is_active_console, t_log_level level);
+
 
 // Variables globales
 
@@ -60,14 +69,16 @@ char* rutaScriptReductor ;
 char* rutaArchivoParaArrancar ;
 char* rutaParaAlmacenarArchivo;
 int conexionYama;
-bool * finDeSolicitudesDeTransformacion;
-bool * finDeSolicitudesDeReduccionLocal;
-bool * finDeSolicitudesGlobales;
+bool finDeSolicitudesDeTransformacion;
+bool finDeSolicitudesDeReduccionLocal;
+bool finDeSolicitudesGlobales;
+bool terminoConError;
 int tareasTransformacion;
 int tareasReduccion;
 pthread_mutex_t variableTareasReduccionLocal;
 pthread_mutex_t variableTareasTransformacion;
 pthread_mutex_t mutexMetricas;
+pthread_mutex_t mutexError;
 bool finDeSolicitudes;
 
 
@@ -95,10 +106,5 @@ float tiempoReduccionGlobal;
 
  // Para los resultados
 
-enum resultado
-{
-	TODO_OK=0,
-	ERROR = 1,
-};
 
 #endif
