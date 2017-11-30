@@ -123,7 +123,7 @@ typedef struct {
 typedef struct {
 	char* ip;
 	char* puerto;
-	int bloque;
+	char* nodo;
 	char* rutaArchivoTemporal;
 } t_pedidoTransformacion;
 
@@ -180,11 +180,19 @@ typedef struct {
 	char* rutaArchivoReduccionGlobal;
 } t_indicacionAlmacenadoFinal;
 
+
 typedef struct{
-	char * ubicacion1;
-	char * ubicacion2;
-	int tamanioArchivo;
-} t_informacion_bloque;
+	char* ip;
+	char* nodo;
+	char* puerto;
+	int numBloque;
+} t_bloque_ubicacion;
+
+typedef struct{
+	t_bloque_ubicacion* copia0;
+	t_bloque_ubicacion* copia1;
+	int tamanioOcupado;
+} t_bloque;
 
 //Verificados
 

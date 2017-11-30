@@ -51,5 +51,7 @@ void 				enviarRutaArchivo				(int, char *);
 
 long 			    generarJob                      ();
 
+t_indicacionTransformacion* bloqueAT_indicacionTranformacion(int, t_bloque_ubicacion* ,char*);
+
 
 #endif /* YAMA_H_ */

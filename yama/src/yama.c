@@ -59,27 +59,40 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		//me llega la respuesta de FS y despues de procesarla la envio al master de la lista masterconectados.
 
 		t_list* listaDeBloque = recibirListaDeBloques(unPaquete); //recibir lista de FS
-
+		char* nombreTemp = nombreArchivoTemp();
 
 
 		while(listaDeBloque->elements_count!=0){   // lista elementos uno por uno
 			t_bloque* bloque = list_remove(listaDeBloque,0);
+			int socketMasterElegido = list_get(masterConectados,0); //todo [CAMBIAR] elige siempre al mismo master cuando elige de la lista masterConectados, deberia ser equitativo tipo RR
+			t_bloque_ubicacion* bloqueUbicacion = bloque->copia0; //todo [CAMBIAR] hacer planificador para elegir bien la copia dependiendo del nodo
+
 
 			//guardar en tabla de estado
-			agregarRegistro(generarJob(), list_get(masterConectados,0),bloque->copia0->nodo,bloque->copia0->numBloque
-					, TRANSFORMACION ,nombreArchivoTemp(), PROCESANDO);
-			//todo [CAMBIAR] elige siempre al mismo master cuando elije de la lista masterConectados
-			//todo [CAMBIAR] hacer planificador para elegir bien el nodo
-			//todo [DUDA] enum etapa lo usa master??, ponerlo en la biblioteca-propia sino
+			agregarRegistro(generarJob(), socketMasterElegido,bloqueUbicacion->nodo,bloqueUbicacion->numBloque
+					, TRANSFORMACION ,nombreTemp, PROCESANDO);
+
+
+			//todo [DUDA] enum etapa, lo usa master??, ponerlo en la biblioteca-propia sino
 
 			//todo enviar lista a master de a un bloque
+			t_indicacionTransformacion* bloqueEnviar = bloqueAT_indicacionTranformacion(bloque->tamanioOcupado,bloqueUbicacion,
+					nombreTemp);  //paso de bloque a T_indicacionTranformacion
+			enviarIndicacionTransformacion(socketMasterElegido, bloqueEnviar);
 
-			//enviarIndicacionTransformacion();
+
+
+
+			//TODO free() al final
 
 		}
 
 
+
+		//TODO free() al final
 		break;
+		//todo CASE para notificar tarea de tranformacion de un job fue concluida
+
 	default:
 		break;
 	}
@@ -134,6 +147,29 @@ t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 
 	return configuracion;
 }
+
+t_indicacionTransformacion* bloqueAT_indicacionTranformacion(int tamanio, t_bloque_ubicacion* ubicacion,char* nombreTemp){
+
+	t_indicacionTransformacion* indTransform = malloc(sizeof(t_indicacionTransformacion));
+
+	//indTransform->bloque = malloc(ubicacion->numBloque);
+	//indTransform->bytes = malloc(tamanio);
+	indTransform->ip = malloc(string_length(ubicacion->ip));
+	indTransform->nodo = malloc(string_length(ubicacion->nodo));
+	indTransform->puerto = malloc(string_length(ubicacion->puerto));
+	indTransform->rutaArchivoTemporal = malloc(string_length(nombreTemp));
+
+	indTransform->bloque = ubicacion->numBloque;
+	indTransform->bytes = tamanio;
+	indTransform->ip = ubicacion->ip;
+	indTransform->nodo = ubicacion->nodo;
+	indTransform->puerto = ubicacion->puerto;
+	indTransform->rutaArchivoTemporal = nombreTemp;
+
+	return indTransform;
+}
+
+//TODO funcion destruir el t_indicacionTranformacion
 
 long generarJob(){
 	idJob += 1;
