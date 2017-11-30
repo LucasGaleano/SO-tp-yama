@@ -1,6 +1,9 @@
 #ifndef _MASTER_H_
 #define _MASTER_H_
 
+
+//---------------------INCLUDES----------------------------------------------//
+
 #include <pthread.h>
 #include <signal.h>
 #include <string.h>
@@ -17,10 +20,19 @@
 #include <biblioteca/estructuras.h>
 #include <commons/log.h>
 
+
+// ----------------------------- DEFINE DE RECIBIRMENSAJE() --------------------------------//
+
+
 #define FIN "0"
-#define ERROR "-1"
+#define ERROR_TRANSFORMACION "-1"
+#define ERROR_REDUCCION_LOCAL "-2"
+#define ERROR_REDUCCION_GLOBAL "-3"
+#define ERROR_ALMACENAMIENTO "-4"
 #define SIGUE "1"
 #define SALIOBIEN "2"
+
+//------------------------------ ESTRUCTURAS PROPIAS ---------------------------------------//
 
 typedef struct
 {
@@ -29,11 +41,6 @@ typedef struct
 
 }transformacion;
 
-typedef struct
-{
-	int conexion;
-	t_pedidoReduccionLocal * ind;
-} reduLocal;
 
 typedef struct
 {
@@ -41,48 +48,65 @@ typedef struct
 	t_pedidoReduccionGlobal * reduGlobal;
 } reduGlobal;
 
+
+// --------------------------------- ENCABEZADOS ---------------------------------------------- //
+
 int leerConfiguracion();
 void liberarListas();
 void gestionarTransformacion();
 void mandarDatosTransformacion(transformacion * t);
-void gestionarReduccionLocal();
-void mandarDatosReduccionLocal(reduLocal * reduccion);
+void mandarDatosReduccionLocal(t_indicacionReduccionLocal * indicacion);
 void gestionarReduccionGlobal();
 void mandarDatosReduccionGlobal();
 void signal_capturer(int numeroSenial);
 void procesarPaquete(t_paquete * unPaquete, int * client_socket);
 void gestionarAlmacenadoFinal(t_indicacionAlmacenadoFinal * pedido);
-t_log* log_create(char* file, char *program_name, bool is_active_console, t_log_level level);
 
 
-// Variables globales
+
+// ------------------------------------- VARIABLES GLOBALES --------------------------------- //
 
 t_log * logMaster;
 t_list * pedidosDeTransformacion ;
-t_list * pedidosDeReduccionLocal;
 t_list * pedidosDeReduccionGlobal;
-int tareasRealizadasEnParalelo;
-int tareasTotalesReduccionLocal;
-int cantidadDeFallos;
 char* rutaScriptTransformador ;
 char* rutaScriptReductor ;
 char* rutaArchivoParaArrancar ;
 char* rutaParaAlmacenarArchivo;
+int tareasRealizadasEnParalelo;
+int tareasTotalesReduccionLocal;
+int cantidadDeFallos;
 int conexionYama;
+int tareasTransformacionEnParalelo;
+int tareasReduccionLocalEnParalelo;
+int cantTareasReduccionLocal;
+float tiempoTransformacion;
+float tiempoReduccionLocal;
+float tiempoReduccionGlobal;
+bool finDeSolicitudes;
 bool finDeSolicitudesDeTransformacion;
 bool finDeSolicitudesDeReduccionLocal;
 bool finDeSolicitudesGlobales;
-bool terminoConError;
-int tareasTransformacion;
-int tareasReduccion;
-pthread_mutex_t variableTareasReduccionLocal;
-pthread_mutex_t variableTareasTransformacion;
+bool errorTransformacion;
+bool errorReduLocal;
+bool errorReduGlobal;
+bool errorAlmacenamiento;
+
+// ------------------------------------- SEMAFOROS ----------------------------------------------- //
+
+
+pthread_mutex_t mutexReduLocal;
+pthread_mutex_t mutexTareasParalelasReduccionLocal;
+pthread_mutex_t mutexTareasTransformacionEnParalelo;
 pthread_mutex_t mutexMetricas;
-pthread_mutex_t mutexError;
-bool finDeSolicitudes;
+pthread_mutex_t mutexErrorTransformacion;
+pthread_mutex_t mutexErrorReduccionLocal;
+pthread_mutex_t mutexErrorReduccionGlobal;
+pthread_mutex_t mutexErrorAlmacenamiento;
+pthread_t * hilosReduccionLocal;
 
 
-// Resultado de operaciones
+// -------------------------------------- METRICAS ----------------------------------------------- //
 
 typedef struct
 {
@@ -93,18 +117,14 @@ typedef struct
 	int cantidadTareasTotalesTransformacion;
 	int cantidadTareasTotalesReduccionLocal;
 	int cantidadTareasTotalesReduccionGlobal;
-	int fallosDelJob; // 0 para todo mal y 1 para todo bien D:
+	int cantidadFallosTransformacion;
+	int cantidadFallosReduccionLocal;
+	int cantidadFallosReduccionGlobal;
+	int cantidadFallosAlmacenamiento;
 
 } metricas;
 
 
 metricas tablaMetricas;
-float tiempoTransformacion;
-float tiempoReduccionLocal;
-float tiempoReduccionGlobal;
-
-
- // Para los resultados
-
 
 #endif
