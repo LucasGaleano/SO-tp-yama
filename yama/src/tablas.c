@@ -27,21 +27,19 @@ void agregarRegistro(int job, int master, char * nombreNodo, int bloque, int eta
 	list_add(tabla_de_estados, elemento);
 }
 
-void modificarEstadoDeRegistro(int job, int master, char* nombreNodo, int bloque, int etapa, int nuevoEstado){
-	t_elemento_tabla_estado* elemento = buscarRegistro(job, master, nombreNodo, bloque, etapa);
+void modificarEstadoDeRegistro(char* nombreNodo, int bloque, int etapa, int nuevoEstado){
+	t_elemento_tabla_estado* elemento = buscarRegistro(nombreNodo, bloque, etapa);
 	elemento->estado = nuevoEstado;
 }
 
-void eliminarRegistro(int job, int master, char* nombreNodo, int bloque, int etapa){
+void eliminarRegistro(char* nombreNodo, int bloque, int etapa){
 
 	bool esRegistroBuscado(t_elemento_tabla_estado* elemento){
-		bool esJobIgual = elemento->job == job;
-		bool esMasterIgual = elemento->master == master;
 		bool esBloqueIgual = elemento->bloque == bloque;
 		bool esEtapaIgual = elemento->etapa == etapa;
 		bool esNombreNodoIgual = string_equals_ignore_case(elemento->nodo, nombreNodo);
 
-		return esJobIgual && esMasterIgual && esBloqueIgual && esNombreNodoIgual && esEtapaIgual;
+		return esBloqueIgual && esNombreNodoIgual && esEtapaIgual;
 	}
 	void liberarRegistro(t_elemento_tabla_estado* elemento){
 		free(elemento->nodo);
@@ -52,19 +50,32 @@ void eliminarRegistro(int job, int master, char* nombreNodo, int bloque, int eta
 	list_remove_and_destroy_by_condition(tabla_de_estados, (void*) esRegistroBuscado, (void*) liberarRegistro);
 }
 
-t_elemento_tabla_estado* buscarRegistro(int job, int master, char* nombreNodo, int bloque, int etapa){
+t_elemento_tabla_estado* buscarRegistro(char* nombreNodo, int bloque, int etapa){
 	bool esRegistroBuscado(t_elemento_tabla_estado* elemento){
-			bool esJobIgual = elemento->job == job;
-			bool esMasterIgual = elemento->master == master;
 			bool esBloqueIgual = elemento->bloque == bloque;
 			bool esEtapaIgual = elemento->etapa == etapa;
 			bool esNombreNodoIgual = string_equals_ignore_case(elemento->nodo, nombreNodo);
 
-			return esJobIgual && esMasterIgual && esBloqueIgual && esNombreNodoIgual && esEtapaIgual;
+			return  esBloqueIgual && esNombreNodoIgual && esEtapaIgual;
 		}
 
 		return list_find(tabla_de_estados, esRegistroBuscado);
 }
+
+t_elemento_tabla_estado* TerminoElNodo(char* nombreNodo,int etapa,int estado){
+
+	bool esRegistroBuscado(t_elemento_tabla_estado* elemento){
+				bool esEtapaIgual = elemento->etapa == etapa;
+				bool esNombreNodoIgual = string_equals_ignore_case(elemento->nodo, nombreNodo);
+				bool esEstadoIgual = elemento->estado == estado;
+
+				return  esNombreNodoIgual && esEtapaIgual && esEstadoIgual;
+			}
+
+	return list_find(tabla_de_estados, esRegistroBuscado);
+
+}
+
 
 int numeroRandom() {
 	unsigned short lfsr = 0xACE1u;
@@ -73,4 +84,12 @@ int numeroRandom() {
 	bit = ((lfsr >> 0) ^ (lfsr >> 2) ^ (lfsr >> 3) ^ (lfsr >> 5)) & 1;
 	return lfsr = (lfsr >> 1) | (bit << 15);
 }
+
+char* nombreArchivoTemp(char* prefijo){
+	char* nombre = string_new();
+	string_append(&nombre,prefijo);
+	string_append(&nombre,temporal_get_string_time());
+
+}
+
 

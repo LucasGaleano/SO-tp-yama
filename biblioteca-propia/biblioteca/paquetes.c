@@ -169,6 +169,16 @@ void enviarHandshake(int server_socket, int emisor) {
 
 }
 
+void enviarRutaArchivo(int server_socket, char * mensaje) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_RUTA_ARCHIVO;
+
+	serializarMensaje(unPaquete, mensaje);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
+
 void enviarMensaje(int server_socket, char * mensaje) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
@@ -383,10 +393,34 @@ void enviarIndicacionAlmacenadoFinal(int server_socket,
 	enviarPaquetes(server_socket, unPaquete);
 }
 
+void enviarListaBloques(int server_socket,
+		t_list* listaBloques){
+	t_paquete * unPaquete = malloc(sizeof(t_bloque) * listaBloques->elements_count);
+
+	unPaquete->codigoOperacion = RESPUESTA_INFO_ARCHIVO;
+
+	serializarListaDeBloques(unPaquete, listaBloques);
+
+	enviarPaquetes(server_socket, unPaquete);
+
+}
+
+void enviarRegistro(int server_socket, char * registro) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+	unPaquete->codigoOperacion = ENVIAR_REGISTRO_REDUCCION_GLOBAL;
+	serializarMensaje(unPaquete, registro);
+	enviarPaquetes(server_socket, unPaquete);
+}
+
+
 /*-------------------------Recibir-------------------------*/
 
 int recibirHandshake(t_paquete * unPaquete){
 	return deserializarHandshake(unPaquete->buffer);
+}
+
+char * recibirRutaArchivo(t_paquete * unPaquete) {
+	return deserializarMensaje(unPaquete->buffer);
 }
 
 char * recibirMensaje(t_paquete * unPaquete) {
@@ -467,4 +501,13 @@ t_indicacionReduccionGlobal * recibirIndicacionReduccionGlobal(
 t_indicacionAlmacenadoFinal * recibirIndicacionAlmacenadoFinal(
 		t_paquete * unPaquete) {
 	return deserializarIndicacionAlmacenadoFinal(unPaquete->buffer);
+}
+
+t_list* recibirListaDeBloques(t_paquete * unPaquete){
+	return deserializarListaDeBloques(unPaquete->buffer);
+}
+
+
+char * recibirRegistro(t_paquete * unPaquete) {
+	return deserializarMensaje(unPaquete->buffer);
 }
