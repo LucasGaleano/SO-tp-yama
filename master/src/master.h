@@ -34,13 +34,6 @@
 
 //------------------------------ ESTRUCTURAS PROPIAS ---------------------------------------//
 
-typedef struct
-{
-	int conexion;
-	t_pedidoTransformacion * ind;
-
-}transformacion;
-
 
 typedef struct
 {
@@ -53,14 +46,19 @@ typedef struct
 
 int leerConfiguracion();
 void liberarListas();
+void inicializarVariablesGlobales();
+void imprimirMetricas();
 void gestionarTransformacion();
-void mandarDatosTransformacion(transformacion * t);
+void mandarDatosTransformacion(t_indicacionTransformacion * indicacion);
 void mandarDatosReduccionLocal(t_indicacionReduccionLocal * indicacion);
 void gestionarReduccionGlobal();
 void mandarDatosReduccionGlobal();
 void signal_capturer(int numeroSenial);
 void procesarPaquete(t_paquete * unPaquete, int * client_socket);
 void gestionarAlmacenadoFinal(t_indicacionAlmacenadoFinal * pedido);
+void liberarMemoria();
+void calcularTiempoTotalTransformacion();
+void calcularTiempoTotalReduccionLocal();
 
 
 
@@ -69,17 +67,19 @@ void gestionarAlmacenadoFinal(t_indicacionAlmacenadoFinal * pedido);
 t_log * logMaster;
 t_list * pedidosDeTransformacion ;
 t_list * pedidosDeReduccionGlobal;
+t_list * tiemposTransformacion;
+t_list * tiemposReduccionLocal;
 char* rutaScriptTransformador ;
 char* rutaScriptReductor ;
 char* rutaArchivoParaArrancar ;
 char* rutaParaAlmacenarArchivo;
 int tareasRealizadasEnParalelo;
 int tareasTotalesReduccionLocal;
+int tareasTotalesTransformacion;
 int cantidadDeFallos;
 int conexionYama;
 int tareasTransformacionEnParalelo;
 int tareasReduccionLocalEnParalelo;
-int cantTareasReduccionLocal;
 float tiempoTransformacion;
 float tiempoReduccionLocal;
 float tiempoReduccionGlobal;
@@ -98,11 +98,13 @@ bool errorAlmacenamiento;
 pthread_mutex_t mutexReduLocal;
 pthread_mutex_t mutexTareasParalelasReduccionLocal;
 pthread_mutex_t mutexTareasTransformacionEnParalelo;
-pthread_mutex_t mutexMetricas;
+pthread_mutex_t mutexTransformaciones;
+pthread_mutex_t mutexReduccionGlobal;
 pthread_mutex_t mutexErrorTransformacion;
 pthread_mutex_t mutexErrorReduccionLocal;
 pthread_mutex_t mutexErrorReduccionGlobal;
 pthread_mutex_t mutexErrorAlmacenamiento;
+pthread_t * hilosTransformacion;
 pthread_t * hilosReduccionLocal;
 
 
