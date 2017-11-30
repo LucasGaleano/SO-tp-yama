@@ -44,7 +44,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_ERROR:
 		recibirError(unPaquete);
 		break;
-	case ENVIAR_INDICACION_TRANSFORMACION:
+	case ENVIAR_SOLICITUD_TRANSFORMACION:
 		;
 		queue_push(cola_master, client_socket);
 		char * nomArchivo = recibirMensaje(unPaquete);
@@ -52,10 +52,6 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		break;
 	case RESPUESTA_INFO_ARCHIVO:
 		int socket_master = queue_pop(cola_master);
-		t_list * listaDeBloques = recibirListaDeBloques(unPaquete);
-		long id_job = generarJob();
-		crearRegistro(id_job, socket_master, ) //TODO ARREGLAR CON FACU LAS ESTRUCTURAS
-		enviarListaBloques(socket_master, listaDeBloques);
 		break;
 	default:
 		break;

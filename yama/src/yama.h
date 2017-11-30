@@ -12,6 +12,7 @@
 #include <biblioteca/estructurasWorkerMaster.h>
 #include <commons/string.h>
 #include <pthread.h>
+#include "tablas.h"
 
 typedef struct {
 	char * ip;

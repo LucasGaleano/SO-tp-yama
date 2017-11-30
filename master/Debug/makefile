@@ -38,11 +38,10 @@ master: $(OBJS) $(USER_OBJS) /home/utnso/workspace/tp-2017-2c-NULL/biblioteca-pr
 
 # Other Targets
 clean:
-	-$(RM) $(OBJS)$(C_DEPS)$(EXECUTABLES) master
+	-$(RM) $(EXECUTABLES)$(OBJS)$(C_DEPS) master
 	-@echo ' '
 
 .PHONY: all clean dependents
-.SECONDARY:
 /home/utnso/workspace/tp-2017-2c-NULL/biblioteca-propia/Debug/libbiblioteca-propia.so:
 
 -include ../makefile.targets
