@@ -544,7 +544,7 @@ void calcularTiempoTotalReduccionLocal()
 }
 void liberarMemoria() {
 
-	list_destroy_and_destroy_elements(pedidosDeTransformacion, (void *) free);
+	list_destroy_and_destroy_elements(pedidosDeReduccionGlobal, (void *) free);
 	list_destroy_and_destroy_elements(tiemposReduccionLocal, (void *) free);
 	list_destroy_and_destroy_elements(tiemposTransformacion, (void *) free);
 	int i=0;
