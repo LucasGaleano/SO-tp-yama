@@ -36,6 +36,11 @@ enum emisor {
 	YAMA = 904,
 };
 
+
+
+
+
+
 enum cod_op{
 	HANDSHAKE=0,
 
@@ -71,13 +76,30 @@ enum cod_op{
 
 	ENVIAR_INDICACION_ALMACENADO_FINAL,
 
-	RESPUESTA_INFO_ARCHIVO
+	ENVIAR_REGISTRO_REDUCCION_GLOBAL,
 
+	TAREA_COMPLETADA,
+	RESPUESTA_INFO_ARCHIVO,
+
+	INDICACION_TERMINO_TAREA,
+};
+
+enum continuaMensaje{
+	CONTINUA=0,
+	NO_CONTINUA=1,
 };
 
 enum tipoArchivo{
 	TEXTO=0,
 	BINARIO=1,
+};
+
+enum error{
+	ERROR_TRANSFORMACION =-1,
+	ERROR_REDUCCION_LOCAL = -2,
+	ERROR_REDUCCION_GLOBAL = -3,
+	ERROR_ALMACENAMIENTO_FINAL = -4
+
 };
 
 /*------------------------------Estructuras de comunicacion FS DataNode------------------------------*/
@@ -121,15 +143,18 @@ typedef struct {
 
 /*------------------------------Estructuras de comunicacion Yama Master------------------------------*/
 typedef struct {
-	char* ip;
-	char* puerto;
-	char* nodo;
+
+	char* rutaScriptTransformacion;
+	int   numBloque;
 	char* rutaArchivoTemporal;
+	int   cantBytes;
 } t_pedidoTransformacion;
 
 typedef struct {
 	char* archivoTransformacion;
 	char* archivoReduccionLocal;
+	char* rutaScript;
+
 } t_pedidoReduccionLocal;
 
 typedef struct {
@@ -139,12 +164,14 @@ typedef struct {
 	char* archivoReduccionPorWorker;
 	char* workerEncargdo;
 	char* ArchivoResultadoReduccionGlobal;
+	int cantWorkerInvolucradros;
 } t_pedidoReduccionGlobal;
 
 typedef struct {
 	char* ip;
 	char* puerto;
 	char* archivoReduccionGlobal;
+	char* rutaScriptResultado;
 } t_pedidoAlmacenadoFinal;
 
 typedef struct {

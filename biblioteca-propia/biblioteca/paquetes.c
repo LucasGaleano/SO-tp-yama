@@ -395,7 +395,7 @@ void enviarIndicacionAlmacenadoFinal(int server_socket,
 
 void enviarListaBloques(int server_socket,
 		t_list* listaBloques){
-	t_paquete * unPaquete = malloc(sizeof(t_informacion_bloque) * listaBloques->elements_count);
+	t_paquete * unPaquete = malloc(sizeof(t_bloque) * listaBloques->elements_count);
 
 	unPaquete->codigoOperacion = RESPUESTA_INFO_ARCHIVO;
 
@@ -404,6 +404,14 @@ void enviarListaBloques(int server_socket,
 	enviarPaquetes(server_socket, unPaquete);
 
 }
+
+void enviarRegistro(int server_socket, char * registro) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+	unPaquete->codigoOperacion = ENVIAR_REGISTRO_REDUCCION_GLOBAL;
+	serializarMensaje(unPaquete, registro);
+	enviarPaquetes(server_socket, unPaquete);
+}
+
 
 /*-------------------------Recibir-------------------------*/
 
@@ -497,4 +505,9 @@ t_indicacionAlmacenadoFinal * recibirIndicacionAlmacenadoFinal(
 
 t_list* recibirListaDeBloques(t_paquete * unPaquete){
 	return deserializarListaDeBloques(unPaquete->buffer);
+}
+
+
+char * recibirRegistro(t_paquete * unPaquete) {
+	return deserializarMensaje(unPaquete->buffer);
 }

@@ -52,7 +52,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		char * nomArchivo = recibirMensaje(unPaquete);
 		enviarRutaArchivo(socketFS, nomArchivo);
 		break;
-	case RESPUESTA_INFO_ARCHIVO:
+	case ENVIAR_INDICACION_TRANSFORMACION:
 		;
 		//int socket_master = queue_pop(cola_master);
 
@@ -92,12 +92,28 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		//TODO free() al final
 		break;
 		//todo CASE para notificar tarea de tranformacion de un job fue concluida
+	case TAREA_COMPLETADA:
+		;
+
+
+
+
+
+
+
+
 
 	default:
 		break;
 	}
 	destruirPaquete(unPaquete);
 }
+
+
+
+
+
+
 
 int recibirHandshake(t_paquete * unPaquete) {
 	int tipoCliente;
