@@ -59,7 +59,10 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		//me llega la respuesta de FS y despues de procesarla la envio al master de la lista masterconectados.
 
 		t_list* listaDeBloque = recibirListaDeBloques(unPaquete); //recibir lista de FS
-		char* nombreTemp = nombreArchivoTemp();
+
+		char* prefijo = string_new();    //prefijo del archivo temporal
+		string_append(prefijo,"transformacion:");
+		char* nombreTemp = nombreArchivoTemp(prefijo);
 
 
 		while(listaDeBloque->elements_count!=0){   // lista elementos uno por uno
@@ -91,15 +94,33 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 
 		//TODO free() al final
 		break;
-		//todo CASE para notificar tarea de tranformacion de un job fue concluida
+
 	case TAREA_COMPLETADA:
 		;
 
+		t_indicacionTransformacion* paqueteTransform = recibirIndicacionTransformacion(unPaquete);
+
+		modificarEstadoDeRegistro(paqueteTransform->nodo, paqueteTransform->bloque, TRANSFORMACION, FINALIZADO_OK);
 
 
+		//todo fijarse si un nodo termino la transformacion.
 
+		if(NULL == TerminoElNodo(paqueteTransform->nodo,TRANSFORMACION,FINALIZADO_OK)){//si terminó un nodo empezar reduccion local en ese nodo
 
+			t_indicacionReduccionLocal* PaqueRedLocal = malloc(sizeof(t_indicacionReduccionLocal));
 
+			char* prefijo = string_new();    //prefijo del archivo temporal
+			string_append(prefijo,"reduccion:");
+			char* nombreTempReduccion = nombreArchivoTemp(prefijo);
+
+			PaqueRedLocal->nodo = malloc(sizeof(paqueteTransform->nodo));
+			PaqueRedLocal->ip = malloc(sizeof(paqueteTransform->ip));
+			PaqueRedLocal->puerto = malloc(sizeof(paqueteTransform->puerto));
+			PaqueRedLocal->archivoTemporalTransformacion = malloc(sizeof(paqueteTransform->rutaArchivoTemporal));
+			PaqueRedLocal->archivoTemporalReduccionLocal = malloc(sizeof(nombreTempReduccion));
+
+			enviarIndicacionReduccionLocal(client_socket,PaqueRedLocal);
+		}
 
 
 
