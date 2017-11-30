@@ -74,3 +74,10 @@ int numeroRandom() {
 	return lfsr = (lfsr >> 1) | (bit << 15);
 }
 
+char* nombreArchivoTemp(){
+	char* nombre = string_new();
+	string_append(&nombre,temporal_get_string_time());
+
+}
+
+

@@ -7,6 +7,7 @@
 #include <commons/collections/list.h>
 #include <commons/string.h>
 #include <string.h>
+#include <commons/temporal.h>
 
 
 t_list* tabla_de_estados;

@@ -8,7 +8,7 @@
 #include <commons/collections/list.h>
 #include <commons/collections/queue.h>
 #include <biblioteca/sockets.h>
-#include <biblioteca/estructurasMasterYama.h>
+//#include <biblioteca/estructurasMasterYama.h>
 #include <biblioteca/estructurasWorkerMaster.h>
 #include <commons/string.h>
 #include <pthread.h>
@@ -27,6 +27,8 @@ int socketFS;
 t_queue* cola_master;
 
 long idJob;
+
+t_list* masterConectados;
 
 //typedef struct {
 //	char * ;

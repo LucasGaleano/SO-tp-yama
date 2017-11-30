@@ -10,6 +10,7 @@ int main(void) {
 	pthread_t threadServerYama;
 	idJob = 0;
 	cola_master = queue_create();
+	masterConectados = list_create();
 
 	if (pthread_create(&threadServerYama, NULL, (void*) iniciarServidor, config->puerto_yama)) {
 		perror("Error el crear el thread servidor.");
@@ -34,6 +35,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	switch (unPaquete->codigoOperacion) {
 	case HANDSHAKE:
 		recibirHandshake(unPaquete);
+		list_add(masterConectados,client_socket); // una lista de master conectados para distribuir job
 		break;
 	case ENVIAR_MENSAJE:
 		recibirMensaje(unPaquete);
@@ -51,7 +53,32 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		enviarRutaArchivo(socketFS, nomArchivo);
 		break;
 	case RESPUESTA_INFO_ARCHIVO:
-		int socket_master = queue_pop(cola_master);
+		;
+		//int socket_master = queue_pop(cola_master);
+
+		//me llega la respuesta de FS y despues de procesarla la envio al master de la lista masterconectados.
+
+		t_list* listaDeBloque = recibirListaDeBloques(unPaquete); //recibir lista de FS
+
+
+
+		while(listaDeBloque->elements_count!=0){   // lista elementos uno por uno
+			t_bloque* bloque = list_remove(listaDeBloque,0);
+
+			//guardar en tabla de estado
+			agregarRegistro(generarJob(), list_get(masterConectados,0),bloque->copia0->nodo,bloque->copia0->numBloque
+					, TRANSFORMACION ,nombreArchivoTemp(), PROCESANDO);
+			//todo [CAMBIAR] elige siempre al mismo master cuando elije de la lista masterConectados
+			//todo [CAMBIAR] hacer planificador para elegir bien el nodo
+			//todo [DUDA] enum etapa lo usa master??, ponerlo en la biblioteca-propia sino
+
+			//todo enviar lista a master de a un bloque
+
+			//enviarIndicacionTransformacion();
+
+		}
+
+
 		break;
 	default:
 		break;
@@ -64,6 +91,7 @@ int recibirHandshake(t_paquete * unPaquete) {
 	memcpy(&tipoCliente, unPaquete->buffer->data, sizeof(int));
 	switch (tipoCliente) {
  	case MASTER:
+
 		return 0;
 		break;
 	default:
