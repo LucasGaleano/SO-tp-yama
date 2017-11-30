@@ -62,6 +62,7 @@ void calcularTiempoTotalReduccionLocal();
 
 
 
+
 // ------------------------------------- VARIABLES GLOBALES --------------------------------- //
 
 t_log * logMaster;

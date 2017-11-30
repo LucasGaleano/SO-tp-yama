@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
 
 void inicializarVariablesGlobales()
 {
-	logMaster = t_log_create("/home/utnso/workspace/tp-2017-2c-NULL/master/log/", "master.log",false,LOG_LEVEL_ERROR);
+	logMaster = log_create("/home/utnso/workspace/tp-2017-2c-NULL/master/log/", "master.log",false,LOG_LEVEL_ERROR);
 
 	hilosReduccionLocal = malloc(sizeof(pthread_t));
 	if (hilosReduccionLocal == NULL)
@@ -314,6 +314,11 @@ void gestionarReduccionGlobal()
 		while(posActual < cantidadSolicitudes)
 		{
 			reduGlobal * reduccion = malloc (sizeof(reduGlobal));
+			if(reduccion == NULL)
+			{
+				log_error(logMaster, "no hay memoria disponible");
+				exit(EXIT_FAILURE);
+			}
 			reduccion->conexion = conexionWorker;
 			reduccion->reduGlobal = pedidos[posActual];
 			pthread_create(&hiloReduGlobal[posActual],NULL,(void*) mandarDatosReduccionGlobal, (void *) reduccion);
