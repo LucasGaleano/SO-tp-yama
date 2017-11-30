@@ -1,137 +1,23 @@
-/*
- ============================================================================
-
- ============================================================================
- Name        : master.c
- Author      : 
- Version     :
- Copyright   : Your copyright notice
- Description : Hello World in C, Ansi-style
- ============================================================================
- */
-#include <pthread.h>
-#include <signal.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <signal.h>
-#include <commons/config.h>
-#include <commons/collections/list.h>
-#include <biblioteca/sockets.h>
-#include <commons/string.h>
-#include <time.h>
-#include <biblioteca/estructuras.h>
-/*
-
-Señales extraidas de /usr/bin/include/bits/signum.h
-
-
-
-#define SIG_ERR	((__sighandler_t) -1)		 Error return.
-#define SIG_DFL	((__sighandler_t) 0)		 Default action.
-#define SIG_IGN	((__sighandler_t) 1)		 Ignore signal.
-
-Signals.
-#define	SIGHUP		1	 Hangup (POSIX).
-#define	SIGINT		2	 Interrupt (ANSI).
-#define	SIGQUIT		3	 Quit (POSIX).
-#define	SIGILL		4	 Illegal instruction (ANSI).
-#define	SIGTRAP		5	 Trace trap (POSIX).
-#define	SIGABRT		6	 Abort (ANSI).
-#define	SIGIOT		6	 IOT trap (4.2 BSD).
-#define	SIGBUS		7	 BUS error (4.2 BSD).
-#define	SIGFPE		8	 Floating-point exception (ANSI).
-#define	SIGKILL		9	 Kill, unblockable (POSIX).
-#define	SIGUSR1		10	 User-defined signal 1 (POSIX).
-#define	SIGSEGV		11	 Segmentation violation (ANSI).
-#define	SIGUSR2		12	 User-defined signal 2 (POSIX).
-#define	SIGPIPE		13	 Broken pipe (POSIX).
-#define	SIGALRM		14	 Alarm clock (POSIX).
-#define	SIGTERM		15	 Termination (ANSI).
-#define	SIGSTKFLT	16	 Stack fault.
-#define	SIGCLD		SIGCHLD	 Same as SIGCHLD (System V).
-#define	SIGCHLD		17	 Child status has changed (POSIX).
-#define	SIGCONT		18	 Continue (POSIX).
-#define	SIGSTOP		19	 Stop, unblockable (POSIX).
-#define	SIGTSTP		20	 Keyboard stop (POSIX).
-#define	SIGTTIN		21	 Background read from tty (POSIX).
-#define	SIGTTOU		22	 Background write to tty (POSIX).
-#define	SIGURG		23	 Urgent condition on socket (4.2 BSD).
-#define	SIGXCPU		24	 CPU limit exceeded (4.2 BSD).
-#define	SIGXFSZ		25	 File size limit exceeded (4.2 BSD).
-#define	SIGVTALRM	26	 Virtual alarm clock (4.2 BSD).
-#define	SIGPROF		27	 Profiling alarm clock (4.2 BSD).
-#define	SIGWINCH	28	Window size change (4.3 BSD, Sun).
-#define	SIGPOLL		SIGIO	 Pollable event occurred (System V).
-#define	SIGIO		29	 I/O now possible (4.2 BSD).
-#define	SIGPWR		30	 Power failure restart (System V).
-#define SIGSYS		31	 Bad system call.
-#define SIGUNUSED	31
-
-*/
-
-// Funciones
-
-int leerConfiguracion();
-void gestionarTransformacion();
-void mandarDatosTransformacion(t_indicacionTransformacion * indicacion, char* rutasRepetidas[], int tamRepetidas, int conexion);
-bool chequearExistencia(char* array[],int tamanio, char* elemento);
-void gestionarReduccionLocal();
-void mandarDatosReduccionLocal(t_indicacionReduccionLocal * indicacion, int worker);
-void gestionarReduccionGlobal();
-void mandarDatosReduccionGlobal(t_indicacionReduccionGlobal * indicacion , int conexionEncargado);
-void signal_capturer(int numeroSenial);
-void procesarPaquete(t_paquete * unPaquete, int * client_socket);
-
-
-// Variables globales
-
-t_list * pedidosDeTransformacion ;
-t_list * pedidosDeReduccionLocal;
-t_list * pedidosDeReduccionGlobal;
-int tareasRealizadasEnParalelo;
-int tareasTotalesReduccionLocal;
-int cantidadDeFallos;
-char* rutaScriptTransformador ;
-char* rutaScriptReductor ;
-char* rutaArchivoParaArrancar ;
-char* rutaParaAlmacenarArchivo;
-int conexionYama;
-bool * finDeSolicitudesDeTransformacion;
-bool * finDeSolicitudesDeReduccionLocal;
-bool * finDeSolicitudesGlobales;
-
-// Resultado de operaciones
-
-struct metricas {
-	float tiempoTotal;
-	float promedioJobs;
-	unsigned short int tareasEnParalelo;
-	unsigned short int tareasPrincipalesDelJob;
-	unsigned short int fallosDelJob;
-
-};
-
-
+#include "master.h"
 
 int main(int argc, char **argv) {
 
-
-	clock_t inicioPrograma = clock();
-	printf(" inicio");
+	logMaster = t_log_create("/home/utnso/workspace/tp-2017-2c-NULL/master/log/", "master.log",false,LOG_LEVEL_ERROR);
+	log_info(logMaster, "arranca proceso master");
+	struct timeval tiempoInicio;
+	struct timeval tiempoFin;
+	float total;
+	gettimeofday(&tiempoInicio, NULL);
 	pedidosDeTransformacion = list_create();
 	pedidosDeReduccionLocal = list_create();
 	pedidosDeReduccionGlobal = list_create();
+	finDeSolicitudes = false;
+	terminoConError = false;
+
 	rutaScriptTransformador = argv [1];
 	rutaScriptReductor = argv [2];
 	rutaArchivoParaArrancar = argv [3];
 	rutaParaAlmacenarArchivo = argv [4];
-
-
-	finDeSolicitudesDeTransformacion = malloc(sizeof(bool));
-	*finDeSolicitudesDeTransformacion = false;
 
 	conexionYama = leerConfiguracion();
 
@@ -141,43 +27,57 @@ int main(int argc, char **argv) {
 	enviarMensaje(conexionYama,rutaArchivoParaArrancar);
 
 
-	while(*finDeSolicitudesDeTransformacion == false){
+	while(finDeSolicitudes == false){
 
 	gestionarSolicitudes(conexionYama, (void *) procesarPaquete);
 
 	}
 
+	finDeSolicitudes = false;
 
-	finDeSolicitudesDeReduccionLocal= malloc (sizeof(bool));
-	finDeSolicitudesDeReduccionLocal = false;
-
-	while(*finDeSolicitudesDeReduccionLocal == false){
+	while(finDeSolicitudes == false)
+	{
 
 		gestionarSolicitudes(conexionYama,(void *) procesarPaquete);
 
 	}
 
-	finDeSolicitudesGlobales = malloc(sizeof(bool));
-	finDeSolicitudesGlobales = false;
+	finDeSolicitudes = false;
 
-	while(*finDeSolicitudesGlobales == false){
+	while(finDeSolicitudes == false)
+	{
 
 		gestionarSolicitudes(conexionYama, (void *) procesarPaquete);
 
 	}
 
-	gestionarSolicitudes(conexionYama, (void*) procesarPaquete); //para almacenado final
+
+	//para almacenado final
+	gestionarSolicitudes(conexionYama, (void*) procesarPaquete);
 
 
 
+	gettimeofday(&tiempoFin, NULL);
+
+	total = (tiempoFin.tv_sec - tiempoInicio.tv_sec) *1000 + (tiempoFin.tv_usec - tiempoInicio.tv_usec) / 1000;
+
+	tablaMetricas.tiempoTotal = total;
+	tablaMetricas.promedioJobs = (tiempoReduccionGlobal + tiempoReduccionLocal + tiempoTransformacion) / 3;
+
+	printf("El proceso Master finalizo con las siguientes metricas:\n");
+	printf("cantidad tareas de transformacion : %d\n", tablaMetricas.cantidadTareasTotalesTransformacion);
+	printf("cantidad tareas de Reduccion Local : %d\n", tablaMetricas.cantidadTareasTotalesReduccionLocal);
+	printf("cantidad tareas de Reduccion Global : %d\n", tablaMetricas.cantidadTareasTotalesReduccionGlobal);
+	printf("cantidad maxima de tareas de transformacion en paralelo : %d\n", tablaMetricas.cantMaximaTareasTransformacionParalelas);
+	printf("cantidad maxima de tareas de reduccion local en paralelo : %d\n", tablaMetricas.cantMaximaTareasReduccionLocalParalelas);
+	printf("tiempo total de ejecucion : %f\n", tablaMetricas.tiempoTotal);
+	printf("tiempo promedio jobs: %f\n", tablaMetricas.promedioJobs);
 
 
+	liberarListas();
+	log_destroy(logMaster);
 
-	printf("El proceso Master termino en: %d", (clock()-inicioPrograma)*1000/CLOCKS_PER_SEC);
-
-	list_destroy(pedidosDeTransformacion);
-	list_destroy(pedidosDeReduccionLocal);
-	list_destroy(pedidosDeReduccionGlobal);
+	log_info(logMaster, "termino el proceso master");
 	return EXIT_SUCCESS;
 
 }
@@ -194,61 +94,47 @@ int leerConfiguracion(){
     printf("%s", ip);
 
     int socketYama = conectarCliente(ip, puerto, MASTER);
-    char * mensaje = string_new();
-    string_append(&mensaje,"Hola puto te re cabio");
 
-    enviarMensaje(socketYama, mensaje);
-    while(1){
-
-    }
     return socketYama;
-
-
 }
 
 
 void gestionarTransformacion(){
+
+	log_info(logMaster, "arrancan las transformaciones");
+
+	struct timeval t0;
+	struct timeval t1;
+	gettimeofday(&t0,NULL);
 
 
 	int conexionWorker;
 	int cantPedidos = list_size(pedidosDeTransformacion);
 	int posActual = 0;
 	pthread_t hiloTransformar[cantPedidos];
-	t_indicacionTransformacion * indicacionesDeTransformacion[cantPedidos];
-	char* rutasRepetidas[cantPedidos];
-	int numeroRepetidas = 0;
+	t_pedidoTransformacion * solicitudesDeTransformacion[cantPedidos];
 	int conexionesWorker[cantPedidos];
-	while(posActual < cantPedidos)
+
+	while(posActual <= cantPedidos)
 	{
-
-		char* rutasAux[cantPedidos];
-		t_pedidoTransformacion * pedido = list_get(pedidosDeTransformacion, posActual);
-		t_indicacionTransformacion * indicacion = malloc(sizeof(t_indicacionTransformacion));
-		indicacion->bloque = pedido->bloque;
-		indicacion->ip = pedido->ip;
-		indicacion->bytes = 2; // cómo sé cuántos bytes ocupados hay en un bloque?
-		indicacion->rutaArchivoTemporal = pedido->rutaArchivoTemporal;
-		*indicacionesDeTransformacion[posActual] = *indicacion;
+		t_indicacionTransformacion * indicacion = list_get(pedidosDeTransformacion, posActual);
+		t_pedidoTransformacion * pedido = malloc(sizeof(t_pedidoTransformacion));
+		pedido->bloque = indicacion->bloque;
+//		pedido->bytes = indicacion->bytes; faltan los bytes ocupados
+		pedido->rutaArchivoTemporal = indicacion->rutaArchivoTemporal;
+		solicitudesDeTransformacion[posActual] = pedido;
 		conexionWorker = conectarCliente(indicacion->ip,indicacion->puerto,WORKER);
-		rutasAux[posActual] = indicacion->rutaArchivoTemporal;
 		conexionesWorker[posActual]=conexionWorker;
-
-		if(posActual >= 1)
-			{
-			if(chequearExistencia(rutasAux,posActual,indicacion->rutaArchivoTemporal))
-				{
-				rutasRepetidas[numeroRepetidas]=indicacion->rutaArchivoTemporal;
-				numeroRepetidas++;
-				}
-			}
 		posActual ++;
 	}
 	posActual = 0;
 
 	while(posActual <= cantPedidos)
 	{
-
-		pthread_create(hiloTransformar[posActual],NULL,(void *) mandarDatosTransformacion, (*indicacionesDeTransformacion[posActual], rutasRepetidas, numeroRepetidas, conexionesWorker[posActual]));
+		transformacion * transformacion= malloc(sizeof(transformacion));
+		transformacion->conexion = conexionesWorker[posActual];
+		transformacion->ind = solicitudesDeTransformacion[posActual];
+		pthread_create(&hiloTransformar[posActual], NULL ,(void *) mandarDatosTransformacion,(void*) transformacion);
 		posActual++;
 	}
 	int i=0;
@@ -257,11 +143,19 @@ void gestionarTransformacion(){
 		pthread_join(hiloTransformar[i],NULL);
 	}
 
-	enviarMensaje(conexionYama,"salio todo piola la transformacion");
+	enviarMensaje(conexionYama,SALIOBIEN);
+	gettimeofday(&t1,NULL);
+
+	tiempoTransformacion = (t1.tv_sec - t0.tv_sec) *1000 + (t1.tv_usec - t0.tv_usec) / 1000;
+
+	pthread_mutex_lock(&mutexMetricas);
+	tablaMetricas.cantidadTareasTotalesTransformacion = cantPedidos;
+	pthread_mutex_unlock(&mutexMetricas);
+
 
 }
 
-
+/*
 bool chequearExistencia(char* array[],int tamanio, char* elemento){
 	int contador = 0;
 	bool encontroRepetido = false;
@@ -274,42 +168,76 @@ bool chequearExistencia(char* array[],int tamanio, char* elemento){
 	return encontroRepetido;
 
 }
+*/
+
+void mandarDatosTransformacion(transformacion * transformacion){ //todo liberar memoria
 
 
-void mandarDatosTransformacion(t_indicacionTransformacion * indicacion, char* rutasRepetidas[], int tamRepetidas, int conexion){
+		pthread_mutex_lock (&variableTareasTransformacion);
+		tareasTransformacion ++;
 
-	if(chequearExistencia(rutasRepetidas, tamRepetidas, indicacion->rutaArchivoTemporal))
-	{
+		if(tareasTransformacion > tablaMetricas.cantMaximaTareasTransformacionParalelas)
+		{
+			tablaMetricas.cantMaximaTareasTransformacionParalelas = tareasTransformacion;
+		}
+
+		pthread_mutex_unlock (&variableTareasTransformacion);
+
 		pthread_mutex_t mutexArchivo;
+
 		pthread_mutex_lock(&mutexArchivo);
-		enviarIndicacionTransformacion(conexion,indicacion);
+		enviarSolicitudTransformacion(transformacion->conexion,transformacion->ind);
 		pthread_mutex_unlock(&mutexArchivo);
-	} else {
 
-		enviarIndicacionTransformacion(conexion,indicacion);
-	}
-	 //   recibirMensaje(conexion,algo)  --> CONFIRMACION DEL WORKER
+		pthread_mutex_lock (&variableTareasTransformacion);
+		tareasTransformacion --;
+		pthread_mutex_unlock (&variableTareasTransformacion);
 
+		gestionarSolicitudes(transformacion->conexion, (void *) procesarPaquete);
+
+		if(terminoConError)
+		{
+			enviarMensaje(conexionYama,ERROR);
+			log_error(logMaster, "Error en la transformacion, worker de conexion %d", transformacion->conexion);
+			free(transformacion->ind);
+			free(transformacion);
+			return;
+		} else
+		{
+			log_info (logMaster, "una transformacionTerminada");
+		}
+
+		free(transformacion->ind);
+		free(transformacion);
 
 }
 
 void gestionarReduccionLocal(){
 
+	struct timeval t0;
+	struct timeval t1;
+	gettimeofday(&t0,NULL);
 	int cantidadDeSolicitudes = list_size(pedidosDeReduccionLocal);
 	pthread_t hiloReduLocal[cantidadDeSolicitudes];
 	int posActual = 0;
 	int conexionWorker;
 
-	while(posActual<cantidadDeSolicitudes)
-	{
 
-		t_indicacionReduccionLocal * pedido = list_get(pedidosDeTransformacion , list_size(pedidosDeTransformacion));
-		t_pedidoReduccionLocal * indicacion = malloc (sizeof (t_pedidoReduccionLocal));  // hay que cambiarle el nombre a esto
-		indicacion->archivoReduccionLocal = pedido->archivoTemporalReduccionLocal;
-		indicacion->archivoTransformacion = pedido->archivoTemporalTransformacion;
-		conexionWorker = conectarCliente(pedido->ip,pedido->puerto,WORKER);
-		pthread_create(hiloReduLocal[posActual],NULL,(void *) mandarDatosTransformacion, (indicacion,conexionWorker));
+	while(posActual<=cantidadDeSolicitudes)
+	{
+		log_info(logMaster, "arrancan las reducciones");
+		reduLocal * reduccion = malloc(sizeof(reduccion));
+		t_indicacionReduccionLocal * indicacion = list_get(pedidosDeTransformacion , list_size(pedidosDeTransformacion));
+		t_pedidoReduccionLocal * pedido = malloc (sizeof (t_pedidoReduccionLocal));
+		pedido->archivoReduccionLocal = indicacion->archivoTemporalReduccionLocal;
+		pedido->archivoTransformacion = indicacion->archivoTemporalTransformacion;
+		conexionWorker = conectarCliente(indicacion->ip,indicacion->puerto,WORKER);
+
+		reduccion->conexion = conexionWorker;
+		reduccion->ind = pedido;
+		pthread_create(&hiloReduLocal[posActual],NULL,(void *) mandarDatosTransformacion, (void *) reduccion);
 		posActual ++;
+
 
 	}
 
@@ -319,46 +247,70 @@ void gestionarReduccionLocal(){
 		pthread_join(hiloReduLocal[i],NULL);
 	}
 
-	enviarMensaje(conexionYama,"salio todo piola la reduccion"); // aca iria solo un número, sería 0 para todo bien y a partir de 1 para señales
+	enviarMensaje(conexionYama,SALIOBIEN);
 
+	gettimeofday(&t1,NULL);
+	tiempoReduccionLocal = (t1.tv_sec - t0.tv_sec) *1000 + (t1.tv_usec - t0.tv_usec) / 1000;
 
+	pthread_mutex_lock (&mutexMetricas);
+	tablaMetricas.cantidadTareasTotalesReduccionLocal = cantidadDeSolicitudes;
+	pthread_mutex_unlock(&mutexMetricas);
 }
 
 
-void mandarDatosReduccionLocal(t_indicacionReduccionLocal * indicacion, int worker)
+void mandarDatosReduccionLocal(reduLocal * reduccion)
 	{
 
+		pthread_mutex_lock (&variableTareasReduccionLocal);
+		tareasReduccion ++;
 
-		enviarIndicacionReduccionLocal(worker, indicacion);
-		 //   recibirMensaje(conexion,algo)  --> CONFIRMACION DEL WORKER
+		if(tablaMetricas.cantMaximaTareasReduccionLocalParalelas < tareasReduccion)
+		{
+			tablaMetricas.cantMaximaTareasReduccionLocalParalelas = tareasReduccion;
+		}
 
+		pthread_mutex_unlock (&variableTareasTransformacion);
 
+		enviarSolicitudReduccionLocal(reduccion->conexion, reduccion->ind); // acá va el cambio de estructura
 
+		gestionarSolicitudes(reduccion->conexion,(void*) procesarPaquete);
+
+		if(terminoConError)
+		{
+			enviarMensaje(conexionYama,ERROR);
+			return;
+		}
+
+		pthread_mutex_lock (&variableTareasReduccionLocal);
+		tareasReduccion --;
+		pthread_mutex_unlock (&variableTareasReduccionLocal);
+
+		free (reduccion->ind);
+		free (reduccion);
 	}
 
 
 void gestionarReduccionGlobal()
 	{
-
+		log_info(logMaster, "arranca la reduccion global");
+		struct timeval t0;
+		struct timeval t1;
+		gettimeofday (&t0,NULL);
 		int cantidadSolicitudes = list_size(pedidosDeReduccionGlobal);
 		int posActual = 0;
-		t_indicacionReduccionGlobal * indicaciones[cantidadSolicitudes];
+		t_pedidoReduccionGlobal * pedidos[cantidadSolicitudes];
 		int conexionWorker;
 		pthread_t hiloReduGlobal[cantidadSolicitudes] ;
-		while(posActual < cantidadSolicitudes)
+		while(posActual <= cantidadSolicitudes)
 		{
-			t_indicacionReduccionGlobal * indicacion = malloc (sizeof(t_indicacionReduccionGlobal));
-			t_pedidoReduccionGlobal * pedido = list_get(pedidosDeReduccionGlobal,posActual);
-			indicacion->archivoDeReduccionGlobal = pedido->ArchivoResultadoReduccionGlobal;
-			indicacion->archivoDeReduccionLocal = pedido->archivoReduccionPorWorker;
-			indicacion->encargado = pedido->workerEncargdo;
-			indicacion->ip = pedido->ip;
-			indicacion->puerto = pedido->puerto;
-			//hay que borrar NODO de indicacion. No sirve.
+			t_pedidoReduccionGlobal * pedido = malloc (sizeof(t_pedidoReduccionGlobal));
+			t_indicacionReduccionGlobal * indicacion = list_get(pedidosDeReduccionGlobal,posActual);
+			pedido->ArchivoResultadoReduccionGlobal = indicacion->archivoDeReduccionGlobal;
+			pedido->archivoReduccionPorWorker = indicacion->archivoDeReduccionLocal;
+			pedido->workerEncargdo = indicacion->encargado;
+			pedidos[posActual] = pedido;
 
-			indicaciones[posActual] = indicacion;
-
-			if ( indicacion -> encargado == "1")
+			if ( string_equals_ignore_case( pedido -> workerEncargdo , "1"))
 			{
 				conexionWorker= conectarCliente(indicacion->ip,indicacion->puerto, WORKER);
 			}
@@ -370,7 +322,10 @@ void gestionarReduccionGlobal()
 		posActual = 0;
 		while(posActual < cantidadSolicitudes)
 		{
-			pthread_create(hiloReduGlobal[posActual],NULL,(void*) mandarDatosReduccionGlobal, (indicaciones[posActual],conexionWorker));
+			reduGlobal * reduccion = malloc (sizeof(reduGlobal));
+			reduccion->conexion = conexionWorker;
+			reduccion->reduGlobal = pedidos[posActual];
+			pthread_create(&hiloReduGlobal[posActual],NULL,(void*) mandarDatosReduccionGlobal, (void *) reduccion);
 			posActual++;
 
 		}
@@ -381,27 +336,56 @@ void gestionarReduccionGlobal()
 			pthread_join (hiloReduGlobal[i],NULL);
 		}
 
-		enviarMensaje(conexionYama, "salio piola la reduGlobal");
+		enviarMensaje(conexionYama, SALIOBIEN);
+		gettimeofday(t1,NULL);
+
+		tiempoReduccionGlobal = (t1.tv_sec - t0.tv_sec) *1000 + (t1.tv_usec - t0.tv_usec) / 1000;
+		pthread_mutex_lock(&mutexMetricas);
+		tablaMetricas.cantidadTareasTotalesReduccionGlobal = cantidadSolicitudes;
+		pthread_mutex_unlock(&mutexMetricas);
 
 	}
 
-void mandarDatosReduccionGlobal(t_indicacionReduccionGlobal * indicacion , int conexionEncargado)
+void mandarDatosReduccionGlobal(reduGlobal * reduccion)
 {
-	enviarIndicacionReduccionGlobal(conexionEncargado,indicacion);
+	enviarSolicitudReduccionGlobal(reduccion->conexion,reduccion->reduGlobal);
+	gestionarSolicitudes(reduccion->conexion, (void *) procesarPaquete);
+
+	if (terminoConError)
+	{
+		enviarMensaje(conexionYama,ERROR);
+		log_error(logMaster, "Error en la reduccion, worker de conexion %d", reduccion->conexion);
+		free(reduccion->reduGlobal);
+		free(reduccion);
+		return;
+	}
+
+	free(reduccion->reduGlobal);
+	free(reduccion);
 }
 
 
-void gestionarAlmacenadoFinal(t_pedidoAlmacenadoFinal * pedido)
+void gestionarAlmacenadoFinal(t_indicacionAlmacenadoFinal * indicacion)
 {
-
-	t_indicacionAlmacenadoFinal * indicacion = malloc (sizeof(t_indicacionAlmacenadoFinal));
-	indicacion->rutaArchivoReduccionGlobal = pedido->archivoReduccionGlobal; //HAY QUE SACARLE IP Y PUERTO A INDICACION
-	//indicacion->rutaAlmacenadoFinal = rutaArchivoParaAlmacenar     ---> es la ruta que viene por el main . Mandar al worker???
-	int conexionWorker = conectarCliente(pedido->ip,pedido->puerto,WORKER);
-
+	log_info (logMaster, "arranca el almacenado final");
+	t_pedidoAlmacenadoFinal * solicitud = malloc (sizeof(t_pedidoAlmacenadoFinal));
+	solicitud->archivoReduccionGlobal = indicacion->rutaArchivoReduccionGlobal; //hay que rajarle ip y puerto al pedido
+	int conexionWorker = conectarCliente(indicacion->ip,indicacion->puerto,WORKER);
 	enviarIndicacionAlmacenadoFinal(conexionWorker,indicacion);
-	enviarMensaje(conexionYama, "termino todo wacho");
+	gestionarSolicitudes(conexionWorker,(void *) procesarPaquete);
 
+	if (terminoConError)
+	{
+		enviarMensaje(conexionYama,ERROR);
+		log_error(logMaster, "Error en el almacenado final");
+		free(solicitud);
+		free(indicacion);
+		return;
+	}
+
+	enviarMensaje(conexionYama, "termino todo wacho");
+	free(solicitud);
+	free(indicacion);
 }
 
 void signal_capturer(int numeroSenial){
@@ -433,59 +417,74 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) { // contesto a
 	switch (unPaquete->codigoOperacion) {
 
 
-	case ENVIAR_SOLICITUD_TRANSFORMACION:
+	case ENVIAR_INDICACION_TRANSFORMACION:
 		 ;
-		t_pedidoTransformacion * indicacionTransformacion = recibirSolicitudTransformacion(unPaquete);
-		char* continuarRecibiendoPedidosTransformacion = "1";// recibirMensaje(unPaquete); // preg facu
+		log_info(logMaster,"LLega solicitud de trasnformacion");
+		t_indicacionTransformacion * indicacionTransformacion = recibirIndicacionTransformacion(unPaquete);
 		list_add(pedidosDeTransformacion,indicacionTransformacion); //leno lista con pedidos
-		if (continuarRecibiendoPedidosTransformacion == "0")
-		{
-			gestionarTransformacion();
-			*finDeSolicitudesDeTransformacion = true;
-		}
-		break;// sale para volver a pedir
+
+		break;
 
 
-	case ENVIAR_SOLICITUD_REDUCCION_LOCAL: //guarda, acá recibe una INDICACIONDEREDULOCAL, no una solicitud
+	case ENVIAR_INDICACION_REDUCCION_LOCAL: //guarda, acá recibe una INDICACIONDEREDULOCAL, no una solicitud
 
 		 ;
-		t_indicacionReduccionLocal * indicacionReduLocal = recibirSolicitudReduccionLocal(unPaquete); //ACA TIENE QUE RECIBIR LA INDICACION
-		char* continuarRecibiendoPedidosDeReduLocal= "1";//recibirMensaje(unPaquete); // aca que onda? --> preguntar facu
+		t_indicacionReduccionLocal * indicacionReduLocal = recibirIndicacionReduccionLocal(unPaquete);
 		list_add(pedidosDeReduccionLocal,indicacionReduLocal);
-
-		if(continuarRecibiendoPedidosDeReduLocal == "0")
-		{
-			gestionarReduccionLocal();
-			*finDeSolicitudesDeReduccionLocal = true;
-		}
 		break;
 
 
-	case ENVIAR_SOLICITUD_REDUCCION_GLOBAL:
+	case ENVIAR_INDICACION_REDUCCION_GLOBAL:
 	 ;
-		t_pedidoReduccionGlobal * pedidoReduGlobal = recibirSolicitudReduccionGlobal(unPaquete);
-	    list_add(pedidosDeReduccionGlobal, pedidoReduGlobal);
-	    char* continuarRecibiendo = "1";//recibirMensaje(unPaquete);
-	    if(continuarRecibiendo == "0"){
-	    	*finDeSolicitudesGlobales = true;
-
-	    }
-
-
+		t_indicacionReduccionGlobal * indicacionesParaReduccionGlobal = recibirIndicacionReduccionGlobal(unPaquete);
+	    list_add(pedidosDeReduccionGlobal, indicacionesParaReduccionGlobal);
 		break;
 
-
-	case ENVIAR_SOLICITUD_ALMACENADO_FINAL:
+	case ENVIAR_INDICACION_ALMACENADO_FINAL:
 		 ;
-		 t_pedidoAlmacenadoFinal * indicacionAlmacenamientoFinal = recibirSolicitudAlmacenadoFinal(unPaquete);
+		 t_indicacionAlmacenadoFinal * indicacionAlmacenamientoFinal = recibirIndicacionAlmacenadoFinal(unPaquete);
 		 gestionarAlmacenadoFinal(indicacionAlmacenamientoFinal);
-		break;
+		 break;
+
+	case ENVIAR_MENSAJE:
+		  ;
+		 char* mensaje = string_new();
+		 string_append(&mensaje ,recibirMensaje(unPaquete));
+
+		 if(string_equals_ignore_case(mensaje,FIN))
+		 {
+			 finDeSolicitudes = true;
+
+		 } else
+
+			 if(string_equals_ignore_case(mensaje,ERROR))
+			 {
+				 terminoConError = true;
+
+			 } else
+
+			     if(string_equals_ignore_case(mensaje,SALIOBIEN))
+			     {
+			    	 terminoConError = false;
+			     }
+		 free(mensaje);
+		 break;
 
 
 	default:
-		break;
+
+		 break;
 	}
 
 	destruirPaquete(unPaquete);
+}
+
+
+void liberarListas() {
+
+	list_destroy_and_destroy_elements(pedidosDeTransformacion, (void *) free);
+	list_destroy_and_destroy_elements(pedidosDeReduccionLocal, (void *) free);
+	list_destroy_and_destroy_elements(pedidosDeReduccionGlobal, (void *) free);
+
 }
 
