@@ -26,22 +26,23 @@ endif
 all: master
 
 dependents:
-	-cd /home/utnso/workspace/tp-2017-2c-NULL/biblioteca-propia/Debug && $(MAKE) clean all
+	-cd /home/utnso/workspace/tp-2017-2c-NULL/biblioteca-propia/Debug && $(MAKE) all
 
 # Tool invocations
 master: $(OBJS) $(USER_OBJS) /home/utnso/workspace/tp-2017-2c-NULL/biblioteca-propia/Debug/libbiblioteca-propia.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc  -o "master" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -L"/home/utnso/workspace/tp-2017-2c-NULL/biblioteca-propia/Debug" -o "master" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(EXECUTABLES)$(OBJS)$(C_DEPS) master
+	-$(RM) $(OBJS)$(C_DEPS)$(EXECUTABLES) master
 	-@echo ' '
 
 .PHONY: all clean dependents
+.SECONDARY:
 /home/utnso/workspace/tp-2017-2c-NULL/biblioteca-propia/Debug/libbiblioteca-propia.so:
 
 -include ../makefile.targets
