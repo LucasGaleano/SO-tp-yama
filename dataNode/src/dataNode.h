@@ -18,6 +18,9 @@
 
 //---------globales---------
 char* rutaDatabin;
+t_log* logger;
+bool recibirSolicitudes;
+
 /**
  * @NAME: getBloque
  * @DESC: Retorna el numero del bloque pedido
@@ -28,6 +31,13 @@ char* getBloque(int numBLoque);
  * @DESC: escribe el numero del bloque pedido
  */
 int setBloque(int numBLoque, char* bloque);
+
+/*------------------------------Procesar paquetes------------------------------*/
 void recibirSolicitud(t_paquete * unPaquete, int * client_socket);
-void gestionarSolicitudes(int, void (*)(void*, int*));
+void procesarSolicitudLecturaBloque(t_paquete * unPaquete, int * client_socket);
+void procesarSolicitudEscrituraBloque(t_paquete * unPaquete,int * client_socket);
+void procesarError(t_paquete * unPaquete);
+void procesarSolicitudLecturaArchivoTemporal(t_paquete * unPaquete,int * client_socket);
+void procesarSolicitudLecturaBloqueGenerarCopia(t_paquete * unPaquete,int * client_socket);
+
 #endif /*DATANODE_H_*/

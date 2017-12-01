@@ -35,9 +35,10 @@ libbiblioteca-propia.so: $(OBJS) $(USER_OBJS)
 
 # Other Targets
 clean:
-	-$(RM) $(LIBRARIES)$(OBJS)$(C_DEPS) libbiblioteca-propia.so
+	-$(RM) $(OBJS)$(C_DEPS)$(LIBRARIES) libbiblioteca-propia.so
 	-@echo ' '
 
 .PHONY: all clean dependents
+.SECONDARY:
 
 -include ../makefile.targets

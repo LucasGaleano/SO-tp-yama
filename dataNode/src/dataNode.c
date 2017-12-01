@@ -1,5 +1,5 @@
 #include "dataNode.h"
-bool recibirSolicitudes;
+
 int main(void) {
 	recibirSolicitudes = true;
 	t_config* conf;
@@ -15,9 +15,16 @@ int main(void) {
 	rutaDatabin = config_get_string_value(conf, "RUTA_DATABIN");
 //log_warning(logger, "algo paso aca!!!!!");
 //CONECTARSE A FILESYSTEM, QUEDAR A LA ESPERA DE SOLICITUDES --------------------------------
+
+	struct stat statArch;
+
+	stat(rutaDatabin, &statArch);
+
+	int cantidadBloques = statArch.st_size / TAM_BLOQUE;
+
 	int socketFileSystem = conectarCliente(IP_FILESYSTEM, PUERTO_FILESYSTEM,
 			DATANODE);
-	enviarInfoDataNode(socketFileSystem, NOMBRE_NODO, 20, 20);
+	enviarInfoDataNode(socketFileSystem, NOMBRE_NODO, cantidadBloques, cantidadBloques);
 	while (recibirSolicitudes) {
 		gestionarSolicitudes(socketFileSystem, (void*) recibirSolicitud);
 	}
@@ -30,45 +37,7 @@ int main(void) {
 	free(bloque);
 	return EXIT_SUCCESS;
 }
-void recibirSolicitud(t_paquete * unPaquete, int * client_socket) {
-	t_log_level logLevel = LOG_LEVEL_INFO; //elijo enum de log
-	t_log* logger = log_create("dataNode.log", "dataNode", true, logLevel); //creo archivo log
-	switch (unPaquete->codigoOperacion) {
-	case ENVIAR_SOLICITUD_LECTURA_BLOQUE:
-		;
-		int numBloque;
-		char* bloque = malloc(TAM_BLOQUE);
-		numBloque = recibirSolicitudLecturaBloque(unPaquete);
-		bloque = getBloque(numBloque);
-		if (bloque == NULL) {
-			log_error(logger, "error buscando bloque");
-		}
-		enviarBloque(*client_socket, bloque);
-		free(bloque);
-		break;
-	case ENVIAR_SOLICITUD_ESCRITURA_BLOQUE:
-		;
-		t_pedidoEscritura* pedidoEscritura;
-		pedidoEscritura = recibirSolicitudEscrituraBloque(unPaquete);
-//printf("%d\n",pedidoEscritura->numBloque);
-//printf("%s\n",pedidoEscritura->data);
-		if (setBloque(pedidoEscritura->numBloque, pedidoEscritura->data)
-				== -1) {
-			log_error(logger, "error guardando bloque");
-		}
-		free(pedidoEscritura->data);
-		free(pedidoEscritura);
-		break;
-	case ENVIAR_ERROR:
-		;
-		recibirSolicitudes = false;
-		break;
-	default:
-		break;
-	}
-	log_destroy(logger);
-	destruirPaquete(unPaquete);
-}
+
 char* getBloque(int numBloque) {
 	struct stat sb;
 	char *map;
@@ -102,6 +71,7 @@ char* getBloque(int numBloque) {
 	close(fd); //cierro archivo
 	return bloque;
 }
+
 int setBloque(int numBloque, char* bloque) {
 	struct stat sb;
 	char *map;
@@ -133,3 +103,123 @@ int setBloque(int numBloque, char* bloque) {
 	return 0;
 }
 
+/*------------------------------Procesar paquetes------------------------------*/
+void recibirSolicitud(t_paquete * unPaquete, int * client_socket) {
+
+	t_log_level logLevel = LOG_LEVEL_INFO; //elijo enum de log
+
+	logger = log_create("dataNode.log", "dataNode", true, logLevel); //creo archivo log
+
+	switch (unPaquete->codigoOperacion) {
+	case ENVIAR_SOLICITUD_LECTURA_BLOQUE:
+		procesarSolicitudLecturaBloque(unPaquete, client_socket);
+		break;
+
+	case ENVIAR_SOLICITUD_ESCRITURA_BLOQUE:
+		procesarSolicitudEscrituraBloque(unPaquete, client_socket);
+		break;
+
+	case ENVIAR_ERROR:
+		procesarError(unPaquete);
+		break;
+
+	case ENVIAR_SOLICITUD_LECTURA_ARCHIVO_TEMPORAL:
+		procesarSolicitudLecturaArchivoTemporal(unPaquete, client_socket);
+		break;
+
+	case ENVIAR_SOLICITUD_LECTURA_BLOQUE_GENERAR_COPIA:
+		procesarSolicitudLecturaBloqueGenerarCopia(unPaquete, client_socket);
+		break;
+
+	default:
+		break;
+	}
+	log_destroy(logger);
+	destruirPaquete(unPaquete);
+}
+
+void procesarSolicitudLecturaBloque(t_paquete * unPaquete, int * client_socket) {
+	int numBloque;
+
+	char* bloque = malloc(TAM_BLOQUE);
+
+	numBloque = recibirSolicitudLecturaBloque(unPaquete);
+
+	bloque = getBloque(numBloque);
+
+	if (bloque == NULL) {
+		log_error(logger, "error buscando bloque");
+	}
+
+	enviarBloque(*client_socket, bloque);
+
+	free(bloque);
+}
+
+void procesarSolicitudEscrituraBloque(t_paquete * unPaquete,
+		int * client_socket) {
+	t_pedidoEscritura * pedidoEscritura = recibirSolicitudEscrituraBloque(
+			unPaquete);
+
+	bool exito;
+
+	if (setBloque(pedidoEscritura->numBloque, pedidoEscritura->data) == -1) {
+		log_error(logger, "error guardando bloque");
+		exito = false;
+	}
+
+	exito = true;
+
+	free(pedidoEscritura->data);
+	free(pedidoEscritura);
+
+	enviarRespuestaEscrituraBloque(*client_socket, exito,
+			pedidoEscritura->numBloque);
+}
+
+void procesarError(t_paquete * unPaquete) {
+	recibirSolicitudes = false;
+}
+
+void procesarSolicitudLecturaArchivoTemporal(t_paquete * unPaquete,
+		int * client_socket) {
+
+	char* bloque = malloc(TAM_BLOQUE);
+
+	t_lecturaArchTemp * lectura = recibirSolicitudLecturaBloqueArchTemp(
+			unPaquete);
+
+	bloque = getBloque(lectura->numBloque);
+
+	if (bloque == NULL) {
+		log_error(logger, "error buscando bloque");
+	}
+
+	enviarBloqueArchTemp(*client_socket, bloque, lectura->orden);
+
+	free(bloque);
+}
+
+void procesarSolicitudLecturaBloqueGenerarCopia(t_paquete * unPaquete,
+		int * client_socket) {
+	t_lecturaGenerarCopia * lecturaGenerarCopia =
+			recibirSolicitudLecturaBloqueGenerarCopia(unPaquete);
+
+	char* bloque = malloc(TAM_BLOQUE);
+
+	bloque = getBloque(lecturaGenerarCopia->bloque);
+
+	if (bloque == NULL) {
+		log_error(logger, "error buscando bloque");
+	}
+
+	enviarBloqueGenerarCopia(*client_socket, lecturaGenerarCopia->bloque,
+			bloque, lecturaGenerarCopia->rutaArchivo,
+			lecturaGenerarCopia->nodoAEscribir);
+
+	free(bloque);
+	free(lecturaGenerarCopia->nodoAEscribir);
+	free(lecturaGenerarCopia->nodoBuscado);
+	free(lecturaGenerarCopia->rutaArchivo);
+	free(lecturaGenerarCopia);
+}
