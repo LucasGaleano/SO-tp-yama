@@ -512,8 +512,11 @@ t_indicacionAlmacenadoFinal * recibirIndicacionAlmacenadoFinal(
 	return deserializarIndicacionAlmacenadoFinal(unPaquete->buffer);
 }
 
-}
+
 char * recibirRutaParaArrancarTransformacion(t_paquete * unPaquete) {
+	return deserializarMensaje(unPaquete->buffer);
+}
+
 
 t_list* recibirListaDeBloques(t_paquete * unPaquete){
 	return deserializarListaDeBloques(unPaquete->buffer);
