@@ -7,6 +7,7 @@
 #include <string.h>
 #include <commons/config.h> //config
 #include <commons/log.h> //log
+#include <commons/collections/list.h>
 #include <commons/string.h>
 #include <biblioteca/paquetes.h>
 #include <biblioteca/estructuras.h>
@@ -17,14 +18,23 @@
 #include <unistd.h>  //PROT_READ del mmap()
 #include "worker.h"
 
-/**
-* @NAME: transformacion
-* @DESC: aplica la transformacion al bloque dado
-*/
+#define PATHLOG "..//nodo.cfg"
+#define PATHCONFIG "../configuraciones/nodo.cfg"
+#define TAM_MAX 100
+#define TAM_BLOQUE 1048576 //1024 * 1024, un mega
+#define PUERTO_REDUCCION_GLOBAL "9999"
+
+typedef struct
+{
+	int socket_cliente;
+	char palabra[TAM_MAX];
+}paquete_esclavo;
 
 void recibirHandshake(t_paquete*, int*);
 
 void procesarPaquete(t_paquete*, int*);
+
+void recibirSolicitud(t_paquete*, int*);
 
 void transformacion (unsigned int, char*);
 
@@ -37,5 +47,7 @@ FILE* aparear(FILE *[], int);
 void iniciarEncargado();
 
 void iniciarEsclavo(char *, char *);
+
+void reduccionGlobal();
 
 #endif WORKER_H_
