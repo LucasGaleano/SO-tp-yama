@@ -79,10 +79,12 @@ enum cod_op{
 
 	ENVIAR_RUTA_PARA_ARRANCAR_TRANSFORMACION,
 
+	ENVIAR_ERROR,
 
-	ENVIAR_REGISTRO_REDUCCION_GLOBAL,
+	CONTINUA_MENSAJES,
 
 	TAREA_COMPLETADA,
+
 	RESPUESTA_INFO_ARCHIVO,
 
 	INDICACION_TERMINO_TAREA,
@@ -150,7 +152,6 @@ typedef struct {
 
 /*------------------------------Estructuras de comunicacion Yama Master------------------------------*/
 typedef struct {
-
 	char* rutaScriptTransformacion;
 	int   numBloque;
 	char* rutaArchivoTemporal;
@@ -161,24 +162,20 @@ typedef struct {
 	char* archivoTransformacion;
 	char* archivoReduccionLocal;
 	char* rutaScript;
-
 } t_pedidoReduccionLocal;
 
 typedef struct {
-	char* nodo;
 	char* ip;
 	char* puerto;
 	char* archivoReduccionPorWorker;
-	char* workerEncargdo;
+	int workerEncargado;
 	char* ArchivoResultadoReduccionGlobal;
 	int cantWorkerInvolucradros;
 } t_pedidoReduccionGlobal;
 
 typedef struct {
-	char* ip;
-	char* puerto;
 	char* archivoReduccionGlobal;
-	char* rutaScriptResultado;
+	char* rutaAlmacenadoFinal;
 } t_pedidoAlmacenadoFinal;
 
 typedef struct {

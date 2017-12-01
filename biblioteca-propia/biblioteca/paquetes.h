@@ -43,6 +43,9 @@ void 							enviarIndicacionReduccionLocal				(int, t_indicacionReduccionLocal *
 void 							enviarIndicacionReduccionGlobal				(int, t_indicacionReduccionGlobal *);
 void 							enviarIndicacionAlmacenadoFinal				(int, t_indicacionAlmacenadoFinal *);
 
+void								enviarError									(int, int);
+void							enviarTareaCompletada						(int, int);
+
 /*-----------------------------------Recibir paquetes-----------------------------------*/
 int 							recibirHandshake							(t_paquete *);
 
@@ -74,5 +77,8 @@ t_indicacionTransformacion* 	recibirIndicacionTransformacion				(t_paquete *);
 t_indicacionReduccionLocal*	 	recibirIndicacionReduccionLocal				(t_paquete *);
 t_indicacionReduccionGlobal*	recibirIndicacionReduccionGlobal			(t_paquete *);
 t_indicacionAlmacenadoFinal* 	recibirIndicacionAlmacenadoFinal			(t_paquete *);
+
+int								recibirError								(t_paquete *);
+int								recibirTareaCompletada						(t_paquete *);
 
 #endif /* SRC_PROCESAMIENTOPAQUETES_H_ */

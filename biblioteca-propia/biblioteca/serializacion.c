@@ -240,8 +240,9 @@ void serializarSolicitudReduccionLocal(t_paquete * unPaquete,
 		t_pedidoReduccionLocal * solicitud) {
 	int tamArchReduc = string_length(solicitud->archivoReduccionLocal) + 1;
 	int ramArchTrans = string_length(solicitud->archivoTransformacion) + 1;
+	int tamRutaScript = string_length(solicitud->rutaScript) + 1;
 
-	int tamTotal = tamArchReduc + ramArchTrans;
+	int tamTotal = tamArchReduc + ramArchTrans + tamRutaScript;
 
 	unPaquete->buffer = malloc(sizeof(t_stream));
 	unPaquete->buffer->size = tamTotal;
@@ -256,22 +257,26 @@ void serializarSolicitudReduccionLocal(t_paquete * unPaquete,
 
 	memcpy(unPaquete->buffer->data + desplazamiento,
 			solicitud->archivoReduccionLocal, tamArchReduc);
+	desplazamiento += tamArchReduc;
+
+	memcpy(unPaquete->buffer->data + desplazamiento,
+				solicitud->archivoReduccionLocal, tamRutaScript);
 
 }
 
 void serializarSolicitudReduccionGlobal(t_paquete * unPaquete,
 		t_pedidoReduccionGlobal * solicitud) {
 
-	int tamNodo = string_length(solicitud->nodo) + 1;
 	int tamDireccion = string_length(solicitud->ip) + 1;
 	int tamPuerto = string_length(solicitud->puerto) + 1;
 	int tamArchivoReduccionPorWorker = string_length(
 			solicitud->archivoReduccionPorWorker) + 1;
-	int tamWorkerEncargdo = string_length(solicitud->workerEncargdo) + 1;
+	int tamWorkerEncargdo = sizeof(int);
 	int tamArchivoResultadoReduccionGlobal = string_length(
 			solicitud->ArchivoResultadoReduccionGlobal) + 1;
+	int cantidadWorker = sizeof(int);
 
-	int tamTotal = tamNodo + tamDireccion + tamPuerto
+	int tamTotal = cantidadWorker + tamDireccion + tamPuerto
 			+ tamArchivoReduccionPorWorker + tamWorkerEncargdo
 			+ tamArchivoResultadoReduccionGlobal;
 
@@ -282,8 +287,8 @@ void serializarSolicitudReduccionGlobal(t_paquete * unPaquete,
 
 	int desplazamiento = 0;
 
-	memcpy(unPaquete->buffer->data + desplazamiento, solicitud->nodo, tamNodo);
-	desplazamiento += tamNodo;
+	memcpy(unPaquete->buffer->data + desplazamiento, solicitud->cantWorkerInvolucradros, cantidadWorker);
+	desplazamiento += cantidadWorker;
 
 	memcpy(unPaquete->buffer->data + desplazamiento, solicitud->ip,
 			tamDireccion);
@@ -297,7 +302,7 @@ void serializarSolicitudReduccionGlobal(t_paquete * unPaquete,
 			solicitud->archivoReduccionPorWorker, tamArchivoReduccionPorWorker);
 	desplazamiento += tamArchivoReduccionPorWorker;
 
-	memcpy(unPaquete->buffer->data + desplazamiento, solicitud->workerEncargdo,
+	memcpy(unPaquete->buffer->data + desplazamiento, solicitud->workerEncargado,
 			tamWorkerEncargdo);
 	desplazamiento += tamWorkerEncargdo;
 
@@ -309,12 +314,11 @@ void serializarSolicitudReduccionGlobal(t_paquete * unPaquete,
 void serializarSolicitudAlmacenadoFinal(t_paquete * unPaquete,
 		t_pedidoAlmacenadoFinal * solicitud) {
 
-	int tamDireccion = string_length(solicitud->ip) + 1;
-	int tamPuerto = string_length(solicitud->puerto) + 1;
 	int tamArchivoReduccionGlobal = string_length(
 			solicitud->archivoReduccionGlobal) + 1;
+	int tamRutaFinal = string_length(solicitud->rutaAlmacenadoFinal) + 1;
 
-	int tamTotal = tamDireccion + tamPuerto + tamArchivoReduccionGlobal;
+	int tamTotal = tamRutaFinal + tamArchivoReduccionGlobal;
 
 	unPaquete->buffer = malloc(sizeof(t_stream));
 	unPaquete->buffer->size = tamTotal;
@@ -323,16 +327,12 @@ void serializarSolicitudAlmacenadoFinal(t_paquete * unPaquete,
 
 	int desplazamiento = 0;
 
-	memcpy(unPaquete->buffer->data + desplazamiento, solicitud->ip,
-			tamDireccion);
-	desplazamiento += tamDireccion;
-
-	memcpy(unPaquete->buffer->data + desplazamiento, solicitud->puerto,
-			tamPuerto);
-	desplazamiento += tamPuerto;
-
 	memcpy(unPaquete->buffer->data + desplazamiento,
 			solicitud->archivoReduccionGlobal, tamArchivoReduccionGlobal);
+	desplazamiento += tamArchivoReduccionGlobal;
+
+	memcpy(unPaquete->buffer->data + desplazamiento,
+				solicitud->archivoReduccionGlobal, tamRutaFinal);
 }
 
 void serializarIndicacionTransformacion(t_paquete * unPaquete,
@@ -677,8 +677,8 @@ t_pedidoTransformacion * deserializarSolicitudTransformacion(t_stream * buffer) 
 	solicitud->rutaScriptTransformacion = strdup(buffer->data + desplazamiento);
 	desplazamiento += strlen(solicitud->rutaScriptTransformacion) + 1;
 
-	solicitud->numBloque = strdup(buffer->data + desplazamiento);
-	desplazamiento += strlen(solicitud->numBloque) + 1;
+	memcpy(&solicitud->numBloque, &buffer->data + desplazamiento, sizeof(int));
+	desplazamiento += sizeof(int);
 
 	memcpy(&solicitud->cantBytes, &buffer->data + desplazamiento, sizeof(int));
 	desplazamiento += sizeof(int);
@@ -698,6 +698,9 @@ t_pedidoReduccionLocal * deserializarSolicitudReduccionLocal(t_stream * buffer) 
 	desplazamiento += strlen(solicitud->archivoTransformacion) + 1;
 
 	solicitud->archivoReduccionLocal = strdup(buffer->data + desplazamiento);
+	desplazamiento += strlen(solicitud->archivoReduccionLocal) + 1;
+
+	solicitud->rutaScript = strdup(buffer->data + desplazamiento);
 
 	return solicitud;
 }
@@ -719,12 +722,15 @@ t_pedidoReduccionGlobal * deserializarSolicitudReduccionGlobal(
 			buffer->data + desplazamiento);
 	desplazamiento += strlen(solicitud->archivoReduccionPorWorker) + 1;
 
-	solicitud->workerEncargdo = strdup(buffer->data + desplazamiento);
-	desplazamiento += strlen(solicitud->workerEncargdo) + 1;
+	memcpy(&solicitud->workerEncargado, &buffer->data, sizeof(int));
+	desplazamiento += sizeof(int);
 
 	solicitud->ArchivoResultadoReduccionGlobal = strdup(
 			buffer->data + desplazamiento);
 	desplazamiento += strlen(solicitud->ArchivoResultadoReduccionGlobal) + 1;
+
+	memcpy(&solicitud->cantWorkerInvolucradros, &buffer->data, sizeof(int));
+		desplazamiento += sizeof(int);
 
 	return solicitud;
 }
@@ -736,13 +742,11 @@ t_pedidoAlmacenadoFinal * deserializarSolicitudAlmacenadoFinal(
 
 	int desplazamiento = 0;
 
-	solicitud->ip = strdup(buffer->data + desplazamiento);
-	desplazamiento += strlen(solicitud->ip) + 1;
-
-	solicitud->puerto = strdup(buffer->data + desplazamiento);
-	desplazamiento += strlen(solicitud->puerto) + 1;
-
 	solicitud->archivoReduccionGlobal = strdup(buffer->data + desplazamiento);
+	desplazamiento += strlen(solicitud->archivoReduccionGlobal) + 1;
+
+	solicitud->rutaAlmacenadoFinal = strdup(buffer->data + desplazamiento);
+		desplazamiento += strlen(solicitud->rutaAlmacenadoFinal) + 1;
 
 	return solicitud;
 }

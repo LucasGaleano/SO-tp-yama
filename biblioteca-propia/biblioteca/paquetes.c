@@ -414,14 +414,27 @@ void enviarListaBloques(int server_socket,
 
 }
 
-void enviarRegistro(int server_socket, char * registro) {
-	t_paquete * unPaquete = malloc(sizeof(t_paquete));
-	unPaquete->codigoOperacion = ENVIAR_REGISTRO_REDUCCION_GLOBAL;
-	serializarMensaje(unPaquete, registro);
+void enviarError(int server_socket, int cod_error)
+{
+	t_paquete* unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_ERROR;
+
+	serializarNumero(unPaquete, cod_error);
+
 	enviarPaquetes(server_socket, unPaquete);
 }
 
+void enviarTareaCompletada(int server_socket, int cod_tarea)
+{
+	t_paquete* unPaquete = malloc(sizeof(t_paquete));
 
+	unPaquete->codigoOperacion = CONTINUA_MENSAJES;
+
+	serializarNumero(unPaquete, cod_tarea);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
 /*-------------------------Recibir-------------------------*/
 
 int recibirHandshake(t_paquete * unPaquete){
@@ -526,4 +539,14 @@ t_list* recibirListaDeBloques(t_paquete * unPaquete){
 char * recibirRegistro(t_paquete * unPaquete) {
 
 	return deserializarMensaje(unPaquete->buffer);
+}
+
+int recibirError(t_paquete * unPaquete)
+{
+	return deserializarNumero(unPaquete->buffer);
+}
+
+int recibirTareaCompletada(t_paquete * unPaquete)
+{
+	return deserializarNumero(unPaquete->buffer);
 }
