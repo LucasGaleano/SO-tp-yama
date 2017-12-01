@@ -123,10 +123,10 @@ void procesarRespuestaEscrituraBloque(t_paquete * unPaquete, int client_socket) 
 	char * nomNodo = buscarNombrePorSocket(client_socket);
 
 	if (respuesta->exito) {
-		printf("Se pudo guardar en el bloque: %d del nodo: %s \n",
+		printf("Se pudo guardar el bloque: %d en el nodo: %s \n",
 				respuesta->numBloque, nomNodo);
 	} else {
-		printf("No se pudo guardar en el bloque: %d del nodo: %s \n",
+		printf("No se pudo guardar el bloque: %d en el nodo: %s \n",
 				respuesta->numBloque, nomNodo);
 	}
 
@@ -152,9 +152,9 @@ void procesarBloqueGenerarCopia(t_paquete * unPaquete) {
 	int indexPadre;
 
 	if (posicion == 0) {
-		indexPadre = obtenerIndexPadre("root");
+		indexPadre = obtenerIndex("root");
 	} else {
-		indexPadre = obtenerIndexPadre(separado[posicion - 1]);
+		indexPadre = obtenerIndex(separado[posicion - 1]);
 	}
 
 	//Creo el config del archivo

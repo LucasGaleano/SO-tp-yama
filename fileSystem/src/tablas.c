@@ -173,7 +173,14 @@ t_config * crearArchivoTablaArchivo(char * origen, char *destino, char * nombre,
 	for (posicion = 0; listaDestino[posicion] != NULL; ++posicion) {
 	}
 
-	int indexPadre = obtenerIndexPadre(listaDestino[posicion - 1]);
+	int indexPadre;
+
+	if (posicion == 0) {
+			indexPadre = obtenerIndex("root");
+		} else {
+			indexPadre = obtenerIndex(listaDestino[posicion-1]);
+		}
+
 	char * indexPadreString = string_itoa(indexPadre);
 
 	//Creo la carpeta donde va a estar el archivo
@@ -754,9 +761,9 @@ int buscarIndexLibre() {
 	return index;
 }
 
-int obtenerIndexPadre(char * nomPadre) {
+int obtenerIndex(char * nombre) {
 	bool esPadreBuscado(t_directory * registro) {
-		return string_equals_ignore_case(registro->nombre, nomPadre);
+		return string_equals_ignore_case(registro->nombre, nombre);
 	}
 
 	t_directory *registro = list_find(tablaDirectorios, (void*) esPadreBuscado);

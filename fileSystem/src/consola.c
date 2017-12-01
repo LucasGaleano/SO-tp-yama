@@ -121,10 +121,17 @@ void ejecutarComando(char * linea, bool * ejecutar) {
 		return;
 	}
 
-	//PRUEBA
-	if (string_starts_with(linea, "prueba")) {
-		almacenarArchivo("/home/utnso/Escritorio/nombres.csv", "base",
+	//PRUEBAS
+	if (string_starts_with(linea, "pruebaT")) {
+		almacenarArchivo("/home/utnso/Escritorio/DataSets/nombres-1985-1989.csv", "base",
 				"prueba", TEXTO);
+
+		return;
+	}
+
+	if (string_starts_with(linea, "pruebaB")) {
+		almacenarArchivo("/home/utnso/Escritorio/Feraligatr4sotw-1.png", "base",
+				"prueba", BINARIO);
 
 		return;
 	}
@@ -211,9 +218,9 @@ void eliminarArchivo(char * linea) {
 	int indexPadre;
 
 	if (posicion == 0) {
-		indexPadre = obtenerIndexPadre("root");
+		indexPadre = obtenerIndex("root");
 	} else {
-		indexPadre = obtenerIndexPadre(separado[posicion - 1]);
+		indexPadre = obtenerIndex(separado[posicion - 1]);
 	}
 
 	//Busco la configuracion del archivo
@@ -302,9 +309,9 @@ void eliminarDirectorio(char * linea) {
 	int indexPadre;
 
 	if (posicion == 0) {
-		indexPadre = obtenerIndexPadre("root");
+		indexPadre = obtenerIndex("root");
 	} else {
-		indexPadre = obtenerIndexPadre(separado[posicion - 1]);
+		indexPadre = obtenerIndex(separado[posicion - 1]);
 	}
 
 	bool esRegistroBuscado(t_directory * registro) {
@@ -365,9 +372,9 @@ void eliminarBloque(char * linea) {
 	int indexPadre;
 
 	if (posicion == 0) {
-		indexPadre = obtenerIndexPadre("root");
+		indexPadre = obtenerIndex("root");
 	} else {
-		indexPadre = obtenerIndexPadre(separado[posicion - 1]);
+		indexPadre = obtenerIndex(separado[posicion - 1]);
 	}
 
 	//Busco la configuracion del archivo
@@ -548,9 +555,9 @@ void modificar(char * linea) {
 	int indexPadre;
 
 	if (posicionOriginal == 0) {
-		indexPadre = obtenerIndexPadre("root");
+		indexPadre = obtenerIndex("root");
 	} else {
-		indexPadre = obtenerIndexPadre(separadoOriginal[posicionOriginal - 1]);
+		indexPadre = obtenerIndex(separadoOriginal[posicionOriginal - 1]);
 	}
 
 	bool esRegistroBuscado(t_directory * registro) {
@@ -577,9 +584,9 @@ void modificar(char * linea) {
 	int indexPadreFinal;
 
 	if (posicionFinal == 0) {
-		indexPadreFinal = obtenerIndexPadre("root");
+		indexPadreFinal = obtenerIndex("root");
 	} else {
-		indexPadreFinal = obtenerIndexPadre(separadoFinal[posicionFinal - 1]);
+		indexPadreFinal = obtenerIndex(separadoFinal[posicionFinal - 1]);
 	}
 
 	//Busco los hijos del directorio
@@ -592,9 +599,9 @@ void modificar(char * linea) {
 	if (list_any_satisfy(tablaDirectorios, (void*) soyDirectorio)) {
 		//Quiero mover un archivo
 		if (posicionFinal == 0) {
-			nuevoIndex = obtenerIndexPadre("root");
+			nuevoIndex = obtenerIndex("root");
 		} else {
-			nuevoIndex = obtenerIndexPadre(separadoFinal[posicionFinal]);
+			nuevoIndex = obtenerIndex(separadoFinal[posicionFinal]);
 		}
 		string_append(&nuevoNombre, registroDirectorio->nombre);
 	} else {
@@ -644,9 +651,9 @@ void crearDirectorio(char * linea) {
 	int indexPadre;
 
 	if (posicion == 0) {
-		indexPadre = obtenerIndexPadre("root");
+		indexPadre = obtenerIndex("root");
 	} else {
-		indexPadre = obtenerIndexPadre(separado[posicion - 1]);
+		indexPadre = obtenerIndex(separado[posicion - 1]);
 	}
 
 	if (indexPadre == -1) {
@@ -762,9 +769,9 @@ void crearCopiaBloqueEnNodo(char * linea) {
 	int indexPadre;
 
 	if (posicion == 0) {
-		indexPadre = obtenerIndexPadre("root");
+		indexPadre = obtenerIndex("root");
 	} else {
-		indexPadre = obtenerIndexPadre(separado[posicion - 1]);
+		indexPadre = obtenerIndex(separado[posicion - 1]);
 	}
 
 	//Abro el archivo de config
@@ -866,9 +873,9 @@ void listarArchivos(char * linea) {
 	int indexPadre;
 
 	if (posicion == 0) {
-		indexPadre = obtenerIndexPadre("root");
+		indexPadre = obtenerIndex("root");
 	} else {
-		indexPadre = obtenerIndexPadre(separado[posicion - 1]);
+		indexPadre = obtenerIndex(separado[posicion - 1]);
 	}
 
 	//Busco los hijos del directorio
@@ -929,9 +936,9 @@ void mostrarInfo(char * linea) {
 	int indexPadre;
 
 	if (posicion == 0) {
-		indexPadre = obtenerIndexPadre("root");
+		indexPadre = obtenerIndex("root");
 	} else {
-		indexPadre = obtenerIndexPadre(separado[posicion - 1]);
+		indexPadre = obtenerIndex(separado[posicion - 1]);
 	}
 
 	//Abro el archivo de config
@@ -1108,9 +1115,9 @@ void modificarArchivo(char ** separadoOriginal, char ** separadoFinal,
 	int indexPadreFinal;
 
 	if (posicionFinal == 0) {
-		indexPadreFinal = obtenerIndexPadre("root");
+		indexPadreFinal = obtenerIndex("root");
 	} else {
-		indexPadreFinal = obtenerIndexPadre(separadoFinal[posicionFinal - 1]);
+		indexPadreFinal = obtenerIndex(separadoFinal[posicionFinal - 1]);
 	}
 
 	//Busco los hijos del directorio
