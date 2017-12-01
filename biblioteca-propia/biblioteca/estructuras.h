@@ -76,6 +76,10 @@ enum cod_op{
 
 	ENVIAR_INDICACION_ALMACENADO_FINAL,
 
+
+	ENVIAR_RUTA_PARA_ARRANCAR_TRANSFORMACION,
+
+
 	ENVIAR_REGISTRO_REDUCCION_GLOBAL,
 
 	TAREA_COMPLETADA,
@@ -87,6 +91,7 @@ enum cod_op{
 enum continuaMensaje{
 	CONTINUA=0,
 	NO_CONTINUA=1,
+
 };
 
 enum tipoArchivo{
