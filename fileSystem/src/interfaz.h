@@ -7,10 +7,11 @@ t_list * listaTemporal;
 
 /*-------------------------Almacenar archivo-------------------------*/
 void				almacenarArchivo				(char *, char *, char *, int);
-void * 				dividirBloqueArchivoBinario		(void *, int *);
+void * 				dividirBloqueArchivoBinario		(void *, size_t, int *, int *);
 void * 				dividirBloqueArchivoTexto		(void *, int *);
 char * 				buscarNodoMenosCargado			(void);
 int 				buscarBloqueAEscribir			(char *);
+char * 				generarBloque					(void *, int);
 
 /*-------------------------Leer archivo-------------------------*/
 char* 				leerArchivo						(char *);

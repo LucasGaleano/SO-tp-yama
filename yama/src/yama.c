@@ -4,7 +4,7 @@ int main(void) {
 
 	char* path_config_yama ="/home/utnso/workspace/tp-2017-2c-NULL/configuraciones/yama.cfg";
 
-	leerArchivoDeConfiguracionYAMA(path_config_yama);
+	t_configuracion * config = leerArchivoDeConfiguracionYAMA(path_config_yama);
 
 	//Creo el thread para escuchar conexiones
 	pthread_t threadServerYama;
@@ -64,19 +64,12 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		string_append(prefijo,"transformacion:");
 		char* nombreTemp = nombreArchivoTemp(prefijo);
 
-		//PLANIFICADOR-----------------------
-
-		t_tablaPlanificador* tablaPlanificador = tablaPlanificador_create();
-		Planificador(config->algoritmo, listaDeBloque, masterConectados, tablaPlanificador);
-
 
 		while(listaDeBloque->elements_count!=0){   // lista elementos uno por uno
 			t_bloque* bloque = list_remove(listaDeBloque,0);
 			int socketMasterElegido = list_get(masterConectados,0); //todo [CAMBIAR] elige siempre al mismo master cuando elige de la lista masterConectados, deberia ser equitativo tipo RR
+			t_bloque_ubicacion* bloqueUbicacion = bloque->copia0; //todo [CAMBIAR] hacer planificador para elegir bien la copia dependiendo del nodo
 
-
-
-			t_bloque_ubicacion* bloqueUbicacion = bloque->copia0;
 
 			//guardar en tabla de estado
 			agregarRegistro(generarJob(), socketMasterElegido,bloqueUbicacion->nodo,bloqueUbicacion->numBloque
@@ -89,6 +82,8 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 			t_indicacionTransformacion* bloqueEnviar = bloqueAT_indicacionTranformacion(bloque->tamanioOcupado,bloqueUbicacion,
 					nombreTemp);  //paso de bloque a T_indicacionTranformacion
 			enviarIndicacionTransformacion(socketMasterElegido, bloqueEnviar);
+
+
 
 
 			//TODO free() al final
@@ -164,8 +159,9 @@ void recibirError(t_paquete * unPaquete) {
 
 }
 
-void leerArchivoDeConfiguracionYAMA() {
+t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 
+	t_config * config = config_create(path);
 
 	//Valido que el archivo de configuracion este con los datos correspondientes
 	if(!config_has_property(config, "FS_IP") || !config_has_property(config, "FS_PUERTO")
@@ -174,17 +170,19 @@ void leerArchivoDeConfiguracionYAMA() {
 		exit(1);
 	}
 
+	t_configuracion * configuracion = malloc(sizeof(t_configuracion));
 
-	config->ip = config_get_string_value(config, "FS_IP");
-	config->puerto = config_get_string_value(config, "FS_PUERTO");
-	config->retardo = config_get_int_value(config, "RETARDO_PLANIFICACION");
-	config->algoritmo = config_get_string_value(config, "ALGORITMO_BALANCEO");
-	config->puerto_yama = config_get_string_value(config, "PUERTO_YAMA");
-	config->disponibilidad_base = config_get_int_value(config, "DISPONIBILIDAD_BASE");
+	configuracion->ip = config_get_string_value(config, "FS_IP");
+	configuracion->puerto = config_get_string_value(config, "FS_PUERTO");
+	configuracion->retardo = config_get_int_value(config, "RETARDO_PLANIFICACION");
+	configuracion->algoritmo = config_get_string_value(config, "ALGORITMO_BALANCEO");
+	configuracion->puerto_yama = config_get_string_value(config, "PUERTO_YAMA");
+	configuracion->disponibilidad_base = config_get_int_value(config, "DISPONIBILIDAD_BASE");
 
 	printf("Se levanto el proceso YAMA con: YAMA_PUERTO: %s  FS_IP: %s - FS_PUERTO: %s - RETARDO: %d - ALGORITMO: %s - DISPONIBILIDAD BASE: %d \n",
-			config.puerto_yama, config.ip, config.puerto, config.retardo, config.algoritmo, config.disponibilidad_base);
+			configuracion->puerto_yama, configuracion->ip, configuracion->puerto, configuracion->retardo, configuracion->algoritmo, configuracion->disponibilidad_base);
 
+	return configuracion;
 }
 
 t_indicacionTransformacion* bloqueAT_indicacionTranformacion(int tamanio, t_bloque_ubicacion* ubicacion,char* nombreTemp){
@@ -214,22 +212,6 @@ long generarJob(){
 	idJob += 1;
 	return idJob;
 }
-
-t_worker* worker_create(){
-	t_worker* worker = malloc(sizeof(t_worker));
-	return worker;
-
-}
-
-t_tablaPlanificador* tablaPlanificador_create(){
-
-	t_tablaPlanificador* tb = malloc(t_tablaPlanificador);
-	tb->registros = list_create();
-
-	return tb;
-
-}
-
 
 
 

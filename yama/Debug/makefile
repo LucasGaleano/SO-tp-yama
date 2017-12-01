@@ -38,10 +38,11 @@ yama: $(OBJS) $(USER_OBJS) /home/utnso/workspace/tp-2017-2c-NULL/biblioteca-prop
 
 # Other Targets
 clean:
-	-$(RM) $(EXECUTABLES)$(OBJS)$(C_DEPS) yama
+	-$(RM) $(OBJS)$(C_DEPS)$(EXECUTABLES) yama
 	-@echo ' '
 
 .PHONY: all clean dependents
+.SECONDARY:
 /home/utnso/workspace/tp-2017-2c-NULL/biblioteca-propia/Debug/libbiblioteca-propia.so:
 
 -include ../makefile.targets

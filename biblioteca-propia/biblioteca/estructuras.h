@@ -16,7 +16,7 @@
 #include <unistd.h>
 
 /*------------------------------Estructuras------------------------------*/
-#define TAM_BLOQUE 1024
+#define TAM_BLOQUE 1048576
 
 typedef struct {
 	size_t size;
@@ -79,8 +79,6 @@ enum cod_op{
 
 	ENVIAR_RUTA_PARA_ARRANCAR_TRANSFORMACION,
 
-	ENVIAR_ERROR,
-
 	CONTINUA_MENSAJES,
 
 	TAREA_COMPLETADA,
@@ -105,7 +103,8 @@ enum error{
 	ERROR_TRANSFORMACION =-1,
 	ERROR_REDUCCION_LOCAL = -2,
 	ERROR_REDUCCION_GLOBAL = -3,
-	ERROR_ALMACENAMIENTO_FINAL = -4
+	ERROR_ALMACENAMIENTO_FINAL = -4,
+	ERROR_MASTER = -5
 
 };
 
