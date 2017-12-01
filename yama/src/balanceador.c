@@ -14,59 +14,131 @@
 //
 //Nota: La cargas de trabajo deberán corresponder a un número entero sin signar de 32bits.
 
-typedef struct {
-	bool puntero;
-	int disponibilidad;
-	char * worker;
-	t_list * bloques;
-} t_elemento_tabla_jobs;
-
-typedef struct {
-	char * archivo;
-	t_list * bloques;
-} t_elemento_archivo_bloque;
-
-int iniciarPlanificador(char * algoritmo) {
-
-	t_list * tabla_jobs = list_create();
-
-	t_elemento_tabla_jobs * elemento1 = malloc(sizeof(t_elemento_tabla_jobs));
-
-	t_elemento_tabla_jobs * elemento2 = malloc(sizeof(t_elemento_tabla_jobs));
-
-	//Completo y agrego el primer elemento
-	elemento1->puntero = true;
-	elemento1->disponibilidad = 2;
-	elemento1->worker = "w1";
-	int num1 = 2;
-	list_add(elemento1->bloques, &num1 );
-
-	list_add(tabla_jobs, elemento1);
-
-	//completo y agrego el segundo elemento
-	elemento2->puntero = false;
-	elemento2->disponibilidad = 2;
-	elemento2->worker = "w2";
-	int num2 = 2;
-	list_add(elemento2->bloques, &num2);
-
-	list_add(tabla_jobs, elemento2);
-
-	//planificar(tabla_jobs);
 
 
-	return 0;
+
+void Planificador(char* algoritmo, t_list listaDeBloques, int cantWorkers, t_tablaPlanificador* tablaPlanificador){
+
+
+	int punteroClock=0;
+	int cantBloques = list_size(listaDeBloques);
+	t_list* secuenciaDePlanificador = list_create();
+	t_registro_planificador* registro = malloc(t_registro_planificador);
+
+	int contworkers=0;
+	for(;contworkers < cantWorkers;contworkers++)
+	{
+		//Se calcularán los valores de disponibilidades para cada Worker
+		//Se posicionará el Clock en el Worker de mayor disponibilidad, desempatando por el primer worker que tenga menor cantidad de tareas realizadas históricamente.
+		t_worker* worker = worker_create();
+		registro->worker->id = contworkers;
+		registro->worker->weight = config->disponibilidad_base;
+		list_add(tablaPlanificador->registros,registro);
+	}
+	int contBloques = 0;
+	for(;contBloques<cantBloques;contBloques++){
+		t_bloque* bloque = list_get(listaDeBloques,contBloques); // TRAE BLOQUES UNO POR UNO.
+
+		t_worker* workerPuntero= list_get(tablaPlanificador->registros,punteroClock);
+
+		if(estaBloqueEnWorker(bloque, workerPuntero) && workerPuntero->weight > 0 ){
+			//Se deberá evaluar si el Bloque a asignar se encuentra en el Worker apuntado por el Clock y el mismo tenga disponibilidad mayor a 0.
+			//Si se encuentra, se deberá reducir en 1 el valor de disponibilidad y avanzar el Clock al siguiente Worker.
+			//Si dicho clock fuera a ser asignado a un Worker cuyo nivel de disponibilidad fuera 0,
+			//se deberá restaurar la disponibilidad al valor de la disponibilidad base y luego, avanzar el clock al siguiente Worker.
+
+			punteroClock = avanzarPuntero(punteroClock,list_size(tablaPlanificador->registros));
+
+			t_registro_planificador* registro = malloc(sizeof(t_registro_planificador));
+			registro = list_get(tablaPlanificador->registros,workerPuntero);
+			registro->worker->weight--;
+			list_add(registro->listaBloques,bloque);
+
+
+		}
+		else{//En el caso de que no se encuentre, se deberá utilizar el siguiente Worker que posea una disponibilidad mayor a 0.
+			//Para este caso, no se deberá modificar el Worker apuntado por el Clock.
+
+			int proximoWorker = avanzarPuntero(punteroClock,list_size(tablaPlanificador->registros));
+			while (proximoWorker != punteroClock) {
+
+				if(estaBloqueEnWorker(t_bloque,proximoWorker) && workerPuntero->weight > 0) {
+
+				}else{
+					proximoWorker = avanzarPuntero(proximoWorker,list_size(tablaPlanificador->registros));
+
+				}
+
+			}
+			//Si se volviera a caer en el Worker apuntado por el clock por no existir disponibilidad en los Workers (es decir, da una vuelta completa a los Workers),
+			//se deberá sumar al valor de disponibilidad de todos los workers el valor de la Disponibilidad Base configurado al inicio de la pre-planificación.
+
+			if(proximoWorker == punteroClock){   //suma base a todos los workers;
+				contworkers=0;
+					for(;contworkers<cantWorkers;contworkers++)
+					{
+						t_registro_planificador registro = list_get(tablaPlanificador->registros,contworkers);
+						registro->worker->weight += config->disponibilidad_base;
+					}
+
+
+
+
+			}
+
+
+
+		}
+
+
+
+
+	}
+
 }
 
 
-//void planificar(t_list * tabla_jobs){
-//
-//	void mod(t_elemento_tabla_jobs elemento){
-//		if(elemento.puntero){
-//
-//		}
-//	}
-//
-//	list_iterate(tabla_jobs, (void*)modificador);
-//}
+
+
+
+
+
+
+
+bool estaBloqueEnWorker(t_bloque bloque,int worker){
+
+		char* ubic0 = string_new();
+		char* ubic1 = string_new();
+
+		ubic0 = string_substring(bloque->copia0->nodo,0,4);  //"Nodo1" devuelve "1"
+		ubic1 = string_substring(bloque->copia1->nodo,0,4);
+		if(strcmp(ubic0,string_itoa(worker)) || strcmp(ubic1,string_itoa(worker))){
+			return true;
+		}
+	return false;
+
+
+}
+
+int avanzarPuntero(int puntero,int  n){
+
+	puntero++;
+	if(puntero>n)
+		puntero=0;
+	return puntero;
+
+}
+
+
+
+
+
+
+//Listas -----------------------------------
+
+
+
+
+
+//todo worker_destroy
 
