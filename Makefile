@@ -7,9 +7,7 @@
 ## bajará lo que no esté bajado y compilará lo no compilado.
 ## Si se desea rehacer el proceso, escribir "sudo make clean", lo que reiniciará todo.
 
-deploy: dependencias tp
-
-dependencias: so-commons-library readline biblioteca
+deploy: so-commons-library readline biblioteca dataNode fileSystem master worker yama
 
 so-commons-library:
 	$(call mostrarTitulo,$@)
@@ -26,9 +24,6 @@ biblioteca:
 	mkdir /usr/include/biblioteca
 	sudo cp -u ./biblioteca-propia/Debug/libbiblioteca-propia.so /usr/lib/libbiblioteca-propia.so
 	sudo cp -u ./biblioteca-propia/biblioteca/*.h /usr/include/biblioteca
-
-
-tp: dataNode fileSystem master worker yama
 
 dataNode:
 	$(call mostrarTitulo,$@)
