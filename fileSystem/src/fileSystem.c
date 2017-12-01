@@ -1,11 +1,11 @@
 #include "fileSystem.h"
 
 int main(int argc, char **argv) {
+	//Verifico si ignoro o no el estado anterior
+	manejoDeEstado(argv[1]);
 
-	//Creo tablas administrativas
-	crearTablaNodos("/home/utnso/Escritorio/metadata");
+	//Creo la tabla de sockets
 	crearTablaSockets();
-	crearTablaDirectorios("/home/utnso/Escritorio/metadata");
 
 	//Creo archivo de log
 	logFileSystem = log_create("log_FileSystem.log", "fileSystem", false,
@@ -23,8 +23,6 @@ int main(int argc, char **argv) {
 
 	//Levanto consola
 	iniciarConsola();
-
-	pthread_join(threadServer, NULL);
 
 	//Termina fileSystem
 	log_info(logFileSystem, "Termino el proceso fileSystem");
@@ -80,24 +78,36 @@ void procesarInfoNodo(t_paquete * unPaquete, int client_socket) {
 	//Recibo info
 	t_nodo_info * info = recibirInfoDataNode(unPaquete);
 
+	//Verifico si existe
+	bool esNodoBuscado(char * nodo) {
+		return string_equals_ignore_case(info->nombre, nodo);
+	}
+	bool yaExiste = list_any_satisfy(tablaNodos->nomNodos,
+			(void*) esNodoBuscado);
+
 	//Agrego elemento a la lista de nodos por sockets
 	agregarNodoTablaSockets(info->nombre, client_socket);
 
-	//Agrego elemento a la tabla de nodos
-	agregarNodoTablaNodos(info);
+	if (!yaExiste) {
+		//Agrego elemento a la tabla de nodos
+		agregarNodoTablaNodos(info);
 
-	//Creo una tabla de Bitmap del nodo
-	crearArchivoTablaBitmap(info);
+		//Creo una tabla de Bitmap del nodo
+		crearArchivoTablaBitmap(info);
+	} else {
+		free(info->nombre);
+		free(info);
+	}
 
 }
 
 void procesarError(t_paquete * unPaquete) {
-	int cliente_desconectado;
-	memcpy(&cliente_desconectado, unPaquete->buffer->data, sizeof(int));
+	//int cliente_desconectado;
+	//memcpy(&cliente_desconectado, unPaquete->buffer->data, sizeof(int));
 
-	char * nomNodo = eliminarNodoTablaSockets(cliente_desconectado);
+	//char * nomNodo = eliminarNodoTablaSockets(cliente_desconectado);
 
-	eliminarNodoTablaNodos(nomNodo);
+	//eliminarNodoTablaNodos(nomNodo);
 
 }
 
@@ -142,9 +152,9 @@ void procesarBloqueGenerarCopia(t_paquete * unPaquete) {
 	int indexPadre;
 
 	if (posicion == 0) {
-		indexPadre = obtenerIndexPadre("root");
+		indexPadre = obtenerIndex("root");
 	} else {
-		indexPadre = obtenerIndexPadre(separado[posicion - 1]);
+		indexPadre = obtenerIndex(separado[posicion - 1]);
 	}
 
 	//Creo el config del archivo
@@ -175,18 +185,20 @@ void procesarBloqueGenerarCopia(t_paquete * unPaquete) {
 		string_append(&key, "BLOQUE");
 		string_append(&key, bloqueChar);
 		string_append(&key, "COPIA");
-		i ++;
+		i++;
 		copiaChar = string_itoa(i);
 		string_append(&key, copiaChar);
 	}
 
 	int bloqueAEscribir = buscarBloqueAEscribir(bloqueGenerarCopia->nodo);
 
-	agregarRegistroTablaArchivos(bloqueGenerarCopia->nodo,bloqueAEscribir,bloqueGenerarCopia->bloque,i,configArchivo);
+	agregarRegistroTablaArchivos(bloqueGenerarCopia->nodo, bloqueAEscribir,
+			bloqueGenerarCopia->bloque, i, configArchivo);
 
 	int socketNodo = buscarSocketPorNombre(bloqueGenerarCopia->nodo);
 
-	enviarSolicitudEscrituraBloque(socketNodo, bloqueGenerarCopia->data, bloqueAEscribir);
+	enviarSolicitudEscrituraBloque(socketNodo, bloqueGenerarCopia->data,
+			bloqueAEscribir);
 
 	//Libero memoria
 	destruirSubstring(separado);
@@ -200,6 +212,69 @@ void procesarBloqueGenerarCopia(t_paquete * unPaquete) {
 	free(bloqueGenerarCopia->nodo);
 	free(bloqueGenerarCopia->rutaArchivo);
 	free(bloqueGenerarCopia);
+}
+
+/*-------------------------Manejos de estado-------------------------*/
+void manejoDeEstado(char * comando) {
+	if (comando != NULL) {
+		if (string_equals_ignore_case(comando, "--clean")) {
+			ignoroEstadoAnterior();
+		} else {
+			printf("Parametro inexistente, concidero estado anterior \n");
+		}
+	} else {
+		consideroEstadoAnterior();
+	}
+}
+
+void ignoroEstadoAnterior() {
+	printf("Ignoro estado anterior \n");
+
+	//Verifico que la carpeta metadata exista
+	char * ruta = string_new();
+	string_append(&ruta, RUTA_METADATA);
+	string_append(&ruta, "metadata");
+
+	if (mkdir(ruta, 0777) == -1) {
+		//Borro las estructuras administrativas existentes
+		char * comando = string_new();
+		string_append(&comando, "sudo rm -r ");
+		string_append(&comando, RUTA_METADATA);
+		string_append(&comando, "metadata");
+
+		system(comando);
+
+		free(comando);
+
+		mkdir(ruta, 0777);
+	}
+
+	//Creo las nuevas tablas administrativas
+	crearTablaNodos(ruta);
+	crearTablaDirectorios(ruta);
+
+	//Libero memoria
+	free(ruta);
+}
+
+void consideroEstadoAnterior() {
+	printf("Considero estado anterior \n");
+
+	//Verifico que la carpeta metadata exista
+	char * ruta = string_new();
+	string_append(&ruta, RUTA_METADATA);
+	string_append(&ruta, "metadata");
+
+	if (mkdir(ruta, 0777) == -1) {
+		crearTablaNodosSegunArchivo(RUTA_METADATA);
+		crearTablaDirectorioSegunArchivo(RUTA_METADATA);
+	} else {
+		//Creo las nuevas tablas administrativas
+		crearTablaNodos(ruta);
+		crearTablaDirectorios(ruta);
+	}
+
+	free(ruta);
 }
 /*-------------------------Funciones auxiliares-------------------------*/
 void iniciarServidor(char* unPuerto) {

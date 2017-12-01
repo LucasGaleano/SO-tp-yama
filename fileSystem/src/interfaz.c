@@ -16,14 +16,18 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 	t_config * configTablaArchivo = crearArchivoTablaArchivo(rutaArchivo,
 			rutaDestino, nomArchivo, tipoArchivo);
 
+	int tamBuffer;
+
 	while (desplazamiento < tamArch) {
 		void * buffer;
 		switch (tipoArchivo) {
 		case BINARIO:
-			buffer = dividirBloqueArchivoBinario(archivo, &desplazamiento);
+			buffer = dividirBloqueArchivoBinario(archivo, tamArch,
+					&desplazamiento, &tamBuffer);
 			break;
 		case TEXTO:
 			buffer = dividirBloqueArchivoTexto(archivo, &desplazamiento);
+			tamBuffer = strlen(buffer);
 			break;
 		default:
 			printf("No puedo enviar el archivo xq no conosco su tipo de dato");
@@ -54,7 +58,6 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 				bloqueAEscribirCopia);
 
 		//Bytes guardados en un bloque
-		int tamBuffer = strlen((char*) buffer);
 		guardoBytesPorBloque(numeroBloque, tamBuffer, configTablaArchivo);
 
 		//Actualizo el numero de bloques
@@ -63,104 +66,80 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 		//Libero memoria
 		free(buffer);
 	}
+
 	config_destroy(configTablaArchivo);
+	munmap(archivo, tamArch);
+	fclose(archivofd);
 }
 
-void * dividirBloqueArchivoBinario(void * archivo, int * desplazamiento) {
+void * dividirBloqueArchivoBinario(void * archivo, size_t tamArch,
+		int * desplazamiento, int * tamBuffer) {
 	int tamProximoBloque;
 
-	int tamArch = string_length((char *) archivo);
+	int tamRestante = tamArch - *desplazamiento;
 
-	if ((tamArch - (*desplazamiento)) < TAM_BLOQUE) {
-		tamProximoBloque = tamArch - *desplazamiento;
+	if (tamRestante < TAM_BLOQUE) {
+		tamProximoBloque = tamRestante;
 	} else {
 		tamProximoBloque = TAM_BLOQUE;
 	}
 
 	void * buffer = malloc(tamProximoBloque);
 	memcpy(buffer, archivo + (*desplazamiento), tamProximoBloque);
-	*desplazamiento += tamProximoBloque;
+	*desplazamiento = *desplazamiento + tamProximoBloque;
+	*tamBuffer = tamProximoBloque;
 	return buffer;
 }
 
 void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
 
-	char ** archivoSeparado = string_split((char *) archivo + *desplazamiento,
-			"\n");
+	int tamArchivo = strlen(archivo);
 
-	bool esUltimoBloque = false;
-
-	int i = 0;
-
-	int tamProximoBloque = string_length(archivoSeparado[i]);
-
-	if (archivoSeparado[i + 1] != NULL) {
-		tamProximoBloque++;
-	} else {
-		esUltimoBloque = true;
-	}
-
-	if (tamProximoBloque > TAM_BLOQUE)
-		return NULL;
+	int tamRestante = tamArchivo - *desplazamiento;
 
 	char * buffer = string_new();
 
-	char * bufferInterno = string_new();
+	int tamBuffer = 0;
 
-	string_append(&bufferInterno, archivoSeparado[i]);
-	if(!esUltimoBloque)string_append(&bufferInterno, "\n");
+	//Genero el bloque
+	char * bloqueAGurdar = generarBloque(archivo + *desplazamiento,
+			tamRestante);
+	int tamBloqueAGuardar = strlen(bloqueAGurdar);
 
-	string_append((char**) &buffer, bufferInterno);
-
-	i++;
-
-	int tamBuffer = tamProximoBloque;
-
-	if (archivoSeparado[i] != NULL) {
-		tamProximoBloque = string_length(archivoSeparado[i]);
-		if (archivoSeparado[i + 1] != NULL) {
-			tamProximoBloque++;
-		} else {
-			esUltimoBloque = true;
-		}
+	//Pregunto si es el ultimo bloque
+	if ((tamRestante - tamBloqueAGuardar) != 0) {
+		tamBloqueAGuardar++;
 	}
 
-	free(bufferInterno);
+	while (tamRestante > 0 && (tamBuffer + tamBloqueAGuardar) < TAM_BLOQUE) {
+		//Guardo el bloque al buffer
+		string_append(&buffer, bloqueAGurdar);
 
-	while (TAM_BLOQUE >= (tamBuffer + tamProximoBloque)
-			&& archivoSeparado[i + 1] != NULL && archivoSeparado[i] != NULL) {
-
-		char * bufferInterno = string_new();
-		string_append(&bufferInterno, archivoSeparado[i]);
-		if (!esUltimoBloque)
-			string_append(&bufferInterno, "\n");
-
-		string_append((char**) &buffer, bufferInterno);
-
-		i++;
-
-		tamBuffer += tamProximoBloque;
-
-		if (archivoSeparado[i + 1] != NULL) {
-			tamProximoBloque = string_length(archivoSeparado[i + 1]);
-			if (archivoSeparado[i + 2] != NULL)
-				tamProximoBloque++;
+		//Pregunto si es el ultimo bloque
+		if ((tamRestante - tamBloqueAGuardar) != 0) {
+			string_append(&buffer, "\n");
 		}
 
-		free(bufferInterno);
+		tamRestante -= tamBloqueAGuardar;
+
+		*desplazamiento = *desplazamiento + tamBloqueAGuardar;
+
+		tamBuffer += tamBloqueAGuardar;
+
+		free(bloqueAGurdar);
+
+		//Genero el bloque
+		bloqueAGurdar = generarBloque(archivo + *desplazamiento, tamRestante);
+		tamBloqueAGuardar = strlen(bloqueAGurdar);
+
+		//Pregunto si es el ultimo bloque
+		if ((tamRestante - tamBloqueAGuardar) != 0) {
+			tamBloqueAGuardar++;
+		}
+
 	}
 
-	if (TAM_BLOQUE >= (tamBuffer + tamProximoBloque)) {
-		buffer = realloc(buffer, tamBuffer + tamProximoBloque);
-		memcpy(buffer + tamBuffer, archivoSeparado[i], tamProximoBloque);
-		tamBuffer += tamProximoBloque;
-
-	}
-
-	*desplazamiento += tamBuffer;
-
-	//Libero memoria
-	destruirSubstring(archivoSeparado);
+	free(bloqueAGurdar);
 
 	return buffer;
 }
@@ -198,6 +177,31 @@ int buscarBloqueAEscribir(char * nombreNodo) {
 	return buscarBloqueLibre(configBitMap);
 }
 
+char * generarBloque(void * archivo, int tamRestante) {
+
+	int desplazamiento = 0;
+	int tamALeer = 0;
+
+	if (string_starts_with(archivo, "\n"))
+		desplazamiento++;
+
+	void * prueba = strchr(archivo + desplazamiento, '\n');
+
+	if (prueba == NULL) {
+		tamALeer += tamRestante;
+		desplazamiento = 0;
+	} else {
+		tamALeer += prueba - archivo;
+	}
+
+	char * bloque = malloc(tamALeer + 1);
+	char * finBloque = "\0";
+	memcpy(bloque, archivo + desplazamiento, tamALeer);
+	memcpy(bloque + tamALeer, finBloque, 1);
+
+	return bloque;
+}
+
 /*-------------------------Leer archivo-------------------------*/
 char * leerArchivo(char * rutaArchivo) {
 
@@ -217,9 +221,9 @@ char * leerArchivo(char * rutaArchivo) {
 	int indexPadre;
 
 	if (posicion == 0) {
-		indexPadre = obtenerIndexPadre("root");
+		indexPadre = obtenerIndex("root");
 	} else {
-		indexPadre = obtenerIndexPadre(separado[posicion - 1]);
+		indexPadre = obtenerIndex(separado[posicion - 1]);
 	}
 
 	//Busco la configuracion del archivo
