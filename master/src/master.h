@@ -39,6 +39,7 @@ typedef struct
 {
 	int conexion;
 	t_pedidoReduccionGlobal * reduGlobal;
+	t_indicacionReduccionGlobal * indicacion;
 } reduGlobal;
 
 

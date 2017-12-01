@@ -158,6 +158,16 @@ void mandarDatosTransformacion(t_indicacionTransformacion * transformacion){
 		struct timeval t1;
 		gettimeofday (&t0,NULL);
 
+		t_pedidoTransformacion * pedido = malloc(sizeof(t_pedidoTransformacion));
+		if(pedido == NULL){
+			log_error(logMaster, "no hay memoria suficiente");
+			exit(EXIT_SUCCESS);
+		}
+
+		pedido->rutaArchivoTemporal = transformacion->rutaArchivoTemporal;
+		pedido->rutaScriptTransformacion = rutaScriptTransformador;
+		pedido->cantBytes = transformacion->bytes;
+		pedido->numBloque = transformacion->bloque;
 		pthread_mutex_lock (&mutexTareasTransformacionEnParalelo);
 		tareasTransformacionEnParalelo ++;
 
@@ -168,10 +178,9 @@ void mandarDatosTransformacion(t_indicacionTransformacion * transformacion){
 
 		pthread_mutex_unlock (&mutexTareasTransformacionEnParalelo);
 
-
 		int conexionWorker = conectarCliente(transformacion->ip,transformacion->puerto,WORKER);
 
-		enviarIndicacionTransformacion(conexionWorker, transformacion);
+		enviarSolicitudTransformacion(conexionWorker, pedido);
 
 		pthread_mutex_lock(&mutexErrorTransformacion);
 
@@ -189,7 +198,6 @@ void mandarDatosTransformacion(t_indicacionTransformacion * transformacion){
 
 		} else
 		{
-
 			pthread_mutex_unlock(&mutexErrorTransformacion);
 			log_info (logMaster, "una transformacion terminada");
 			enviarMensaje(conexionYama, SALIOBIEN);
@@ -206,6 +214,7 @@ void mandarDatosTransformacion(t_indicacionTransformacion * transformacion){
 		list_add(tiemposTransformacion, &tiempoTotal);
 
 		free(transformacion);
+		free(pedido);
 
 }
 
@@ -221,7 +230,7 @@ void mandarDatosReduccionLocal(t_indicacionReduccionLocal * reduccion)
 			printf("no hay memoria disponible");
 			exit(EXIT_FAILURE);
 		}
-
+		pedido->rutaScript = rutaScriptReductor;
 		pedido->archivoReduccionLocal = reduccion -> archivoTemporalReduccionLocal;
 		pedido->archivoTransformacion = reduccion -> archivoTemporalTransformacion;
 		int worker = conectarCliente(reduccion->ip,reduccion->puerto, WORKER);
@@ -296,9 +305,13 @@ void gestionarReduccionGlobal()
 				exit(EXIT_FAILURE);
 			}
 			t_indicacionReduccionGlobal * indicacion = list_get(pedidosDeReduccionGlobal,posActual);
+			pedido->cantWorkerInvolucradros = cantidadSolicitudes;
 			pedido->ArchivoResultadoReduccionGlobal = indicacion->archivoDeReduccionGlobal;
 			pedido->archivoReduccionPorWorker = indicacion->archivoDeReduccionLocal;
 			pedido->workerEncargdo = indicacion->encargado;
+			pedido->ip = indicacion->ip;
+			pedido->nodo = indicacion->nodo;
+			pedido->puerto = indicacion->puerto;
 			pedidos[posActual] = pedido;
 
 			if ( string_equals_ignore_case( pedido -> workerEncargdo , "1"))
@@ -321,6 +334,7 @@ void gestionarReduccionGlobal()
 			}
 			reduccion->conexion = conexionWorker;
 			reduccion->reduGlobal = pedidos[posActual];
+
 			pthread_create(&hiloReduGlobal[posActual],NULL,(void*) mandarDatosReduccionGlobal, (void *) reduccion);
 			posActual++;
 
@@ -346,6 +360,18 @@ void mandarDatosReduccionGlobal(reduGlobal * reduccion)
 {
 	enviarSolicitudReduccionGlobal(reduccion->conexion,reduccion->reduGlobal);
 
+	t_indicacionReduccionGlobal * indicacion = malloc(sizeof(t_indicacionReduccionGlobal));
+	if(indicacion == NULL)
+	{
+		log_error(logMaster, "no hay memoria suficiente");
+		exit(EXIT_FAILURE);
+	}
+
+	indicacion->ip = reduccion->reduGlobal->ip;
+	indicacion->puerto = reduccion->reduGlobal->puerto;
+	indicacion->nodo = reduccion->reduGlobal->nodo;
+	indicacion->encargado = reduccion->reduGlobal->workerEncargdo;
+
 	pthread_mutex_lock(&mutexErrorReduccionGlobal);
 
 	errorReduGlobal = false;
@@ -357,6 +383,7 @@ void mandarDatosReduccionGlobal(reduGlobal * reduccion)
 		tablaMetricas.cantidadFallosReduccionGlobal ++;
 		pthread_mutex_unlock(&mutexErrorReduccionGlobal);
 		enviarMensaje(conexionYama,ERROR_REDUCCION_GLOBAL);
+		enviarIndicacionReduccionGlobal(conexionYama,indicacion);
 		log_error(logMaster, "Error en la reduccion, worker de conexion %d", reduccion->conexion);
 
 	} else pthread_mutex_unlock(&mutexErrorReduccionGlobal);
@@ -364,6 +391,7 @@ void mandarDatosReduccionGlobal(reduGlobal * reduccion)
 
 	free(reduccion->reduGlobal);
 	free(reduccion);
+	free(indicacion);
 }
 
 
@@ -474,7 +502,6 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) { // contesto a
 		 t_indicacionAlmacenadoFinal * indicacionAlmacenamientoFinal = recibirIndicacionAlmacenadoFinal(unPaquete);
 		 gestionarAlmacenadoFinal(indicacionAlmacenamientoFinal);
 		 break;
-
 
 	case ENVIAR_MENSAJE:
 		  ;
