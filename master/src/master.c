@@ -50,8 +50,11 @@ int main(int argc, char **argv) {
 	gestionarSolicitudes(conexionYama, (void *) procesarPaquete);
 	}
 
+	if(errorReduGlobal == false)
+	{
 	// almacenado final
-	gestionarSolicitudes(conexionYama, (void *) procesarPaquete);
+		gestionarSolicitudes(conexionYama, (void *) procesarPaquete);
+	}
 
 	gettimeofday(&tiempoFin, NULL);
 
@@ -293,9 +296,8 @@ void gestionarReduccionGlobal()
 		gettimeofday (&t0,NULL);
 		int cantidadSolicitudes = list_size(pedidosDeReduccionGlobal);
 		int posActual = 0;
-		t_pedidoReduccionGlobal * pedidos[cantidadSolicitudes];
+		t_pedidoReduccionGlobal * pedidos[cantidadSolicitudes-1];
 		int conexionWorker;
-		pthread_t hiloReduGlobal[cantidadSolicitudes] ;
 		while(posActual < cantidadSolicitudes)
 		{
 			t_pedidoReduccionGlobal * pedido = malloc (sizeof(t_pedidoReduccionGlobal));
@@ -321,84 +323,48 @@ void gestionarReduccionGlobal()
 
 			posActual ++;
 
+			free(indicacion);
 		}
 
 		posActual = 0;
 		while(posActual < cantidadSolicitudes)
 		{
-			reduGlobal * reduccion = malloc (sizeof(reduGlobal));
-			if(reduccion == NULL)
-			{
-				log_error(logMaster, "no hay memoria disponible");
-				exit(EXIT_FAILURE);
-			}
-			reduccion->conexion = conexionWorker;
-			reduccion->reduGlobal = pedidos[posActual];
-
-			pthread_create(&hiloReduGlobal[posActual],NULL,(void*) mandarDatosReduccionGlobal, (void *) reduccion);
+			enviarSolicitudReduccionGlobal(conexionWorker,pedidos[posActual]);
+			free(pedidos[posActual]);
 			posActual++;
-
 		}
 
-		int i = 0;
-		for(; i < cantidadSolicitudes; i++)
+		gestionarSolicitudes(conexionWorker,(void *) procesarPaquete);
+
+		if (errorReduGlobal)
 		{
-			pthread_join (hiloReduGlobal[i],NULL);
+			tablaMetricas.cantidadFallosReduccionGlobal ++;
+			enviarMensaje(conexionYama,ERROR_REDUCCION_GLOBAL);
+			log_error(logMaster, "Error en la reduccion, worker de conexion %d", conexionWorker);
+
+		} else
+		{
+		enviarMensaje(conexionYama, SALIOBIEN);
 		}
 
-		enviarMensaje(conexionYama, SALIOBIEN);
 		gettimeofday(t1,NULL);
 
 		tiempoReduccionGlobal = (t1.tv_sec - t0.tv_sec) *1000 + (t1.tv_usec - t0.tv_usec) / 1000;
-		pthread_mutex_lock(&mutexReduccionGlobal);
+
 		tablaMetricas.cantidadTareasTotalesReduccionGlobal = cantidadSolicitudes;
-		pthread_mutex_unlock(&mutexReduccionGlobal);
 
 	}
-
-void mandarDatosReduccionGlobal(reduGlobal * reduccion)
-{
-	enviarSolicitudReduccionGlobal(reduccion->conexion,reduccion->reduGlobal);
-
-	t_indicacionReduccionGlobal * indicacion = malloc(sizeof(t_indicacionReduccionGlobal));
-	if(indicacion == NULL)
-	{
-		log_error(logMaster, "no hay memoria suficiente");
-		exit(EXIT_FAILURE);
-	}
-
-	indicacion->ip = reduccion->reduGlobal->ip;
-	indicacion->puerto = reduccion->reduGlobal->puerto;
-	indicacion->nodo = reduccion->reduGlobal->nodo;
-	indicacion->encargado = reduccion->reduGlobal->workerEncargdo;
-
-	pthread_mutex_lock(&mutexErrorReduccionGlobal);
-
-	errorReduGlobal = false;
-
-	gestionarSolicitudes(reduccion->conexion, (void *) procesarPaquete);
-
-	if (errorReduGlobal)
-	{
-		tablaMetricas.cantidadFallosReduccionGlobal ++;
-		pthread_mutex_unlock(&mutexErrorReduccionGlobal);
-		enviarMensaje(conexionYama,ERROR_REDUCCION_GLOBAL);
-		enviarIndicacionReduccionGlobal(conexionYama,indicacion);
-		log_error(logMaster, "Error en la reduccion, worker de conexion %d", reduccion->conexion);
-
-	} else pthread_mutex_unlock(&mutexErrorReduccionGlobal);
-
-
-	free(reduccion->reduGlobal);
-	free(reduccion);
-	free(indicacion);
-}
 
 
 void gestionarAlmacenadoFinal(t_indicacionAlmacenadoFinal * indicacion)
 {
 	log_info (logMaster, "arranca el almacenado final");
 	t_pedidoAlmacenadoFinal * solicitud = malloc (sizeof(t_pedidoAlmacenadoFinal));
+	if(solicitud == NULL)
+	{
+		log_error(logMaster, " no hay memoria disponible");
+		exit(EXIT_FAILURE);
+	}
 	solicitud->archivoReduccionGlobal = indicacion->rutaArchivoReduccionGlobal; //hay que rajarle ip y puerto al pedido
 	int conexionWorker = conectarCliente(indicacion->ip,indicacion->puerto,WORKER);
 	enviarIndicacionAlmacenadoFinal(conexionWorker,indicacion);

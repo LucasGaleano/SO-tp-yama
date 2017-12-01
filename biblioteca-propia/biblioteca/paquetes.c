@@ -383,6 +383,17 @@ void enviarIndicacionAlmacenadoFinal(int server_socket,
 	enviarPaquetes(server_socket, unPaquete);
 }
 
+void enviarRutaParaArrancarTransformacion(int server_socket, char * ruta) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_RUTA_PARA_ARRANCAR_TRANSFORMACION;
+
+	serializarMensaje(unPaquete, ruta);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
+
+
 /*-------------------------Recibir-------------------------*/
 
 int recibirHandshake(t_paquete * unPaquete){
@@ -467,4 +478,8 @@ t_indicacionReduccionGlobal * recibirIndicacionReduccionGlobal(
 t_indicacionAlmacenadoFinal * recibirIndicacionAlmacenadoFinal(
 		t_paquete * unPaquete) {
 	return deserializarIndicacionAlmacenadoFinal(unPaquete->buffer);
+}
+
+char * recibirRutaParaArrancarTransformacion(t_paquete * unPaquete) {
+	return deserializarMensaje(unPaquete->buffer);
 }

@@ -39,7 +39,6 @@ typedef struct
 {
 	int conexion;
 	t_pedidoReduccionGlobal * reduGlobal;
-	t_indicacionReduccionGlobal * indicacion;
 } reduGlobal;
 
 
@@ -94,7 +93,7 @@ bool errorReduLocal;
 bool errorReduGlobal;
 bool errorAlmacenamiento;
 
-// ------------------------------------- SEMAFOROS ----------------------------------------------- //
+// ------------------------------------- SEMAFOROS E HILOS ----------------------------------------------- //
 
 
 pthread_mutex_t mutexReduLocal;
