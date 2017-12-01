@@ -48,6 +48,8 @@ yama:
 clean:
 	$(call mostrarTitulo,$@)
 	rm -rf ../so-commons-library
+	rm -rf /usr/include/biblioteca
+	rm -rf /usr/lib/libbiblioteca-propia.so
 
 define mostrarTitulo
 	@echo
