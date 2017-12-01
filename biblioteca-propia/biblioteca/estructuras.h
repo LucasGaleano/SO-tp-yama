@@ -16,8 +16,7 @@
 #include <unistd.h>
 
 /*------------------------------Estructuras------------------------------*/
-//#define TAM_BLOQUE 1048576
-#define TAM_BLOQUE 1024
+#define TAM_BLOQUE 1048576
 
 typedef struct {
 	size_t size;
