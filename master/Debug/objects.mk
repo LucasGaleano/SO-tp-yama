@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -lcommons -lestructurasWorkerMaster -lestructurasMasterYama
+LIBS := -lbiblioteca-propia -lcommons
 

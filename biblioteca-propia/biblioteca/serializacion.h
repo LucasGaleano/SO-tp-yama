@@ -3,6 +3,7 @@
 
 #include "estructuras.h"
 #include <commons/string.h>
+#include <commons/collections/list.h>
 
 /*-----------------------------------Serializacion-----------------------------------*/
 void 							serializarNumero							(t_paquete*, int);

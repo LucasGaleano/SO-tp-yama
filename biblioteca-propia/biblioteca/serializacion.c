@@ -206,13 +206,13 @@ void serializarRespuestaEscrituraBloque(t_paquete* unPaquete, bool exito,
 
 void serializarSolicitudTransformacion(t_paquete * unPaquete,
 		t_pedidoTransformacion * solicitud) {
-	int tamIP = string_length(solicitud->ip) + 1;
-	int tamPuerto = string_length(solicitud->puerto) + 1;
-	int tamBloque = sizeof(int);
+	int tamRuta = string_length(solicitud->rutaScriptTransformacion) + 1;
+	int tamNumBloque = sizeof(int);
+	int tamCantBytes = sizeof(int);
 	int tamRutaArchivoTemporal = string_length(solicitud->rutaArchivoTemporal)
 			+ 1;
 
-	int tamTotal = tamIP + tamPuerto + tamBloque + tamRutaArchivoTemporal;
+	int tamTotal = tamRuta + tamNumBloque + tamCantBytes + tamRutaArchivoTemporal;
 
 	unPaquete->buffer = malloc(sizeof(t_stream));
 	unPaquete->buffer->size = tamTotal;
@@ -221,20 +221,19 @@ void serializarSolicitudTransformacion(t_paquete * unPaquete,
 
 	int desplazamiento = 0;
 
-	memcpy(unPaquete->buffer->data + desplazamiento, solicitud->ip, tamIP);
-	desplazamiento += tamIP;
+	memcpy(unPaquete->buffer->data + desplazamiento, solicitud->rutaScriptTransformacion, tamRuta);
+	desplazamiento += tamRuta;
 
-	memcpy(unPaquete->buffer->data + desplazamiento, solicitud->puerto,
-			tamPuerto);
-	desplazamiento += tamPuerto;
+	memcpy(unPaquete->buffer->data + desplazamiento, solicitud->numBloque,
+			tamNumBloque);
+	desplazamiento += tamNumBloque;
 
-	memcpy(unPaquete->buffer->data + desplazamiento, &solicitud->bloque,
-			tamBloque);
-	desplazamiento += tamBloque;
+	memcpy(unPaquete->buffer->data + desplazamiento, &solicitud->cantBytes,
+			tamCantBytes);
+	desplazamiento += tamCantBytes;
 
 	memcpy(unPaquete->buffer->data + desplazamiento,
 			solicitud->rutaArchivoTemporal, tamRutaArchivoTemporal);
-
 }
 
 void serializarSolicitudReduccionLocal(t_paquete * unPaquete,
@@ -504,6 +503,10 @@ void serializarIndicacionAlmacenadoFinal(t_paquete * unPaquete,
 
 }
 
+void serializarListaDeBloques(t_paquete* unPaquete, t_list* listaBloques){
+//	TODO SERIALIZAR LA LISTA DE BLOQUES
+}
+
 /*-------------------------Deserializacion-------------------------*/
 int deserializarNumero(t_stream* buffer) {
 	return *(int*) (buffer->data);
@@ -671,18 +674,19 @@ t_pedidoTransformacion * deserializarSolicitudTransformacion(t_stream * buffer) 
 
 	int desplazamiento = 0;
 
-	solicitud->ip = strdup(buffer->data + desplazamiento);
-	desplazamiento += strlen(solicitud->ip) + 1;
+	solicitud->rutaScriptTransformacion = strdup(buffer->data + desplazamiento);
+	desplazamiento += strlen(solicitud->rutaScriptTransformacion) + 1;
 
-	solicitud->puerto = strdup(buffer->data + desplazamiento);
-	desplazamiento += strlen(solicitud->puerto) + 1;
+	solicitud->numBloque = strdup(buffer->data + desplazamiento);
+	desplazamiento += strlen(solicitud->numBloque) + 1;
 
-	memcpy(&solicitud->bloque, &buffer->data + desplazamiento, sizeof(int));
+	memcpy(&solicitud->cantBytes, &buffer->data + desplazamiento, sizeof(int));
 	desplazamiento += sizeof(int);
 
 	solicitud->rutaArchivoTemporal = strdup(buffer->data + desplazamiento);
 
 	return solicitud;
+
 }
 
 t_pedidoReduccionLocal * deserializarSolicitudReduccionLocal(t_stream * buffer) {
@@ -845,6 +849,10 @@ t_indicacionAlmacenadoFinal * deserializarIndicacionAlmacenadoFinal(
 			buffer->data + desplazamiento);
 
 	return indicacion;
+}
+
+t_list * deserializarListaDeBloques(t_stream * buffer){
+   return list_create();//	TODO DESERIALIZAR LA LISTA DE BLOQUES
 }
 
 /*-------------------------Funciones auxiliares-------------------------*/
