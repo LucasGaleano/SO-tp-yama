@@ -249,7 +249,6 @@ char * leerArchivo(char * rutaArchivo) {
 
 		list_add(tablaTareas, tarea);
 
-		printf("Le pide el bloque del archivo: %d \n",i);
 		enviarSolicitudLecturaArchTemp(buscarSocketPorNombre(tarea->nomNodo), tarea->bloque, i);
 
 		destruirSubstring(nodoBloqueOriginal);
@@ -282,8 +281,6 @@ char * leerArchivo(char * rutaArchivo) {
 		string_append(&key,"BYTES");
 
 		int tamBuffer = config_get_int_value(configArchivo,key);
-
-		printf("Me piden la info de %s y el tam es: %d \n",key,tamBuffer);
 
 		archivoTemporal = realloc(archivoTemporal,desplazamiento + tamBuffer);
 		memcpy(archivoTemporal + desplazamiento, bloque->data, tamBuffer);

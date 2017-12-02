@@ -114,7 +114,6 @@ void procesarError(t_paquete * unPaquete) {
 void procesarBloqueArchivoTemporal(t_paquete * unPaquete) {
 	t_respuestaLecturaArchTemp * bloqueArchTem = recibirBloqueArchTemp(
 			unPaquete);
-	printf("Me llego este arch temp %d \n",bloqueArchTem->orden);
 	list_add(listaTemporal, bloqueArchTem);
 }
 

@@ -100,7 +100,7 @@ int setBloque(int numBloque, char* bloque) {
 	}
 	int i = numBloque * TAM_BLOQUE;
 
-	memcpy(bloque, map + i, TAM_BLOQUE);
+	memcpy(map + i, bloque, TAM_BLOQUE);
 
 	if (munmap(map, sb.st_size) == -1) //cierro mmap()
 			{
@@ -167,13 +167,15 @@ void procesarSolicitudEscrituraBloque(t_paquete * unPaquete,
 	t_pedidoEscritura * pedidoEscritura = recibirSolicitudEscrituraBloque(
 			unPaquete);
 
-	printf("Me llego una solicitud de escritura \n");
-	printf("Bloque: %d \n", pedidoEscritura->bloqueAEscribir);
+//	printf("Me llego una solicitud de escritura \n");
+//	printf("Bloque: %d \n", pedidoEscritura->bloqueAEscribir);
+//	printf("Size: %d \n", pedidoEscritura->buffer->size);
+//	printf("Data: %s \n", (char*) pedidoEscritura->buffer->data);
 
 	bool exito = true;
 
 	pedidoEscritura->buffer->data = realloc(pedidoEscritura->buffer->data,
-			TAM_BLOQUE);
+	TAM_BLOQUE);
 
 	if (setBloque(pedidoEscritura->bloqueAEscribir,
 			pedidoEscritura->buffer->data) == -1) {
@@ -199,13 +201,11 @@ void procesarSolicitudLecturaArchivoTemporal(t_paquete * unPaquete,
 	t_lecturaArchTemp * lectura = recibirSolicitudLecturaBloqueArchTemp(
 			unPaquete);
 
-	char* bloque = getBloque(lectura->numBloque);
+	void * bloque = getBloque(lectura->numBloque);
 
 	if (bloque == NULL) {
 		log_error(logger, "error buscando bloque");
 	}
-
-	printf("Envio el bloque de orden: %d \n",lectura->orden);
 
 	enviarBloqueArchTemp(*client_socket, bloque, lectura->orden);
 
