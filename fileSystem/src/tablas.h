@@ -96,7 +96,7 @@ void 				liberarBloquebitMap				(char *, int);
 /*-------------------------Funciones auxiliares-------------------------*/
 char * 				armarRegistroDirectorio			(char *, int);
 int 				buscarIndexLibre				(void);
-int 				obtenerIndexPadre				(char *);
+int 				obtenerIndex					(char *);
 void 				llenarBitmap					(void);
 void 				destruirSubstring				(char **);
 
