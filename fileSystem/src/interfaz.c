@@ -116,7 +116,7 @@ void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
 		if ((tamRestante - tamBloqueAGuardar) != 0) {
 			string_append(&buffer, "\n");
 		}
-
+    
 		tamRestante -= tamBloqueAGuardar;
 
 		*desplazamiento = *desplazamiento + tamBloqueAGuardar;
@@ -129,7 +129,7 @@ void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
 		bloqueAGurdar = generarBloque(archivo + *desplazamiento, tamRestante);
 		tamBloqueAGuardar = strlen(bloqueAGurdar);
 
-		//Pregunto si es el ultimo bloque
+    //Pregunto si es el ultimo bloque
 		if ((tamRestante - tamBloqueAGuardar) != 0) {
 			tamBloqueAGuardar++;
 		}

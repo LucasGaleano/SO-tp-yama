@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
 
 	enviarInfoDataNode(socketFileSystem, argv[1], cantidadBloques,
 			cantidadBloques);
-
+      
 	recibirSolicitudes = true;
 	t_config* conf;
 	char* bloque = malloc(TAM_BLOQUE);
@@ -32,11 +32,11 @@ int main(int argc, char **argv) {
 //	rutaDatabin = config_get_string_value(conf, "RUTA_DATABIN");
 //log_warning(logger, "algo paso aca!!!!!");
 //CONECTARSE A FILESYSTEM, QUEDAR A LA ESPERA DE SOLICITUDES --------------------------------
-
 //	int socketFileSystem = conectarCliente(IP_FILESYSTEM, PUERTO_FILESYSTEM,
 //			DATANODE);
 //	enviarInfoDataNode(socketFileSystem, NOMBRE_NODO, cantidadBloques,
 //			cantidadBloques);
+
 	while (recibirSolicitudes) {
 		gestionarSolicitudes(socketFileSystem, (void*) recibirSolicitud);
 	}
@@ -147,6 +147,7 @@ void recibirSolicitud(t_paquete * unPaquete, int * client_socket) {
 }
 
 void procesarSolicitudLecturaBloque(t_paquete * unPaquete, int * client_socket) {
+
 	int numBloque = recibirSolicitudLecturaBloque(unPaquete);
 
 	char* bloque = malloc(TAM_BLOQUE);
@@ -182,7 +183,7 @@ void procesarSolicitudEscrituraBloque(t_paquete * unPaquete,
 		log_error(logger, "error guardando bloque");
 		exito = false;
 	}
-
+  
 	enviarRespuestaEscrituraBloque(*client_socket, exito,
 			pedidoEscritura->bloqueAEscribir);
 

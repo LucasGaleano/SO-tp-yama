@@ -244,6 +244,70 @@ void ignoroEstadoAnterior() {
 		system(comando);
 
 		free(comando);
+    
+		mkdir(ruta, 0777);
+	}
+
+	//Creo las nuevas tablas administrativas
+	crearTablaNodos(ruta);
+	crearTablaDirectorios(ruta);
+
+	//Libero memoria
+	free(ruta);
+}
+
+
+void consideroEstadoAnterior() {
+	printf("Considero estado anterior \n");
+
+	//Verifico que la carpeta metadata exista
+	char * ruta = string_new();
+	string_append(&ruta, RUTA_METADATA);
+	string_append(&ruta, "metadata");
+
+	if (mkdir(ruta, 0777) == -1) {
+		crearTablaNodosSegunArchivo(RUTA_METADATA);
+		crearTablaDirectorioSegunArchivo(RUTA_METADATA);
+	} else {
+		//Creo las nuevas tablas administrativas
+		crearTablaNodos(ruta);
+		crearTablaDirectorios(ruta);
+	}
+
+	free(ruta);
+}
+
+/*-------------------------Manejos de estado-------------------------*/
+void manejoDeEstado(char * comando) {
+	if (comando != NULL) {
+		if (string_equals_ignore_case(comando, "--clean")) {
+			ignoroEstadoAnterior();
+		} else {
+			printf("Parametro inexistente, concidero estado anterior \n");
+		}
+	} else {
+		consideroEstadoAnterior();
+	}
+}
+
+void ignoroEstadoAnterior() {
+	printf("Ignoro estado anterior \n");
+
+	//Verifico que la carpeta metadata exista
+	char * ruta = string_new();
+	string_append(&ruta, RUTA_METADATA);
+	string_append(&ruta, "metadata");
+
+	if (mkdir(ruta, 0777) == -1) {
+		//Borro las estructuras administrativas existentes
+		char * comando = string_new();
+		string_append(&comando, "sudo rm -r ");
+		string_append(&comando, RUTA_METADATA);
+		string_append(&comando, "metadata");
+
+		system(comando);
+
+		free(comando);
 
 		mkdir(ruta, 0777);
 	}
