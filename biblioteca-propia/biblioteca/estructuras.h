@@ -16,7 +16,8 @@
 #include <unistd.h>
 
 /*------------------------------Estructuras------------------------------*/
-#define TAM_BLOQUE 1048576
+//#define TAM_BLOQUE 1048576
+#define TAM_BLOQUE 1024
 
 typedef struct {
 	size_t size;
@@ -109,13 +110,13 @@ enum error{
 
 /*------------------------------Estructuras de comunicacion FS DataNode------------------------------*/
 typedef struct {
-	void* data;
-	int numBloque;
+	int bloqueAEscribir;
+	t_stream * buffer;
 }t_pedidoEscritura;
 
 typedef struct {
-	bool exito;
 	int numBloque;
+	bool exito;
 }t_respuestaEscritura;
 
 typedef struct {
@@ -124,22 +125,22 @@ typedef struct {
 }t_lecturaArchTemp;
 
 typedef struct {
-	void * data;
 	int orden;
+	void * data;
 }t_respuestaLecturaArchTemp;
 
 typedef struct {
-	int bloque;
+	int numeroBloqueNodo;
 	char * rutaArchivo;
-	char * nodoBuscado;
-	char * nodoAEscribir;
+	int numBloqueArchivo;
+	char * nomNodoAEscribir;
 }t_lecturaGenerarCopia;
 
 typedef struct {
-	int bloque;
 	void * data;
 	char * rutaArchivo;
-	char * nodo;
+	int numBloqueArchivo;
+	char * nomNodoAEscribir;
 }t_respuestaLecturaGenerarCopia;
 
 typedef struct {

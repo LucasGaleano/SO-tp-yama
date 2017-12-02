@@ -114,6 +114,7 @@ void procesarError(t_paquete * unPaquete) {
 void procesarBloqueArchivoTemporal(t_paquete * unPaquete) {
 	t_respuestaLecturaArchTemp * bloqueArchTem = recibirBloqueArchTemp(
 			unPaquete);
+	printf("Me llego este arch temp %d \n",bloqueArchTem->orden);
 	list_add(listaTemporal, bloqueArchTem);
 }
 
@@ -135,83 +136,82 @@ void procesarRespuestaEscrituraBloque(t_paquete * unPaquete, int client_socket) 
 }
 
 void procesarBloqueGenerarCopia(t_paquete * unPaquete) {
-	t_respuestaLecturaGenerarCopia * bloqueGenerarCopia =
-			recibirBloqueGenerarCopia(unPaquete);
-
-	//Busco el nombre del directorio
-	char ** separado = string_split(bloqueGenerarCopia->rutaArchivo, "/");
-
-	int posicion;
-
-	for (posicion = 0; separado[posicion] != NULL; ++posicion) {
-	}
-
-	posicion -= 1;
-
-	//Busco index del padre
-	int indexPadre;
-
-	if (posicion == 0) {
-		indexPadre = obtenerIndex("root");
-	} else {
-		indexPadre = obtenerIndex(separado[posicion - 1]);
-	}
-
-	//Creo el config del archivo
-	char * rutaFS = string_new();
-	string_append(&rutaFS, RUTA_METADATA);
-	string_append(&rutaFS, "metadata/archivos/");
-	char * indexPadreChar = string_itoa(indexPadre);
-	string_append(&rutaFS, indexPadreChar);
-	string_append(&rutaFS, "/");
-	string_append(&rutaFS, separado[posicion]);
-
-	t_config * configArchivo = config_create(rutaFS);
-
-	//Busco el numero de copia ultima
-	char * key = string_new();
-	string_append(&key, "BLOQUE");
-	char * bloqueChar = string_itoa(bloqueGenerarCopia->bloque);
-	string_append(&key, bloqueChar);
-	string_append(&key, "COPIA");
-	int i = 0;
-	char * copiaChar = string_itoa(i);
-	string_append(&key, copiaChar);
-
-	while (config_has_property(configArchivo, key)) {
-		free(key);
-		free(copiaChar);
-		key = string_new();
-		string_append(&key, "BLOQUE");
-		string_append(&key, bloqueChar);
-		string_append(&key, "COPIA");
-		i++;
-		copiaChar = string_itoa(i);
-		string_append(&key, copiaChar);
-	}
-
-	int bloqueAEscribir = buscarBloqueAEscribir(bloqueGenerarCopia->nodo);
-
-	agregarRegistroTablaArchivos(bloqueGenerarCopia->nodo, bloqueAEscribir,
-			bloqueGenerarCopia->bloque, i, configArchivo);
-
-	int socketNodo = buscarSocketPorNombre(bloqueGenerarCopia->nodo);
-
-	enviarSolicitudEscrituraBloque(socketNodo, bloqueGenerarCopia->data,
-			bloqueAEscribir);
-
-	//Libero memoria
-	destruirSubstring(separado);
-	free(rutaFS);
-	free(indexPadreChar);
-	config_destroy(configArchivo);
-	free(key);
-	free(bloqueChar);
-	free(copiaChar);
-	free(bloqueGenerarCopia->data);
-	free(bloqueGenerarCopia->nodo);
-	free(bloqueGenerarCopia->rutaArchivo);
-	free(bloqueGenerarCopia);
+//	t_respuestaLecturaGenerarCopia * bloqueGenerarCopia =
+//			recibirBloqueGenerarCopia(unPaquete);
+//
+//	//Busco el nombre del directorio
+//	char ** separado = string_split(bloqueGenerarCopia->rutaArchivo, "/");
+//
+//	int posicion;
+//
+//	for (posicion = 0; separado[posicion] != NULL; ++posicion) {
+//	}
+//
+//	posicion -= 1;
+//
+//	//Busco index del padre
+//	int indexPadre;
+//
+//	if (posicion == 0) {
+//		indexPadre = obtenerIndex("root");
+//	} else {
+//		indexPadre = obtenerIndex(separado[posicion - 1]);
+//	}
+//
+//	//Creo el config del archivo
+//	char * rutaFS = string_new();
+//	string_append(&rutaFS, RUTA_METADATA);
+//	string_append(&rutaFS, "metadata/archivos/");
+//	char * indexPadreChar = string_itoa(indexPadre);
+//	string_append(&rutaFS, indexPadreChar);
+//	string_append(&rutaFS, "/");
+//	string_append(&rutaFS, separado[posicion]);
+//
+//	t_config * configArchivo = config_create(rutaFS);
+//
+//	//Busco el numero de copia ultima
+//	char * key = string_new();
+//	string_append(&key, "BLOQUE");
+//	char * bloqueChar = string_itoa(bloqueGenerarCopia->numBloqueArchivo);
+//	string_append(&key, bloqueChar);
+//	string_append(&key, "COPIA");
+//	int i = 0;
+//	char * copiaChar = string_itoa(i);
+//	string_append(&key, copiaChar);
+//
+//	while (config_has_property(configArchivo, key)) {
+//		free(key);
+//		free(copiaChar);
+//		key = string_new();
+//		string_append(&key, "BLOQUE");
+//		string_append(&key, bloqueChar);
+//		string_append(&key, "COPIA");
+//		i++;
+//		copiaChar = string_itoa(i);
+//		string_append(&key, copiaChar);
+//	}
+//
+//	int bloqueAEscribir = buscarBloqueAEscribir(bloqueGenerarCopia->nomNodoAEscribir);
+//
+//	agregarRegistroTablaArchivos(bloqueGenerarCopia->nomNodoAEscribir, bloqueAEscribir,
+//			bloqueGenerarCopia->numBloqueArchivo, i, configArchivo);
+//
+//	int socketNodo = buscarSocketPorNombre(bloqueGenerarCopia->nomNodoAEscribir);
+//
+//	enviarSolicitudEscrituraBloque(socketNodo, bloqueAEscribir, TAM_BLOQUE, bloqueGenerarCopia->data);
+//
+//	//Libero memoria
+//	destruirSubstring(separado);
+//	free(rutaFS);
+//	free(indexPadreChar);
+//	config_destroy(configArchivo);
+//	free(key);
+//	free(bloqueChar);
+//	free(copiaChar);
+//	free(bloqueGenerarCopia->data);
+//	free(bloqueGenerarCopia->nomNodoAEscribir);
+//	free(bloqueGenerarCopia->rutaArchivo);
+//	free(bloqueGenerarCopia);
 }
 
 /*-------------------------Manejos de estado-------------------------*/

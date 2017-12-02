@@ -123,8 +123,8 @@ void ejecutarComando(char * linea, bool * ejecutar) {
 
 	//PRUEBAS
 	if (string_starts_with(linea, "pruebaT")) {
-		almacenarArchivo("/home/utnso/Escritorio/DataSets/nombres-1985-1989.csv", "base",
-				"prueba", TEXTO);
+		almacenarArchivo("/home/utnso/Escritorio/nombres.csv", "base", "prueba",
+				TEXTO);
 
 		return;
 	}
@@ -463,14 +463,15 @@ void eliminarBloque(char * linea) {
 	char * numeroCopia = string_itoa(i);
 	string_append(&keyCopia, numeroCopia);
 
-	while(config_has_property(configArchivo,keyCopia)){
-		char * verificador2 = config_get_string_value(configArchivo,keyCopia);
-		if(!string_equals_ignore_case(verificador2, "###") && !string_equals_ignore_case(key,keyCopia)){
-			noPuedoBorar=false;
+	while (config_has_property(configArchivo, keyCopia)) {
+		char * verificador2 = config_get_string_value(configArchivo, keyCopia);
+		if (!string_equals_ignore_case(verificador2, "###")
+				&& !string_equals_ignore_case(key, keyCopia)) {
+			noPuedoBorar = false;
 		}
 		free(keyCopia);
 		free(numeroCopia);
-		i ++;
+		i++;
 		keyCopia = string_new();
 		string_append(&keyCopia, "BLOQUE");
 		string_append(&keyCopia, nro_bloque);
@@ -480,7 +481,6 @@ void eliminarBloque(char * linea) {
 	}
 
 	free(numeroCopia);
-
 
 	if (noPuedoBorar) {
 		printf(
@@ -734,8 +734,8 @@ void copiarArchivoLocalAlYamafs(char * linea) {
 	char* archivoTemporal = leerArchivo(path_archivo_origen);
 
 	//Creo el archivo temporal
-	string_append(&directorio_filesystem,"/");
-	string_append(&directorio_filesystem,separado[posicion]);
+	string_append(&directorio_filesystem, "/");
+	string_append(&directorio_filesystem, separado[posicion]);
 
 	FILE* file = fopen(directorio_filesystem, "w+b");
 
@@ -751,12 +751,12 @@ void copiarArchivoLocalAlYamafs(char * linea) {
 }
 
 void crearCopiaBloqueEnNodo(char * linea) {
-	char * path_archivo = obtenerParametro(linea, 1);
-	char * nro_bloque = obtenerParametro(linea, 2);
-	char * id_nodo = obtenerParametro(linea, 3);
+	char * rutaArchivo = obtenerParametro(linea, 1);
+	char * numeroBloqueArchivo = obtenerParametro(linea, 2);
+	char * nodoAGuardar = obtenerParametro(linea, 3);
 
 	//Busco el nombre del directorio
-	char ** separado = string_split(path_archivo, "/");
+	char ** separado = string_split(rutaArchivo, "/");
 
 	int posicion;
 
@@ -787,23 +787,28 @@ void crearCopiaBloqueEnNodo(char * linea) {
 
 	//Busco el bloque a copiar
 	int i = 0;
-	char ** bloqueBuscado = buscarBloque(configArchivo,atoi(nro_bloque),i);
-	while(string_equals_ignore_case(bloqueBuscado[0],"#")){
-		i ++;
+	char ** bloqueBuscado = buscarBloque(configArchivo,
+			atoi(numeroBloqueArchivo), i);
+	while (string_equals_ignore_case(bloqueBuscado[0], "#")) {
+		i++;
 		destruirSubstring(bloqueBuscado);
-		bloqueBuscado = buscarBloque(configArchivo,atoi(nro_bloque),i);
+		bloqueBuscado = buscarBloque(configArchivo, atoi(numeroBloqueArchivo),
+				i);
 	}
 
-	printf("Es el bloque buscado: %s %s \n",bloqueBuscado[0],bloqueBuscado[1]);
+	char* nodo = bloqueBuscado[0];
+	char* bloqueNodo = bloqueBuscado[1];
+
+	printf("Busco del nodo: %s el bloque: %s \n", nodo, bloqueNodo);
 
 	//Pido la info del bloque buscado
 	int socket = buscarSocketPorNombre(bloqueBuscado[0]);
-	enviarSolicitudLecturaBloqueGenerarCopia(socket,atoi(bloqueBuscado[1]),path_archivo,bloqueBuscado[0],id_nodo);
+	//enviarSolicitudLecturaBloqueGenerarCopia(socket,atoi(bloqueBuscado[1]),numeroBloqueArchivo,rutaArchivo,nodoAGuardar);
 
 	//Libero memoria
-	free(path_archivo);
-	free(nro_bloque);
-	free(id_nodo);
+	free(rutaArchivo);
+	free(numeroBloqueArchivo);
+	free(nodoAGuardar);
 	destruirSubstring(separado);
 	free(rutaFS);
 	free(indexChar);
@@ -813,6 +818,38 @@ void crearCopiaBloqueEnNodo(char * linea) {
 
 void solicitarHash(char * linea) {
 	char * path_archivo_yamafs = obtenerParametro(linea, 1);
+
+	//Busco el nombre del directorio
+	char ** separado = string_split(path_archivo_yamafs, "/");
+
+	int posicion;
+
+	for (posicion = 0; separado[posicion] != NULL; ++posicion) {
+	}
+
+	posicion -= 1;
+
+	//Busco el index del padre
+	int indexPadre;
+
+	if (posicion == 0) {
+		indexPadre = obtenerIndex("root");
+	} else {
+		indexPadre = obtenerIndex(separado[posicion - 1]);
+	}
+
+	//Abro el archivo de config
+	char * ruta = string_new();
+	string_append(&ruta, RUTA_METADATA);
+	string_append(&ruta, "metadata/archivos/");
+	char * indexChar = string_itoa(indexPadre);
+	string_append(&ruta, indexChar);
+	string_append(&ruta, "/");
+	string_append(&ruta, separado[posicion]);
+
+	t_config * configArchivo = config_create(ruta);
+
+	int tamArchivo = config_get_int_value(configArchivo,"TAMANIO");
 
 	//Reconstruyo el archivo que me piden
 	char* archivoTemporal = leerArchivo(path_archivo_yamafs);
@@ -828,7 +865,7 @@ void solicitarHash(char * linea) {
 	string_append(&rutaFS, "hash");
 	FILE* file = fopen(rutaFS, "w+b");
 
-	fwrite(archivoTemporal, strlen(archivoTemporal), 1, file);
+	fwrite(archivoTemporal, tamArchivo, 1, file);
 
 	fclose(file);
 
@@ -844,8 +881,8 @@ void solicitarHash(char * linea) {
 
 	//Borro la carpeta temporales
 	char * rutaTemporal = string_new();
-	string_append(&rutaTemporal,RUTA_METADATA);
-	string_append(&rutaTemporal,"metadata/temporales");
+	string_append(&rutaTemporal, RUTA_METADATA);
+	string_append(&rutaTemporal, "metadata/temporales");
 	remove(rutaTemporal);
 
 	//Libero memoria
