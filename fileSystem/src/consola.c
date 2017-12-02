@@ -891,6 +891,10 @@ void solicitarHash(char * linea) {
 	free(rutaFS);
 	free(comando);
 	free(archivoTemporal);
+	config_destroy(configArchivo);
+	destruirSubstring(separado);
+	free(ruta);
+	free(indexChar);
 }
 
 void listarArchivos(char * linea) {
