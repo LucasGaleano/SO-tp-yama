@@ -135,83 +135,146 @@ void procesarRespuestaEscrituraBloque(t_paquete * unPaquete, int client_socket) 
 }
 
 void procesarBloqueGenerarCopia(t_paquete * unPaquete) {
-	t_respuestaLecturaGenerarCopia * bloqueGenerarCopia =
-			recibirBloqueGenerarCopia(unPaquete);
+//	t_respuestaLecturaGenerarCopia * bloqueGenerarCopia =
+//			recibirBloqueGenerarCopia(unPaquete);
+//
+//	//Busco el nombre del directorio
+//	char ** separado = string_split(bloqueGenerarCopia->rutaArchivo, "/");
+//
+//	int posicion;
+//
+//	for (posicion = 0; separado[posicion] != NULL; ++posicion) {
+//	}
+//
+//	posicion -= 1;
+//
+//	//Busco index del padre
+//	int indexPadre;
+//
+//	if (posicion == 0) {
+//		indexPadre = obtenerIndex("root");
+//	} else {
+//		indexPadre = obtenerIndex(separado[posicion - 1]);
+//	}
+//
+//	//Creo el config del archivo
+//	char * rutaFS = string_new();
+//	string_append(&rutaFS, RUTA_METADATA);
+//	string_append(&rutaFS, "metadata/archivos/");
+//	char * indexPadreChar = string_itoa(indexPadre);
+//	string_append(&rutaFS, indexPadreChar);
+//	string_append(&rutaFS, "/");
+//	string_append(&rutaFS, separado[posicion]);
+//
+//	t_config * configArchivo = config_create(rutaFS);
+//
+//	//Busco el numero de copia ultima
+//	char * key = string_new();
+//	string_append(&key, "BLOQUE");
+//	char * bloqueChar = string_itoa(bloqueGenerarCopia->numBloqueArchivo);
+//	string_append(&key, bloqueChar);
+//	string_append(&key, "COPIA");
+//	int i = 0;
+//	char * copiaChar = string_itoa(i);
+//	string_append(&key, copiaChar);
+//
+//	while (config_has_property(configArchivo, key)) {
+//		free(key);
+//		free(copiaChar);
+//		key = string_new();
+//		string_append(&key, "BLOQUE");
+//		string_append(&key, bloqueChar);
+//		string_append(&key, "COPIA");
+//		i++;
+//		copiaChar = string_itoa(i);
+//		string_append(&key, copiaChar);
+//	}
+//
+//	int bloqueAEscribir = buscarBloqueAEscribir(bloqueGenerarCopia->nomNodoAEscribir);
+//
+//	agregarRegistroTablaArchivos(bloqueGenerarCopia->nomNodoAEscribir, bloqueAEscribir,
+//			bloqueGenerarCopia->numBloqueArchivo, i, configArchivo);
+//
+//	int socketNodo = buscarSocketPorNombre(bloqueGenerarCopia->nomNodoAEscribir);
+//
+//	enviarSolicitudEscrituraBloque(socketNodo, bloqueAEscribir, TAM_BLOQUE, bloqueGenerarCopia->data);
+//
+//	//Libero memoria
+//	destruirSubstring(separado);
+//	free(rutaFS);
+//	free(indexPadreChar);
+//	config_destroy(configArchivo);
+//	free(key);
+//	free(bloqueChar);
+//	free(copiaChar);
+//	free(bloqueGenerarCopia->data);
+//	free(bloqueGenerarCopia->nomNodoAEscribir);
+//	free(bloqueGenerarCopia->rutaArchivo);
+//	free(bloqueGenerarCopia);
+}
 
-	//Busco el nombre del directorio
-	char ** separado = string_split(bloqueGenerarCopia->rutaArchivo, "/");
-
-	int posicion;
-
-	for (posicion = 0; separado[posicion] != NULL; ++posicion) {
-	}
-
-	posicion -= 1;
-
-	//Busco index del padre
-	int indexPadre;
-
-	if (posicion == 0) {
-		indexPadre = obtenerIndex("root");
+/*-------------------------Manejos de estado-------------------------*/
+void manejoDeEstado(char * comando) {
+	if (comando != NULL) {
+		if (string_equals_ignore_case(comando, "--clean")) {
+			ignoroEstadoAnterior();
+		} else {
+			printf("Parametro inexistente, concidero estado anterior \n");
+		}
 	} else {
-		indexPadre = obtenerIndex(separado[posicion - 1]);
+		consideroEstadoAnterior();
+	}
+}
+
+void ignoroEstadoAnterior() {
+	printf("Ignoro estado anterior \n");
+
+	//Verifico que la carpeta metadata exista
+	char * ruta = string_new();
+	string_append(&ruta, RUTA_METADATA);
+	string_append(&ruta, "metadata");
+
+	if (mkdir(ruta, 0777) == -1) {
+		//Borro las estructuras administrativas existentes
+		char * comando = string_new();
+		string_append(&comando, "sudo rm -r ");
+		string_append(&comando, RUTA_METADATA);
+		string_append(&comando, "metadata");
+
+		system(comando);
+
+		free(comando);
+    
+		mkdir(ruta, 0777);
 	}
 
-	//Creo el config del archivo
-	char * rutaFS = string_new();
-	string_append(&rutaFS, RUTA_METADATA);
-	string_append(&rutaFS, "metadata/archivos/");
-	char * indexPadreChar = string_itoa(indexPadre);
-	string_append(&rutaFS, indexPadreChar);
-	string_append(&rutaFS, "/");
-	string_append(&rutaFS, separado[posicion]);
-
-	t_config * configArchivo = config_create(rutaFS);
-
-	//Busco el numero de copia ultima
-	char * key = string_new();
-	string_append(&key, "BLOQUE");
-	char * bloqueChar = string_itoa(bloqueGenerarCopia->bloque);
-	string_append(&key, bloqueChar);
-	string_append(&key, "COPIA");
-	int i = 0;
-	char * copiaChar = string_itoa(i);
-	string_append(&key, copiaChar);
-
-	while (config_has_property(configArchivo, key)) {
-		free(key);
-		free(copiaChar);
-		key = string_new();
-		string_append(&key, "BLOQUE");
-		string_append(&key, bloqueChar);
-		string_append(&key, "COPIA");
-		i++;
-		copiaChar = string_itoa(i);
-		string_append(&key, copiaChar);
-	}
-
-	int bloqueAEscribir = buscarBloqueAEscribir(bloqueGenerarCopia->nodo);
-
-	agregarRegistroTablaArchivos(bloqueGenerarCopia->nodo, bloqueAEscribir,
-			bloqueGenerarCopia->bloque, i, configArchivo);
-
-	int socketNodo = buscarSocketPorNombre(bloqueGenerarCopia->nodo);
-
-	enviarSolicitudEscrituraBloque(socketNodo, bloqueGenerarCopia->data,
-			bloqueAEscribir);
+	//Creo las nuevas tablas administrativas
+	crearTablaNodos(ruta);
+	crearTablaDirectorios(ruta);
 
 	//Libero memoria
-	destruirSubstring(separado);
-	free(rutaFS);
-	free(indexPadreChar);
-	config_destroy(configArchivo);
-	free(key);
-	free(bloqueChar);
-	free(copiaChar);
-	free(bloqueGenerarCopia->data);
-	free(bloqueGenerarCopia->nodo);
-	free(bloqueGenerarCopia->rutaArchivo);
-	free(bloqueGenerarCopia);
+	free(ruta);
+}
+
+
+void consideroEstadoAnterior() {
+	printf("Considero estado anterior \n");
+
+	//Verifico que la carpeta metadata exista
+	char * ruta = string_new();
+	string_append(&ruta, RUTA_METADATA);
+	string_append(&ruta, "metadata");
+
+	if (mkdir(ruta, 0777) == -1) {
+		crearTablaNodosSegunArchivo(RUTA_METADATA);
+		crearTablaDirectorioSegunArchivo(RUTA_METADATA);
+	} else {
+		//Creo las nuevas tablas administrativas
+		crearTablaNodos(ruta);
+		crearTablaDirectorios(ruta);
+	}
+
+	free(ruta);
 }
 
 /*-------------------------Manejos de estado-------------------------*/

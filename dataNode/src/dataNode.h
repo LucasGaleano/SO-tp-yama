@@ -13,7 +13,7 @@
 //#include <stdbool.h>
 #include <biblioteca/estructuras.h>
 #include <biblioteca/paquetes.h>
-#define PATHCONFIG "./configuraciones/nodo.cfg"
+#define PATHCONFIG "/home/utnso/workspace/tp-2017-2c-NULL/configuraciones/nodo.cfg"
 #define recibirPaquetes true
 
 //---------globales---------

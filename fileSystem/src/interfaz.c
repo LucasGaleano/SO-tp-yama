@@ -40,11 +40,9 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 		int socketNodoElegido = buscarSocketPorNombre(nodoElegido);
 		int bloqueAEscribir = buscarBloqueAEscribir(nodoElegido);
 
-		agregarRegistroTablaArchivos(nodoElegido, bloqueAEscribir, numeroBloque,
-				0, configTablaArchivo);
+		agregarRegistroTablaArchivos(nodoElegido, bloqueAEscribir, numeroBloque, 0, configTablaArchivo);
 
-		enviarSolicitudEscrituraBloque(socketNodoElegido, buffer,
-				bloqueAEscribir);
+		enviarSolicitudEscrituraBloque(socketNodoElegido, bloqueAEscribir, tamBuffer, buffer);
 
 		//Genero la copia
 		char * nodoElegidoCopia = buscarNodoMenosCargado();
@@ -54,8 +52,7 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 		agregarRegistroTablaArchivos(nodoElegidoCopia, bloqueAEscribirCopia,
 				numeroBloque, 1, configTablaArchivo);
 
-		enviarSolicitudEscrituraBloque(socketNodoElegidoCopia, buffer,
-				bloqueAEscribirCopia);
+		enviarSolicitudEscrituraBloque(socketNodoElegidoCopia, bloqueAEscribirCopia, tamBuffer, buffer);
 
 		//Bytes guardados en un bloque
 		guardoBytesPorBloque(numeroBloque, tamBuffer, configTablaArchivo);
@@ -119,7 +116,7 @@ void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
 		if ((tamRestante - tamBloqueAGuardar) != 0) {
 			string_append(&buffer, "\n");
 		}
-
+    
 		tamRestante -= tamBloqueAGuardar;
 
 		*desplazamiento = *desplazamiento + tamBloqueAGuardar;
@@ -132,7 +129,7 @@ void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
 		bloqueAGurdar = generarBloque(archivo + *desplazamiento, tamRestante);
 		tamBloqueAGuardar = strlen(bloqueAGurdar);
 
-		//Pregunto si es el ultimo bloque
+    //Pregunto si es el ultimo bloque
 		if ((tamRestante - tamBloqueAGuardar) != 0) {
 			tamBloqueAGuardar++;
 		}
@@ -252,8 +249,7 @@ char * leerArchivo(char * rutaArchivo) {
 
 		list_add(tablaTareas, tarea);
 
-		enviarSolicitudLecturaArchTemp(buscarSocketPorNombre(tarea->nomNodo),
-				tarea->bloque, i);
+		enviarSolicitudLecturaArchTemp(buscarSocketPorNombre(tarea->nomNodo), tarea->bloque, i);
 
 		destruirSubstring(nodoBloqueOriginal);
 		destruirSubstring(nodoBloqueCopia);
@@ -271,10 +267,28 @@ char * leerArchivo(char * rutaArchivo) {
 
 	list_sort(listaTemporal, (void*) odenarArchivo);
 
-	char * archivoTemporal = string_new();
+	char * archivoTemporal = malloc(0);
+
+	int desplazamiento = 0;
+
 	for (i = 0; i < list_size(listaTemporal); i++) {
 		t_respuestaLecturaArchTemp * bloque = list_get(listaTemporal, i);
-		string_append(&archivoTemporal, (char*) bloque->data);
+
+		char * key=string_new();
+		string_append(&key,"BLOQUE");
+		char * ordenChar = string_itoa(bloque->orden);
+		string_append(&key,ordenChar);
+		string_append(&key,"BYTES");
+
+		int tamBuffer = config_get_int_value(configArchivo,key);
+
+		archivoTemporal = realloc(archivoTemporal,desplazamiento + tamBuffer);
+		memcpy(archivoTemporal + desplazamiento, bloque->data, tamBuffer);
+
+		desplazamiento += tamBuffer;
+
+		free(key);
+		free(ordenChar);
 	}
 
 	//Libero memoria

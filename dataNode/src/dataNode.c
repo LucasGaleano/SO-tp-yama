@@ -1,6 +1,24 @@
 #include "dataNode.h"
 
-int main(void) {
+int main(int argc, char **argv) {
+
+	rutaDatabin = string_new();
+	string_append(&rutaDatabin, "/home/utnso/Escritorio/DataBin");
+	string_append(&rutaDatabin, argv[1]);
+
+	struct stat statArch;
+
+	stat(rutaDatabin, &statArch);
+
+	int cantidadBloques = statArch.st_size / (TAM_BLOQUE * 1024);
+
+	printf("Tengo tantos bloques: %d \n", cantidadBloques);
+
+	int socketFileSystem = conectarCliente("127.0.0.1", "3200", DATANODE);
+
+	enviarInfoDataNode(socketFileSystem, argv[1], cantidadBloques,
+			cantidadBloques);
+      
 	recibirSolicitudes = true;
 	t_config* conf;
 	char* bloque = malloc(TAM_BLOQUE);
@@ -8,29 +26,23 @@ int main(void) {
 	t_log* logger = log_create("dataNode.log", "dataNode", true, logLevel); //creo archivo log
 //LEER ARCHIVO DE CONFIGURACION ---------------------------------------------------------
 	conf = config_create(PATHCONFIG); // path relativo al archivo nodo.cfg
-	char* IP_FILESYSTEM = config_get_string_value(conf, "IP_FILESYSTEM"); // traigo los datos del archivo nodo.cfg
-	char* PUERTO_FILESYSTEM = config_get_string_value(conf,
-			"PUERTO_FILESYSTEM");
-	char* NOMBRE_NODO = config_get_string_value(conf, "NOMBRE_NODO");
-	rutaDatabin = config_get_string_value(conf, "RUTA_DATABIN");
+//	char* IP_FILESYSTEM = config_get_string_value(conf, "IP_FILESYSTEM"); // traigo los datos del archivo nodo.cfg
+//	char* PUERTO_FILESYSTEM = config_get_string_value(conf,"PUERTO_FILESYSTEM");
+//	char* NOMBRE_NODO = config_get_string_value(conf, "NOMBRE_NODO");
+//	rutaDatabin = config_get_string_value(conf, "RUTA_DATABIN");
 //log_warning(logger, "algo paso aca!!!!!");
 //CONECTARSE A FILESYSTEM, QUEDAR A LA ESPERA DE SOLICITUDES --------------------------------
+//	int socketFileSystem = conectarCliente(IP_FILESYSTEM, PUERTO_FILESYSTEM,
+//			DATANODE);
+//	enviarInfoDataNode(socketFileSystem, NOMBRE_NODO, cantidadBloques,
+//			cantidadBloques);
 
-	struct stat statArch;
-
-	stat(rutaDatabin, &statArch);
-
-	int cantidadBloques = statArch.st_size / TAM_BLOQUE;
-
-	int socketFileSystem = conectarCliente(IP_FILESYSTEM, PUERTO_FILESYSTEM,
-			DATANODE);
-	enviarInfoDataNode(socketFileSystem, NOMBRE_NODO, cantidadBloques, cantidadBloques);
 	while (recibirSolicitudes) {
 		gestionarSolicitudes(socketFileSystem, (void*) recibirSolicitud);
 	}
 	int i = 0;
 	for (; i < 10; i++) {
-		printf("%s\n", getBloque(i));
+		//printf("%s\n", getBloque(i));
 	}
 	log_destroy(logger);
 	config_destroy(conf);
@@ -56,13 +68,11 @@ char* getBloque(int numBloque) {
 		perror("[-] Error mapeando el archivo");
 		return NULL;
 	}
-	int i;
-	int j = 0;
-	for (i = numBloque * TAM_BLOQUE; i < (numBloque * TAM_BLOQUE + TAM_BLOQUE);
-			i++) {
-		bloque[j] = map[i]; //leer
-		j++;
-	}
+
+	int i = numBloque * TAM_BLOQUE;
+
+	memcpy(bloque, map + i, TAM_BLOQUE);
+
 	if (munmap(map, sb.st_size) == -1) //cierro mmap()
 			{
 		perror("[-]Error cerrando map");
@@ -89,11 +99,9 @@ int setBloque(int numBloque, char* bloque) {
 		return -1;
 	}
 	int i = numBloque * TAM_BLOQUE;
-	int j = 0;
-	for (; i < (numBloque * TAM_BLOQUE + TAM_BLOQUE); i++) {
-		map[i] = bloque[j]; //escribe
-		j++;
-	}
+
+	memcpy(map + i, bloque, TAM_BLOQUE);
+
 	if (munmap(map, sb.st_size) == -1) //cierro mmap()
 			{
 		perror("[-]Error cerrando map");
@@ -139,11 +147,10 @@ void recibirSolicitud(t_paquete * unPaquete, int * client_socket) {
 }
 
 void procesarSolicitudLecturaBloque(t_paquete * unPaquete, int * client_socket) {
-	int numBloque;
+
+	int numBloque = recibirSolicitudLecturaBloque(unPaquete);
 
 	char* bloque = malloc(TAM_BLOQUE);
-
-	numBloque = recibirSolicitudLecturaBloque(unPaquete);
 
 	bloque = getBloque(numBloque);
 
@@ -161,20 +168,28 @@ void procesarSolicitudEscrituraBloque(t_paquete * unPaquete,
 	t_pedidoEscritura * pedidoEscritura = recibirSolicitudEscrituraBloque(
 			unPaquete);
 
-	bool exito;
+//	printf("Me llego una solicitud de escritura \n");
+//	printf("Bloque: %d \n", pedidoEscritura->bloqueAEscribir);
+//	printf("Size: %d \n", pedidoEscritura->buffer->size);
+//	printf("Data: %s \n", (char*) pedidoEscritura->buffer->data);
 
-	if (setBloque(pedidoEscritura->numBloque, pedidoEscritura->data) == -1) {
+	bool exito = true;
+
+	pedidoEscritura->buffer->data = realloc(pedidoEscritura->buffer->data,
+	TAM_BLOQUE);
+
+	if (setBloque(pedidoEscritura->bloqueAEscribir,
+			pedidoEscritura->buffer->data) == -1) {
 		log_error(logger, "error guardando bloque");
 		exito = false;
 	}
-
-	exito = true;
-
-	free(pedidoEscritura->data);
-	free(pedidoEscritura);
-
+  
 	enviarRespuestaEscrituraBloque(*client_socket, exito,
-			pedidoEscritura->numBloque);
+			pedidoEscritura->bloqueAEscribir);
+
+	free(pedidoEscritura->buffer->data);
+	free(pedidoEscritura->buffer);
+	free(pedidoEscritura);
 }
 
 void procesarError(t_paquete * unPaquete) {
@@ -184,12 +199,10 @@ void procesarError(t_paquete * unPaquete) {
 void procesarSolicitudLecturaArchivoTemporal(t_paquete * unPaquete,
 		int * client_socket) {
 
-	char* bloque = malloc(TAM_BLOQUE);
-
 	t_lecturaArchTemp * lectura = recibirSolicitudLecturaBloqueArchTemp(
 			unPaquete);
 
-	bloque = getBloque(lectura->numBloque);
+	void * bloque = getBloque(lectura->numBloque);
 
 	if (bloque == NULL) {
 		log_error(logger, "error buscando bloque");
@@ -198,28 +211,29 @@ void procesarSolicitudLecturaArchivoTemporal(t_paquete * unPaquete,
 	enviarBloqueArchTemp(*client_socket, bloque, lectura->orden);
 
 	free(bloque);
+	free(lectura);
 }
 
 void procesarSolicitudLecturaBloqueGenerarCopia(t_paquete * unPaquete,
 		int * client_socket) {
-	t_lecturaGenerarCopia * lecturaGenerarCopia =
-			recibirSolicitudLecturaBloqueGenerarCopia(unPaquete);
-
-	char* bloque = malloc(TAM_BLOQUE);
-
-	bloque = getBloque(lecturaGenerarCopia->bloque);
-
-	if (bloque == NULL) {
-		log_error(logger, "error buscando bloque");
-	}
-
-	enviarBloqueGenerarCopia(*client_socket, lecturaGenerarCopia->bloque,
-			bloque, lecturaGenerarCopia->rutaArchivo,
-			lecturaGenerarCopia->nodoAEscribir);
-
-	free(bloque);
-	free(lecturaGenerarCopia->nodoAEscribir);
-	free(lecturaGenerarCopia->nodoBuscado);
-	free(lecturaGenerarCopia->rutaArchivo);
-	free(lecturaGenerarCopia);
+//	t_lecturaGenerarCopia * lecturaGenerarCopia =
+//			recibirSolicitudLecturaBloqueGenerarCopia(unPaquete);
+//
+//	char* bloque = malloc(TAM_BLOQUE);
+//
+//	bloque = getBloque(lecturaGenerarCopia->numeroBloqueNodo);
+//
+//	if (bloque == NULL) {
+//		log_error(logger, "error buscando bloque");
+//	}
+//
+//	enviarBloqueGenerarCopia(*client_socket,
+//			lecturaGenerarCopia->numeroBloqueArchivo,
+//			lecturaGenerarCopia->rutaArchivo, lecturaGenerarCopia->nodoAGuardar,
+//			bloque);
+//
+//	free(bloque);
+//	free(lecturaGenerarCopia->nodoAGuardar);
+//	free(lecturaGenerarCopia->rutaArchivo);
+//	free(lecturaGenerarCopia);
 }

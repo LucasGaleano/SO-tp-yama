@@ -23,14 +23,15 @@ void 							enviarArchivo								(int, char *);
 void 							enviarInfoDataNode							(int, char *, int, int);
 
 void 							enviarBloque								(int, char*);
-void 							enviarBloqueGenerarCopia					(int, int, char*, char*, char*);
+void 							enviarBloqueGenerarCopia					(int, int, char *, char *, void *);
+
 void 							enviarBloqueArchTemp						(int, char*, int);
 
 void 							enviarSolicitudLecturaBloque				(int, int);
-void 							enviarSolicitudLecturaBloqueGenerarCopia	(int, int, char*, char*, char *);
+void 							enviarSolicitudLecturaBloqueGenerarCopia	(int, int, int, char*, char *);
 void 							enviarSolicitudLecturaArchTemp				(int, int, int);
 
-void 							enviarSolicitudEscrituraBloque				(int, void*,int);
+void 							enviarSolicitudEscrituraBloque				(int, int, int, void*);
 void 							enviarRespuestaEscrituraBloque				(int, bool, int);
 
 void 							enviarSolicitudTransformacion				(int, t_pedidoTransformacion *);

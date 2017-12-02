@@ -19,14 +19,12 @@ void 							serializarArchvivo							(t_paquete *, char *);
 void 							serializarInfoDataNode						(t_paquete *, char *, int, int);
 
 void 							serializarSolicitudLecturaBloque			(t_paquete*, int);
-void 							serializarSolicitudLecturaBloqueGenerarCopia(t_paquete*, int, char*, char*, char*);
 void 							serializarSolicitudLecturaBloqueArchTemp	(t_paquete*, int, int);
 
 void 							serializarBloque							(t_paquete*, char*);
-void 							serializarBloqueGenerarCopia				(t_paquete*, int, char *, char *, char *);
 void 							serializarBloqueArchTemp					(t_paquete*, char*, int);
 
-void 							serializarSolicitudEscrituraBloque			(t_paquete*, void*, int);
+void 							serializarSolicitudEscrituraBloque			(t_paquete*, int, int, void *);
 void 							serializarRespuestaEscrituraBloque			(t_paquete*, bool, int);
 
 void 							serializarSolicitudTransformacion			(t_paquete *, t_pedidoTransformacion *);
@@ -53,11 +51,9 @@ void * 							deserializarArchivo							(t_stream *);
 t_nodo_info *					deserializarInfoDataNode					(t_stream *);
 
 int								deserializarSolicitudLecturaBloque			(t_stream *);
-t_lecturaGenerarCopia* 			deserializarSolicitudLecturaBloqueGenerarCopia	(t_stream *);
 t_lecturaArchTemp * 			deserializarSolicitudLecturaBloqueArchTemp	(t_stream *);
 
 void*           				deserializarBloque							(t_stream *);
-t_respuestaLecturaGenerarCopia*	deserializarBloqueGenerarCopia				(t_stream *);
 t_respuestaLecturaArchTemp*		deserializarBloqueArchTemp					(t_stream *);
 
 t_pedidoEscritura*				deserializarSolicitudEscrituraBloque		(t_stream *);
