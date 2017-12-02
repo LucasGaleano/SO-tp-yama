@@ -21,16 +21,6 @@
 #include <commons/log.h>
 
 
-// ----------------------------- DEFINE DE RECIBIRMENSAJE() --------------------------------//
-
-
-#define FIN "0"
-#define ERROR_TRANSFORMACION "-1"
-#define ERROR_REDUCCION_LOCAL "-2"
-#define ERROR_REDUCCION_GLOBAL "-3"
-#define ERROR_ALMACENAMIENTO "-4"
-#define SIGUE "1"
-#define SALIOBIEN "2"
 
 //------------------------------ ESTRUCTURAS PROPIAS ---------------------------------------//
 
@@ -59,7 +49,7 @@ void gestionarAlmacenadoFinal(t_indicacionAlmacenadoFinal * pedido);
 void liberarMemoria();
 void calcularTiempoTotalTransformacion();
 void calcularTiempoTotalReduccionLocal();
-
+void liberarReduGlobal(t_indicacionReduccionGlobal * ind);
 
 
 
@@ -67,7 +57,7 @@ void calcularTiempoTotalReduccionLocal();
 
 t_log * logMaster;
 t_list * pedidosDeTransformacion ;
-t_list * pedidosDeReduccionGlobal;
+t_list * indicacionesDeReduccionGlobal;
 t_list * tiemposTransformacion;
 t_list * tiemposReduccionLocal;
 char* rutaScriptTransformador ;
@@ -103,8 +93,6 @@ pthread_mutex_t mutexTransformaciones;
 pthread_mutex_t mutexReduccionGlobal;
 pthread_mutex_t mutexErrorTransformacion;
 pthread_mutex_t mutexErrorReduccionLocal;
-pthread_mutex_t mutexErrorReduccionGlobal;
-pthread_mutex_t mutexErrorAlmacenamiento;
 pthread_t * hilosTransformacion;
 pthread_t * hilosReduccionLocal;
 
