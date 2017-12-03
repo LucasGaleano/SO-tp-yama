@@ -218,9 +218,7 @@ void procesarSolicitudLecturaBloqueGenerarCopia(t_paquete * unPaquete,
 		int * client_socket) {
 	t_lecturaGenerarCopia * lecturaGenerarCopia = recibirSolicitudLecturaBloqueGenerarCopia(unPaquete);
 
-	char* bloque = malloc(TAM_BLOQUE);
-
-	bloque = getBloque(lecturaGenerarCopia->numBloqueNodo);
+	char* bloque = getBloque(lecturaGenerarCopia->numBloqueNodo);
 
 	if (bloque == NULL) {
 		log_error(logger, "error buscando bloque");
