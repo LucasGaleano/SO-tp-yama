@@ -203,6 +203,7 @@ void formatearFilesystem() {
 
 void eliminarArchivo(char * linea) {
 	char * path_archivo = obtenerParametro(linea, 1);
+	if(path_archivo == NULL)return;
 
 	//Busco el nombre del directorio
 	char ** separado = string_split(path_archivo, "/");
@@ -294,6 +295,7 @@ void eliminarArchivo(char * linea) {
 
 void eliminarDirectorio(char * linea) {
 	char * path_directorio = obtenerParametro(linea, 2);
+	if(path_directorio == NULL)return;
 
 	//Busco el nombre del directorio
 	char ** separado = string_split(path_directorio, "/");
@@ -355,8 +357,20 @@ void eliminarDirectorio(char * linea) {
 
 void eliminarBloque(char * linea) {
 	char * path_archivo = obtenerParametro(linea, 2);
+	if(path_archivo == NULL)return;
+
 	char * nro_bloque = obtenerParametro(linea, 3);
+	if(nro_bloque == NULL){
+		free(path_archivo);
+		return;
+	}
+
 	char * nro_copia = obtenerParametro(linea, 4);
+	if(nro_copia == NULL){
+		free(path_archivo);
+		free(nro_bloque);
+		return;
+	}
 
 	//Busco el nombre del directorio
 	char ** separado = string_split(path_archivo, "/");
@@ -1031,6 +1045,12 @@ void mostrarInfo(char * linea) {
 /*------------------------------Auxiliares------------------------------*/
 char * obtenerParametro(char * linea, int parametro) {
 	char** substrings = string_split(linea, " ");
+
+	if(substrings[parametro] == NULL){
+	printf("rm: falta un operando\n");
+	destruirSubstring(substrings);
+	return NULL;
+	}
 
 	int tamPath = string_length(substrings[parametro]);
 
