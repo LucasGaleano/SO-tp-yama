@@ -274,21 +274,12 @@ char * leerArchivo(char * rutaArchivo) {
 	for (i = 0; i < list_size(listaTemporal); i++) {
 		t_respuestaLecturaArchTemp * bloque = list_get(listaTemporal, i);
 
-		char * key=string_new();
-		string_append(&key,"BLOQUE");
-		char * ordenChar = string_itoa(bloque->orden);
-		string_append(&key,ordenChar);
-		string_append(&key,"BYTES");
-
-		int tamBuffer = config_get_int_value(configArchivo,key);
+		int tamBuffer = buscarTamBloque(configArchivo,bloque->orden);
 
 		archivoTemporal = realloc(archivoTemporal,desplazamiento + tamBuffer);
 		memcpy(archivoTemporal + desplazamiento, bloque->data, tamBuffer);
 
 		desplazamiento += tamBuffer;
-
-		free(key);
-		free(ordenChar);
 	}
 
 	//Libero memoria

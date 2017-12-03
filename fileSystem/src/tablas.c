@@ -299,6 +299,21 @@ char ** buscarBloque(t_config * configArchivo, int bloque, int copia) {
 	return bloqueEncontrado;
 }
 
+int buscarTamBloque(t_config * configArchivo, int numeroBloqueArchivo){
+	char * key=string_new();
+	string_append(&key,"BLOQUE");
+	char * ordenChar = string_itoa(numeroBloqueArchivo);
+	string_append(&key,ordenChar);
+	string_append(&key,"BYTES");
+
+	int tamBuffer = config_get_int_value(configArchivo,key);
+
+	free(key);
+	free(ordenChar);
+
+	return tamBuffer;
+}
+
 /*-------------------------Tabla de nodos-------------------------*/
 void crearTablaNodos(char * rutaTablaNodos) {
 	tablaNodos = malloc(sizeof(t_tabla_nodo));
@@ -563,6 +578,19 @@ void persistirTablaNodos() {
 	}
 
 	config_save(configTablaNodo);
+}
+
+void quitarEspacioNodo(char * nomNodo){
+	bool esNodoBuscado(t_nodo_info * nodo){
+		return string_equals_ignore_case(nodo->nombre,nomNodo);
+	}
+
+	t_nodo_info * nodo = list_find(tablaNodos->infoDeNodo,(void*)esNodoBuscado);
+
+	//Actualizo tabla de nodos
+	tablaNodos->libres--;
+	nodo->libre--;
+	persistirTablaNodos();
 }
 
 /*-------------------------Tabla de sockets-------------------------*/

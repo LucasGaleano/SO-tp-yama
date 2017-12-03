@@ -152,17 +152,17 @@ void ejecutarMan() {
 	printf("	void rm(char * path_archivo) \n");
 	printf("	void rm -d(char * path_directorio) \n");
 	printf(
-			"	void rm -b(char * path_archivo, char * nro_bloque, char * nro_copia) \n");
+			"	void rm -b(char * path_archivo, int nro_bloque, int nro_copia) \n");
 	printf("	void rename(char * path_original, char * nombre_final) \n");
 	printf("	void mv(char * path_original, char * path_final) \n");
 	printf("	void cat(char * path_archivo) \n");
 	printf("	void mkdir(char * path_dir) \n");
 	printf(
-			"	void cpfrom(char * path_archivo_origen, char * directorio_yamafs) \n");
+			"	void cpfrom(char * path_archivo_origen, char * directorio_yamafs, char * tipo_archivo) \n");
 	printf(
 			"	void cpto(char * path_archivo_yamafs, char * directorio_filesystem) \n");
 	printf(
-			"	void cpblock(char * path_archivo, char * nro_bloque, char * id_nodo) \n");
+			"	void cpblock(char * path_archivo, int nro_bloque, char * id_nodo) \n");
 	printf("	void md5(char * path_archivo_yamafs) \n");
 	printf("	void ls(char * path_directorio) \n");
 	printf("	void info(char * path_archivo) \n");
@@ -796,14 +796,9 @@ void crearCopiaBloqueEnNodo(char * linea) {
 				i);
 	}
 
-	char* nodo = bloqueBuscado[0];
-	char* bloqueNodo = bloqueBuscado[1];
-
-	printf("Busco del nodo: %s el bloque: %s \n", nodo, bloqueNodo);
-
 	//Pido la info del bloque buscado
-	//int socket = buscarSocketPorNombre(bloqueBuscado[0]);
-	//enviarSolicitudLecturaBloqueGenerarCopia(socket,atoi(bloqueBuscado[1]),numeroBloqueArchivo,rutaArchivo,nodoAGuardar);
+	int socket = buscarSocketPorNombre(bloqueBuscado[0]);
+	enviarSolicitudLecturaBloqueGenerarCopia(socket,atoi(bloqueBuscado[1]),rutaArchivo,atoi(numeroBloqueArchivo),nodoAGuardar);
 
 	//Libero memoria
 	free(rutaArchivo);

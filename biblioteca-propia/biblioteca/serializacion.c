@@ -73,6 +73,39 @@ void serializarSolicitudLecturaBloque(t_paquete* unPaquete, int numBloque) {
 	serializarNumero(unPaquete, numBloque);
 }
 
+void serializarSolicitudLecturaBloqueGenerarCopia(t_paquete * unPaquete,
+		int numBloqueNodo, char * rutaArchivo, int numBloqueArchivo,
+		char * nomNodoAEscribir) {
+
+	int tamNumBloqueNodo = sizeof(int);
+	int tamRutaArchivo = strlen(rutaArchivo) + 1;
+	int tamNumBloqueArchivo = sizeof(int);
+	int tamNomNodoAEscribir = strlen(nomNodoAEscribir) + 1;
+
+	int tamTotal = tamNumBloqueNodo + tamRutaArchivo + tamNumBloqueArchivo
+			+ tamNomNodoAEscribir;
+
+	unPaquete->buffer = malloc(sizeof(t_stream));
+	unPaquete->buffer->size = tamTotal;
+	unPaquete->buffer->data = malloc(tamTotal);
+
+	int desplazamiento = 0;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, &numBloqueNodo,
+			tamNumBloqueNodo);
+	desplazamiento += tamNumBloqueNodo;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, rutaArchivo,
+			tamRutaArchivo);
+	desplazamiento += tamRutaArchivo;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, &numBloqueArchivo,
+			tamNumBloqueArchivo);
+	desplazamiento += tamNumBloqueArchivo;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, nomNodoAEscribir,
+			tamNomNodoAEscribir);
+}
 
 void serializarSolicitudLecturaBloqueArchTemp(t_paquete* unPaquete,
 		int numBloque, int orden) {
@@ -96,6 +129,37 @@ void serializarBloque(t_paquete* unPaquete, char* bloque) {
 	serializarPalabra(unPaquete, bloque);
 }
 
+void serializarBloqueGenerarCopia(t_paquete* unPaquete, void * data,
+		char * rutaArchivo, int numBloqueArchivo, char * nomNodoAEscribir) {
+	int tamRutaArchivo = strlen(rutaArchivo) + 1;
+	int tamNumBloqueArchivo = sizeof(int);
+	int tamNomNodoAEscribir = strlen(nomNodoAEscribir) + 1;
+
+	int tamTotal = TAM_BLOQUE + tamRutaArchivo + tamNumBloqueArchivo
+			+ tamNomNodoAEscribir;
+
+	unPaquete->buffer = malloc(sizeof(t_stream));
+	unPaquete->buffer->size = tamTotal;
+	unPaquete->buffer->data = malloc(tamTotal);
+
+	int desplazamiento = 0;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, data, TAM_BLOQUE);
+	desplazamiento += TAM_BLOQUE;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, rutaArchivo,
+			tamRutaArchivo);
+	desplazamiento += tamRutaArchivo;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, &numBloqueArchivo,
+			tamNumBloqueArchivo);
+	desplazamiento += tamNumBloqueArchivo;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, nomNodoAEscribir,
+			tamNomNodoAEscribir);
+	desplazamiento += tamNomNodoAEscribir;
+
+}
 
 void serializarBloqueArchTemp(t_paquete* unPaquete, char* bloque, int orden) {
 	int tamBloque = TAM_BLOQUE;
@@ -515,6 +579,29 @@ int deserializarSolicitudLecturaBloque(t_stream* buffer) {
 	return deserializarNumero(buffer);
 }
 
+t_lecturaGenerarCopia * deserializarSolicitudLecturaBloqueGenerarCopia(
+		t_stream * buffer) {
+
+	t_lecturaGenerarCopia * solicitudLectura = malloc(
+			sizeof(t_lecturaGenerarCopia));
+
+	int desplazamiento = 0;
+
+	memcpy(&solicitudLectura->numBloqueNodo, buffer->data + desplazamiento,
+			sizeof(int));
+	desplazamiento += sizeof(int);
+
+	solicitudLectura->rutaArchivo = strdup(buffer->data + desplazamiento);
+	desplazamiento += strlen(solicitudLectura->rutaArchivo) + 1;
+
+	memcpy(&solicitudLectura->numBloqueArchivo, buffer->data + desplazamiento,
+			sizeof(int));
+	desplazamiento += sizeof(int);
+
+	solicitudLectura->nomNodoAEscribir = strdup(buffer->data + desplazamiento);
+
+	return solicitudLectura;
+}
 
 t_lecturaArchTemp * deserializarSolicitudLecturaBloqueArchTemp(
 		t_stream * buffer) {
@@ -536,6 +623,32 @@ t_lecturaArchTemp * deserializarSolicitudLecturaBloqueArchTemp(
 
 void* deserializarBloque(t_stream* buffer) {
 	return (void*) deserializarPalabra(buffer);
+}
+
+t_respuestaLecturaGenerarCopia * deserializarBloqueGenerarCopia(
+		t_stream* buffer) {
+	t_respuestaLecturaGenerarCopia * bloqueGenerarCopia = malloc(
+			sizeof(t_respuestaLecturaGenerarCopia));
+
+	int desplazamiento = 0;
+
+	bloqueGenerarCopia->data = malloc(TAM_BLOQUE);
+
+	memcpy(bloqueGenerarCopia->data, buffer->data + desplazamiento,
+	TAM_BLOQUE);
+	desplazamiento += TAM_BLOQUE;
+
+	bloqueGenerarCopia->rutaArchivo = strdup(buffer->data + desplazamiento);
+	desplazamiento += strlen(bloqueGenerarCopia->rutaArchivo) + 1;
+
+	memcpy(&bloqueGenerarCopia->numBloqueArchivo, buffer->data + desplazamiento,
+			sizeof(int));
+	desplazamiento += sizeof(int);
+
+	bloqueGenerarCopia->nomNodoAEscribir = strdup(
+			buffer->data + desplazamiento);
+
+	return bloqueGenerarCopia;
 }
 
 t_respuestaLecturaArchTemp * deserializarBloqueArchTemp(t_stream* buffer) {
@@ -571,7 +684,8 @@ t_pedidoEscritura* deserializarSolicitudEscrituraBloque(t_stream* buffer) {
 
 	pedido->buffer->data = malloc(pedido->buffer->size + 1);
 
-	memcpy(pedido->buffer->data, buffer->data + desplazamiento, pedido->buffer->size);
+	memcpy(pedido->buffer->data, buffer->data + desplazamiento,
+			pedido->buffer->size);
 
 	return pedido;
 }

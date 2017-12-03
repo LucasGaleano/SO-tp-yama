@@ -37,11 +37,6 @@ enum emisor {
 	YAMA = 904,
 };
 
-
-
-
-
-
 enum cod_op{
 	HANDSHAKE=0,
 
@@ -92,7 +87,6 @@ enum cod_op{
 enum continuaMensaje{
 	CONTINUA=0,
 	NO_CONTINUA=1,
-
 };
 
 enum tipoArchivo{
@@ -106,7 +100,6 @@ enum error{
 	ERROR_REDUCCION_GLOBAL = -3,
 	ERROR_ALMACENAMIENTO_FINAL = -4,
 	ERROR_MASTER = -5
-
 };
 
 /*------------------------------Estructuras de comunicacion FS DataNode------------------------------*/
@@ -131,7 +124,7 @@ typedef struct {
 }t_respuestaLecturaArchTemp;
 
 typedef struct {
-	int numeroBloqueNodo;
+	int numBloqueNodo;
 	char * rutaArchivo;
 	int numBloqueArchivo;
 	char * nomNodoAEscribir;

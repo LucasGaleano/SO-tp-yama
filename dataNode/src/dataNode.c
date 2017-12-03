@@ -216,24 +216,18 @@ void procesarSolicitudLecturaArchivoTemporal(t_paquete * unPaquete,
 
 void procesarSolicitudLecturaBloqueGenerarCopia(t_paquete * unPaquete,
 		int * client_socket) {
-//	t_lecturaGenerarCopia * lecturaGenerarCopia =
-//			recibirSolicitudLecturaBloqueGenerarCopia(unPaquete);
-//
-//	char* bloque = malloc(TAM_BLOQUE);
-//
-//	bloque = getBloque(lecturaGenerarCopia->numeroBloqueNodo);
-//
-//	if (bloque == NULL) {
-//		log_error(logger, "error buscando bloque");
-//	}
-//
-//	enviarBloqueGenerarCopia(*client_socket,
-//			lecturaGenerarCopia->numeroBloqueArchivo,
-//			lecturaGenerarCopia->rutaArchivo, lecturaGenerarCopia->nodoAGuardar,
-//			bloque);
-//
-//	free(bloque);
-//	free(lecturaGenerarCopia->nodoAGuardar);
-//	free(lecturaGenerarCopia->rutaArchivo);
-//	free(lecturaGenerarCopia);
+	t_lecturaGenerarCopia * lecturaGenerarCopia = recibirSolicitudLecturaBloqueGenerarCopia(unPaquete);
+
+	char* bloque = getBloque(lecturaGenerarCopia->numBloqueNodo);
+
+	if (bloque == NULL) {
+		log_error(logger, "error buscando bloque");
+	}
+
+	enviarBloqueGenerarCopia(*client_socket, bloque, lecturaGenerarCopia->rutaArchivo, lecturaGenerarCopia->numBloqueArchivo, lecturaGenerarCopia->nomNodoAEscribir);
+
+	free(bloque);
+	free(lecturaGenerarCopia->nomNodoAEscribir);
+	free(lecturaGenerarCopia->rutaArchivo);
+	free(lecturaGenerarCopia);
 }
