@@ -70,6 +70,7 @@ t_config *			crearArchivoTablaArchivo		(char *, char *, char *, int);
 void 				agregarRegistroTablaArchivos	(char *, int,int, int, t_config *);
 void 				guardoBytesPorBloque			(int, int, t_config *);
 char ** 			buscarBloque					(t_config *, int, int);
+int 				buscarTamBloque					(t_config *, int);
 
 /*-------------------------Tabla de nodos-------------------------*/
 void	 			crearTablaNodos					(char *);

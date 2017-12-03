@@ -299,6 +299,21 @@ char ** buscarBloque(t_config * configArchivo, int bloque, int copia) {
 	return bloqueEncontrado;
 }
 
+int buscarTamBloque(t_config * configArchivo, int numeroBloqueArchivo){
+	char * key=string_new();
+	string_append(&key,"BLOQUE");
+	char * ordenChar = string_itoa(numeroBloqueArchivo);
+	string_append(&key,ordenChar);
+	string_append(&key,"BYTES");
+
+	int tamBuffer = config_get_int_value(configArchivo,key);
+
+	free(key);
+	free(ordenChar);
+
+	return tamBuffer;
+}
+
 /*-------------------------Tabla de nodos-------------------------*/
 void crearTablaNodos(char * rutaTablaNodos) {
 	tablaNodos = malloc(sizeof(t_tabla_nodo));
