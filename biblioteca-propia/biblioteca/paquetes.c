@@ -211,6 +211,20 @@ void enviarBloque(int server_socket, char* bloque) {
 
 }
 
+void enviarBloqueGenerarCopia(int server_socket, void * data,
+		char * rutaArchivo, int numBloqueArchivo, char * nomNodoAEscribir) {
+
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_BLOQUE_GENERAR_COPIA;
+
+	serializarBloqueGenerarCopia(unPaquete, data, rutaArchivo, numBloqueArchivo,
+			nomNodoAEscribir);
+
+	enviarPaquetes(server_socket, unPaquete);
+
+}
+
 void enviarBloqueArchTemp(int server_socket, char* bloque, int orden) {
 
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
@@ -232,6 +246,19 @@ void enviarSolicitudLecturaBloque(int server_socket, int numBloque) {
 
 	enviarPaquetes(server_socket, unPaquete);
 
+}
+
+void enviarSolicitudLecturaBloqueGenerarCopia(int server_socket,
+		int numBloqueNodo, char * rutaArchivo, int numBloqueArchivo,
+		char * nomNodoAEscribir) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_SOLICITUD_LECTURA_BLOQUE_GENERAR_COPIA;
+
+	serializarSolicitudLecturaBloqueGenerarCopia(unPaquete, numBloqueNodo,
+			rutaArchivo, numBloqueArchivo, nomNodoAEscribir);
+
+	enviarPaquetes(server_socket, unPaquete);
 }
 
 void enviarSolicitudLecturaArchTemp(int server_socket, int numBloque, int orden) {
@@ -436,12 +463,21 @@ void * recibirBloque(t_paquete * unPaquete) {
 	return deserializarBloque(unPaquete->buffer);
 }
 
+t_respuestaLecturaGenerarCopia* recibirBloqueGenerarCopia(t_paquete * unPaquete) {
+	return deserializarBloqueGenerarCopia(unPaquete->buffer);
+}
+
 t_respuestaLecturaArchTemp * recibirBloqueArchTemp(t_paquete * unPaquete) {
 	return deserializarBloqueArchTemp(unPaquete->buffer);
 }
 
 int recibirSolicitudLecturaBloque(t_paquete* unPaquete) {
 	return deserializarSolicitudLecturaBloque(unPaquete->buffer);
+}
+
+t_lecturaGenerarCopia * recibirSolicitudLecturaBloqueGenerarCopia(
+		t_paquete * unPaquete) {
+	return deserializarSolicitudLecturaBloqueGenerarCopia(unPaquete->buffer);
 }
 
 t_lecturaArchTemp * recibirSolicitudLecturaBloqueArchTemp(t_paquete* unPaquete) {

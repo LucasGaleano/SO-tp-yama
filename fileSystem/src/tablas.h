@@ -80,6 +80,7 @@ void 				agregarNodoTablaNodos			(t_nodo_info *);
 void 				eliminarNodoTablaNodos			(char *);
 void 				liberarBloqueTablaNodos			(char *, int);
 void 				persistirTablaNodos				(void);
+void 				quitarEspacioNodo				(char *);
 
 /*-------------------------Tabla de sockets-------------------------*/
 void 				crearTablaSockets				(void);

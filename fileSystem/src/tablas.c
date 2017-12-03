@@ -580,6 +580,19 @@ void persistirTablaNodos() {
 	config_save(configTablaNodo);
 }
 
+void quitarEspacioNodo(char * nomNodo){
+	bool esNodoBuscado(t_nodo_info * nodo){
+		return string_equals_ignore_case(nodo->nombre,nomNodo);
+	}
+
+	t_nodo_info * nodo = list_find(tablaNodos->infoDeNodo,(void*)esNodoBuscado);
+
+	//Actualizo tabla de nodos
+	tablaNodos->libres--;
+	nodo->libre--;
+	persistirTablaNodos();
+}
+
 /*-------------------------Tabla de sockets-------------------------*/
 void crearTablaSockets(void) {
 	tablaSockets = list_create();

@@ -23,12 +23,11 @@ void 							enviarArchivo								(int, char *);
 void 							enviarInfoDataNode							(int, char *, int, int);
 
 void 							enviarBloque								(int, char*);
-void 							enviarBloqueGenerarCopia					(int, int, char *, char *, void *);
-
+void 							enviarBloqueGenerarCopia					(int, void *, char *, int, char *);
 void 							enviarBloqueArchTemp						(int, char*, int);
 
 void 							enviarSolicitudLecturaBloque				(int, int);
-void 							enviarSolicitudLecturaBloqueGenerarCopia	(int, int, int, char*, char *);
+void 							enviarSolicitudLecturaBloqueGenerarCopia	(int,int, char *, int, char *);
 void 							enviarSolicitudLecturaArchTemp				(int, int, int);
 
 void 							enviarSolicitudEscrituraBloque				(int, int, int, void*);

@@ -796,14 +796,9 @@ void crearCopiaBloqueEnNodo(char * linea) {
 				i);
 	}
 
-	char* nodo = bloqueBuscado[0];
-	char* bloqueNodo = bloqueBuscado[1];
-
-	printf("Busco del nodo: %s el bloque: %s \n", nodo, bloqueNodo);
-
 	//Pido la info del bloque buscado
-	//int socket = buscarSocketPorNombre(bloqueBuscado[0]);
-	//enviarSolicitudLecturaBloqueGenerarCopia(socket,atoi(bloqueBuscado[1]),numeroBloqueArchivo,rutaArchivo,nodoAGuardar);
+	int socket = buscarSocketPorNombre(bloqueBuscado[0]);
+	enviarSolicitudLecturaBloqueGenerarCopia(socket,atoi(bloqueBuscado[1]),rutaArchivo,atoi(numeroBloqueArchivo),nodoAGuardar);
 
 	//Libero memoria
 	free(rutaArchivo);
