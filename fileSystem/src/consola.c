@@ -199,6 +199,10 @@ void ejecutarExit(bool * ejecutar) {
 
 void formatearFilesystem() {
 	printf("Me piden formatear el file system \n");
+
+	//Creo la tabla de sockets
+	crearTablaSockets();
+
 }
 
 void eliminarArchivo(char * linea) {

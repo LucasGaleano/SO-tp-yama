@@ -1,11 +1,10 @@
 #include "fileSystem.h"
 
 int main(int argc, char **argv) {
+	formateado = false;
+
 	//Verifico si ignoro o no el estado anterior
 	manejoDeEstado(argv[1]);
-
-	//Creo la tabla de sockets
-	crearTablaSockets();
 
 	//Creo archivo de log
 	logFileSystem = log_create("log_FileSystem.log", "fileSystem", false,
@@ -65,8 +64,12 @@ void procesarHandshake(t_paquete * unPaquete, int * client_socket) {
 	case DATANODE:
 		break;
 	case YAMA:
+		if (formateado == false)
+			*client_socket = -1;
 		break;
 	case WORKER:
+		if (formateado == false)
+			*client_socket = -1;
 		break;
 	default:
 		*client_socket = -1;
@@ -135,7 +138,8 @@ void procesarRespuestaEscrituraBloque(t_paquete * unPaquete, int client_socket) 
 }
 
 void procesarBloqueGenerarCopia(t_paquete * unPaquete) {
-	t_respuestaLecturaGenerarCopia * bloqueGenerarCopia = recibirBloqueGenerarCopia(unPaquete);
+	t_respuestaLecturaGenerarCopia * bloqueGenerarCopia =
+			recibirBloqueGenerarCopia(unPaquete);
 
 	//Busco el nombre del directorio
 	char ** separado = string_split(bloqueGenerarCopia->rutaArchivo, "/");
@@ -189,16 +193,20 @@ void procesarBloqueGenerarCopia(t_paquete * unPaquete) {
 		string_append(&key, copiaChar);
 	}
 
-	int bloqueAEscribir = buscarBloqueAEscribir(bloqueGenerarCopia->nomNodoAEscribir);
+	int bloqueAEscribir = buscarBloqueAEscribir(
+			bloqueGenerarCopia->nomNodoAEscribir);
 
-	agregarRegistroTablaArchivos(bloqueGenerarCopia->nomNodoAEscribir, bloqueAEscribir,
-			bloqueGenerarCopia->numBloqueArchivo, i, configArchivo);
+	agregarRegistroTablaArchivos(bloqueGenerarCopia->nomNodoAEscribir,
+			bloqueAEscribir, bloqueGenerarCopia->numBloqueArchivo, i,
+			configArchivo);
 
 	quitarEspacioNodo(bloqueGenerarCopia->nomNodoAEscribir);
 
-	int socketNodo = buscarSocketPorNombre(bloqueGenerarCopia->nomNodoAEscribir);
+	int socketNodo = buscarSocketPorNombre(
+			bloqueGenerarCopia->nomNodoAEscribir);
 
-	enviarSolicitudEscrituraBloque(socketNodo, bloqueAEscribir, TAM_BLOQUE, bloqueGenerarCopia->data);
+	enviarSolicitudEscrituraBloque(socketNodo, bloqueAEscribir, TAM_BLOQUE,
+			bloqueGenerarCopia->data);
 
 	//Libero memoria
 	destruirSubstring(separado);

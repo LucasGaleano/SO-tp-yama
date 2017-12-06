@@ -18,6 +18,7 @@
 
 /*------------------------Variables globales-------------------------*/
 t_log* logFileSystem;
+bool formateado;
 
 /*------------------------Procesamiento paquetes-------------------------*/
 void 				procesarPaquete						(t_paquete *, int *);
