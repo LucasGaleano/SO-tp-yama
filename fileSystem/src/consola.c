@@ -203,7 +203,9 @@ void formatearFilesystem() {
 
 void eliminarArchivo(char * linea) {
 	char * path_archivo = obtenerParametro(linea, 1);
-	if(path_archivo == NULL)return;
+
+	if (path_archivo == NULL)
+		return;
 
 	//Busco el nombre del directorio
 	char ** separado = string_split(path_archivo, "/");
@@ -295,7 +297,9 @@ void eliminarArchivo(char * linea) {
 
 void eliminarDirectorio(char * linea) {
 	char * path_directorio = obtenerParametro(linea, 2);
-	if(path_directorio == NULL)return;
+
+	if (path_directorio == NULL)
+		return;
 
 	//Busco el nombre del directorio
 	char ** separado = string_split(path_directorio, "/");
@@ -357,16 +361,19 @@ void eliminarDirectorio(char * linea) {
 
 void eliminarBloque(char * linea) {
 	char * path_archivo = obtenerParametro(linea, 2);
-	if(path_archivo == NULL)return;
+
+	if (path_archivo == NULL)
+		return;
 
 	char * nro_bloque = obtenerParametro(linea, 3);
-	if(nro_bloque == NULL){
+
+	if (nro_bloque == NULL) {
 		free(path_archivo);
 		return;
 	}
 
 	char * nro_copia = obtenerParametro(linea, 4);
-	if(nro_copia == NULL){
+	if (nro_copia == NULL) {
 		free(path_archivo);
 		free(nro_bloque);
 		return;
@@ -541,7 +548,16 @@ void eliminarBloque(char * linea) {
 
 void modificar(char * linea) {
 	char * path_original = obtenerParametro(linea, 1);
+
+	if (path_original == NULL)
+		return;
+
 	char * path_final = obtenerParametro(linea, 2);
+
+	if (path_final == NULL) {
+		free(path_original);
+		return;
+	}
 
 	//Busco el nombre del directorio original
 	char ** separadoOriginal = string_split(path_original, "/");
@@ -636,6 +652,9 @@ void modificar(char * linea) {
 void mostrarContenidoArchivo(char * linea) {
 	char * path_archivo = obtenerParametro(linea, 1);
 
+	if (path_archivo == NULL)
+		return;
+
 	char* archivoTemporal = leerArchivo(path_archivo);
 
 	printf("%s \n", archivoTemporal);
@@ -648,7 +667,10 @@ void mostrarContenidoArchivo(char * linea) {
 void crearDirectorio(char * linea) {
 	char * path_dir = obtenerParametro(linea, 1);
 
-//Busco el nombre del directorio
+	if (path_dir == NULL)
+		return;
+
+	//Busco el nombre del directorio
 	char ** separado = string_split(path_dir, "/");
 
 	int posicion;
@@ -701,8 +723,24 @@ void crearDirectorio(char * linea) {
 
 void copiarArchivoLocalAlYamafsInterfaz(char * linea) {
 	char * path_archivo_origen = obtenerParametro(linea, 1);
+
+	if (path_archivo_origen == NULL)
+		return;
+
 	char * directorio_yamafs = obtenerParametro(linea, 2);
+
+	if (directorio_yamafs == NULL) {
+		free(path_archivo_origen);
+		return;
+	}
+
 	char * tipo_archivo = obtenerParametro(linea, 3);
+
+	if (tipo_archivo == NULL) {
+		free(path_archivo_origen);
+		free(directorio_yamafs);
+		return;
+	}
 
 	//Busco el nombre del archivo
 	char ** separado = string_split(path_archivo_origen, "/");
@@ -732,7 +770,16 @@ void copiarArchivoLocalAlYamafsInterfaz(char * linea) {
 
 void copiarArchivoLocalAlYamafs(char * linea) {
 	char * path_archivo_origen = obtenerParametro(linea, 1);
+
+	if (path_archivo_origen == NULL)
+		return;
+
 	char * directorio_filesystem = obtenerParametro(linea, 2);
+
+	if (directorio_filesystem == NULL) {
+		free(path_archivo_origen);
+		return;
+	}
 
 	//Busco el nombre del archivo
 	char ** separado = string_split(path_archivo_origen, "/");
@@ -766,8 +813,24 @@ void copiarArchivoLocalAlYamafs(char * linea) {
 
 void crearCopiaBloqueEnNodo(char * linea) {
 	char * rutaArchivo = obtenerParametro(linea, 1);
+
+	if (rutaArchivo == NULL)
+		return;
+
 	char * numeroBloqueArchivo = obtenerParametro(linea, 2);
+
+	if (rutaArchivo == NULL) {
+		free(rutaArchivo);
+		return;
+	}
+
 	char * nodoAGuardar = obtenerParametro(linea, 3);
+
+	if (nodoAGuardar == NULL) {
+		free(rutaArchivo);
+		free(numeroBloqueArchivo);
+		return;
+	}
 
 	//Busco el nombre del directorio
 	char ** separado = string_split(rutaArchivo, "/");
@@ -812,7 +875,8 @@ void crearCopiaBloqueEnNodo(char * linea) {
 
 	//Pido la info del bloque buscado
 	int socket = buscarSocketPorNombre(bloqueBuscado[0]);
-	enviarSolicitudLecturaBloqueGenerarCopia(socket,atoi(bloqueBuscado[1]),rutaArchivo,atoi(numeroBloqueArchivo),nodoAGuardar);
+	enviarSolicitudLecturaBloqueGenerarCopia(socket, atoi(bloqueBuscado[1]),
+			rutaArchivo, atoi(numeroBloqueArchivo), nodoAGuardar);
 
 	//Libero memoria
 	free(rutaArchivo);
@@ -827,6 +891,9 @@ void crearCopiaBloqueEnNodo(char * linea) {
 
 void solicitarHash(char * linea) {
 	char * path_archivo_yamafs = obtenerParametro(linea, 1);
+
+	if (path_archivo_yamafs == NULL)
+		return;
 
 	//Busco el nombre del directorio
 	char ** separado = string_split(path_archivo_yamafs, "/");
@@ -858,7 +925,7 @@ void solicitarHash(char * linea) {
 
 	t_config * configArchivo = config_create(ruta);
 
-	int tamArchivo = config_get_int_value(configArchivo,"TAMANIO");
+	int tamArchivo = config_get_int_value(configArchivo, "TAMANIO");
 
 	//Reconstruyo el archivo que me piden
 	char* archivoTemporal = leerArchivo(path_archivo_yamafs);
@@ -908,6 +975,9 @@ void solicitarHash(char * linea) {
 
 void listarArchivos(char * linea) {
 	char * path_directorio = obtenerParametro(linea, 1);
+
+	if (path_directorio == NULL)
+		return;
 
 	//Busco el nombre del directorio
 	char ** separado = string_split(path_directorio, "/");
@@ -971,6 +1041,9 @@ void listarArchivos(char * linea) {
 
 void mostrarInfo(char * linea) {
 	char * path_archivo = obtenerParametro(linea, 1);
+
+	if (path_archivo == NULL)
+		return;
 
 	//Busco el nombre del directorio
 	char ** separado = string_split(path_archivo, "/");
@@ -1046,10 +1119,10 @@ void mostrarInfo(char * linea) {
 char * obtenerParametro(char * linea, int parametro) {
 	char** substrings = string_split(linea, " ");
 
-	if(substrings[parametro] == NULL){
-	printf("rm: falta un operando\n");
-	destruirSubstring(substrings);
-	return NULL;
+	if (substrings[parametro] == NULL) {
+		destruirSubstring(substrings);
+		printf("falta un operando\n");
+		return NULL;
 	}
 
 	int tamPath = string_length(substrings[parametro]);
