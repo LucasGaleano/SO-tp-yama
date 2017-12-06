@@ -93,7 +93,7 @@ void ejecutarComando(char * linea, bool * ejecutar) {
 
 	//COPIO ARCHIVO LOCAL AL FILE SYSTEM
 	if (string_starts_with(linea, "cpto")) {
-		copiarArchivoLocalAlYamafs(linea);
+		copiarArchivoYamafsALocal(linea);
 		return;
 	}
 
@@ -657,6 +657,12 @@ void mostrarContenidoArchivo(char * linea) {
 
 	char* archivoTemporal = leerArchivo(path_archivo);
 
+	if (archivoTemporal == NULL) {
+		printf("%s: No existe el archivo o el directorio", path_archivo);
+		free(path_archivo);
+		return;
+	}
+
 	printf("%s \n", archivoTemporal);
 
 	//Libero memoria
@@ -768,7 +774,7 @@ void copiarArchivoLocalAlYamafsInterfaz(char * linea) {
 	destruirSubstring(separado);
 }
 
-void copiarArchivoLocalAlYamafs(char * linea) {
+void copiarArchivoYamafsALocal(char * linea) {
 	char * path_archivo_origen = obtenerParametro(linea, 1);
 
 	if (path_archivo_origen == NULL)
@@ -793,6 +799,11 @@ void copiarArchivoLocalAlYamafs(char * linea) {
 
 	//Reconstruyo el archivo que me piden
 	char* archivoTemporal = leerArchivo(path_archivo_origen);
+
+	if (archivoTemporal == NULL) {
+		printf("%s: No existe el archivo o el directorio", path_archivo_origen);
+		return;
+	}
 
 	//Creo el archivo temporal
 	string_append(&directorio_filesystem, "/");
@@ -925,10 +936,31 @@ void solicitarHash(char * linea) {
 
 	t_config * configArchivo = config_create(ruta);
 
+	if (configArchivo == NULL) {
+		printf("%s: No existe el archivo o el directorio", path_archivo_yamafs);
+
+		free(path_archivo_yamafs);
+		destruirSubstring(separado);
+		free(ruta);
+		free(indexChar);
+		return;
+	}
+
 	int tamArchivo = config_get_int_value(configArchivo, "TAMANIO");
 
 	//Reconstruyo el archivo que me piden
 	char* archivoTemporal = leerArchivo(path_archivo_yamafs);
+
+	if (archivoTemporal == NULL) {
+		printf("%s: No existe el archivo o el directorio", path_archivo_yamafs);
+
+		free(path_archivo_yamafs);
+		destruirSubstring(separado);
+		free(ruta);
+		free(indexChar);
+		config_destroy(configArchivo);
+		return;
+	}
 
 	//Creo la carpeta temporal
 	char * rutaFS = string_new();
@@ -1074,6 +1106,16 @@ void mostrarInfo(char * linea) {
 	string_append(&rutaFS, separado[posicion]);
 
 	t_config * configArchivo = config_create(rutaFS);
+
+	if (configArchivo == NULL) {
+		printf("%s: No existe el archivo o el directorio", path_archivo);
+
+		free(path_archivo);
+		destruirSubstring(separado);
+		free(rutaFS);
+		free(indexChar);
+		return;
+	}
 
 	//Imprimo por pantalla el archivo
 	char * tamanio = config_get_string_value(configArchivo, "TAMANIO");

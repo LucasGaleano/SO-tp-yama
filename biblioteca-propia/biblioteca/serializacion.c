@@ -889,18 +889,23 @@ t_list * deserializarListaDeBloques(t_stream * buffer) {
 
 /*-------------------------Funciones auxiliares-------------------------*/
 void * abrirArchivo(char * rutaArchivo, size_t * tamArc, FILE ** archivo) {
-//Copio informacion del archivo
+	//Abro el archivo
+	*archivo = fopen(rutaArchivo, "r");
+
+	if(*archivo == NULL){
+		printf("%s: No existe el archivo o el directorio",rutaArchivo);
+		return NULL;
+	}
+
+	//Copio informacion del archivo
 	struct stat statArch;
 
 	stat(rutaArchivo, &statArch);
 
-//Tamaño del archivo que voy a leer
+	//Tamaño del archivo que voy a leer
 	*tamArc = statArch.st_size;
 
-//Abro el archivo
-	*archivo = fopen(rutaArchivo, "r");
-
-//Leo el total del archivo y lo asigno al buffer
+	//Leo el total del archivo y lo asigno al buffer
 	int fd = fileno(*archivo);
 	void * dataArchivo = mmap(0, *tamArc, PROT_READ, MAP_SHARED, fd, 0);
 

@@ -29,7 +29,7 @@ void 				modificar								(char *);
 void 				mostrarContenidoArchivo					(char *);
 void 				crearDirectorio							(char *);
 void 				copiarArchivoLocalAlYamafsInterfaz		(char *);
-void 				copiarArchivoLocalAlYamafs				(char *);
+void 				copiarArchivoYamafsALocal				(char *);
 void 				crearCopiaBloqueEnNodo					(char *);
 void				solicitarHash							(char *);
 void 				listarArchivos							(char *);
