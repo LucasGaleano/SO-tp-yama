@@ -198,10 +198,20 @@ void ejecutarExit(bool * ejecutar) {
 }
 
 void formatearFilesystem() {
-	printf("Me piden formatear el file system \n");
+	formateado = true;
+
+	crearTablaNodos("/home/utnso/Escritorio/metadata");
+	crearTablaSockets();
 
 	//Creo la tabla de sockets
 	crearTablaSockets();
+
+	void pedirInfo(int * socket) {
+		printf("Le envio al socket: %d la solicitud \n", *socket);
+		enviarSolicitudInfoDataNode(*socket);
+	}
+
+	list_iterate(nodoSinFormatear, (void*) pedirInfo);
 
 }
 

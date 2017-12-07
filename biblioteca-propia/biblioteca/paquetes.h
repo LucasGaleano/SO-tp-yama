@@ -20,6 +20,7 @@ void 							enviarMensaje								(int, char *);
 
 void 							enviarArchivo								(int, char *);
 
+void 							enviarSolicitudInfoDataNode					(int);
 void 							enviarInfoDataNode							(int, char *, int, int);
 
 void 							enviarBloque								(int, char*);

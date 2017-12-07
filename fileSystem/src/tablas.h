@@ -17,6 +17,7 @@
 typedef struct {
 	int socket;
 	char * nombre;
+	bool disponible;
 } t_tabla_sockets;
 
 //Tabla de bitMaps

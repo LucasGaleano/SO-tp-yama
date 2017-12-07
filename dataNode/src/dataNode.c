@@ -10,15 +10,14 @@ int main(int argc, char **argv) {
 
 	stat(rutaDatabin, &statArch);
 
-	int cantidadBloques = statArch.st_size / (TAM_BLOQUE * 1024);
+	cantidadBloques = statArch.st_size / (TAM_BLOQUE * 1024);
+
+	nomNodo = argv[1];
 
 	printf("Tengo tantos bloques: %d \n", cantidadBloques);
 
 	int socketFileSystem = conectarCliente("127.0.0.1", "3200", DATANODE);
 
-	enviarInfoDataNode(socketFileSystem, argv[1], cantidadBloques,
-			cantidadBloques);
-      
 	recibirSolicitudes = true;
 	t_config* conf;
 	char* bloque = malloc(TAM_BLOQUE);
@@ -138,7 +137,9 @@ void recibirSolicitud(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_SOLICITUD_LECTURA_BLOQUE_GENERAR_COPIA:
 		procesarSolicitudLecturaBloqueGenerarCopia(unPaquete, client_socket);
 		break;
-
+	case ENVIAR_SOLICITUD_INFO_DATANODE:
+		procesarSolicitudInfoNodo(unPaquete, client_socket);
+		break;
 	default:
 		break;
 	}
@@ -183,7 +184,7 @@ void procesarSolicitudEscrituraBloque(t_paquete * unPaquete,
 		log_error(logger, "error guardando bloque");
 		exito = false;
 	}
-  
+
 	enviarRespuestaEscrituraBloque(*client_socket, exito,
 			pedidoEscritura->bloqueAEscribir);
 
@@ -216,7 +217,8 @@ void procesarSolicitudLecturaArchivoTemporal(t_paquete * unPaquete,
 
 void procesarSolicitudLecturaBloqueGenerarCopia(t_paquete * unPaquete,
 		int * client_socket) {
-	t_lecturaGenerarCopia * lecturaGenerarCopia = recibirSolicitudLecturaBloqueGenerarCopia(unPaquete);
+	t_lecturaGenerarCopia * lecturaGenerarCopia =
+			recibirSolicitudLecturaBloqueGenerarCopia(unPaquete);
 
 	char* bloque = getBloque(lecturaGenerarCopia->numBloqueNodo);
 
@@ -224,10 +226,19 @@ void procesarSolicitudLecturaBloqueGenerarCopia(t_paquete * unPaquete,
 		log_error(logger, "error buscando bloque");
 	}
 
-	enviarBloqueGenerarCopia(*client_socket, bloque, lecturaGenerarCopia->rutaArchivo, lecturaGenerarCopia->numBloqueArchivo, lecturaGenerarCopia->nomNodoAEscribir);
+	enviarBloqueGenerarCopia(*client_socket, bloque,
+			lecturaGenerarCopia->rutaArchivo,
+			lecturaGenerarCopia->numBloqueArchivo,
+			lecturaGenerarCopia->nomNodoAEscribir);
 
 	free(bloque);
 	free(lecturaGenerarCopia->nomNodoAEscribir);
 	free(lecturaGenerarCopia->rutaArchivo);
 	free(lecturaGenerarCopia);
+}
+
+void procesarSolicitudInfoNodo(t_paquete * unPaquete, int * client_socket){
+	printf("Me llego pedido para mandar info \n");
+	enviarInfoDataNode(*client_socket, nomNodo, cantidadBloques,
+			cantidadBloques);
 }

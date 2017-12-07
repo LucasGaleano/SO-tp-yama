@@ -297,6 +297,16 @@ void enviarRespuestaEscrituraBloque(int server_socket, bool exito,
 	enviarPaquetes(server_socket, unPaquete);
 }
 
+void enviarSolicitudInfoDataNode(int server_socket){
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_SOLICITUD_INFO_DATANODE;
+
+	serializarNumero(unPaquete,0);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
+
 void enviarInfoDataNode(int server_socket, char * nombreNodo,
 		int bloquesTotales, int bloquesLibres) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));

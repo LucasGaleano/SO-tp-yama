@@ -62,6 +62,10 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 void procesarHandshake(t_paquete * unPaquete, int * client_socket) {
 	switch (recibirHandshake(unPaquete)) {
 	case DATANODE:
+		;
+		int * a = malloc(sizeof(int));
+		memcpy(a,client_socket,sizeof(int));
+		list_add(nodoSinFormatear,a);
 		break;
 	case YAMA:
 		if (formateado == false)
@@ -258,8 +262,9 @@ void ignoroEstadoAnterior() {
 	}
 
 	//Creo las nuevas tablas administrativas
-	crearTablaNodos(ruta);
-	crearTablaDirectorios(ruta);
+	nodoSinFormatear = list_create();
+//	crearTablaDirectorios(ruta);
+
 
 	//Libero memoria
 	free(ruta);

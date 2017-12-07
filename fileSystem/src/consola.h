@@ -14,6 +14,10 @@
 #include "tablas.h"
 #include "interfaz.h"
 
+/*------------------------Variables globales-------------------------*/
+bool formateado;
+t_list* nodoSinFormatear;
+
 /*------------------------------Consola------------------------------*/
 void 				iniciarConsola							(void);
 void 				ejecutarComando							(char *, bool *);

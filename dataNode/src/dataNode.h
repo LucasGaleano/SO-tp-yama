@@ -20,6 +20,8 @@
 char* rutaDatabin;
 t_log* logger;
 bool recibirSolicitudes;
+int cantidadBloques;
+char * nomNodo;
 
 /**
  * @NAME: getBloque
@@ -39,5 +41,6 @@ void procesarSolicitudEscrituraBloque(t_paquete * unPaquete,int * client_socket)
 void procesarError(t_paquete * unPaquete);
 void procesarSolicitudLecturaArchivoTemporal(t_paquete * unPaquete,int * client_socket);
 void procesarSolicitudLecturaBloqueGenerarCopia(t_paquete * unPaquete,int * client_socket);
+void procesarSolicitudInfoNodo(t_paquete * unPaquete, int * client_socket);
 
 #endif /*DATANODE_H_*/
