@@ -140,6 +140,8 @@ void recibirSolicitud(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_SOLICITUD_INFO_DATANODE:
 		procesarSolicitudInfoNodo(unPaquete, client_socket);
 		break;
+	case ENVIAR_SOLICITUD_NOMBRE:
+		procesarSolicitudNombre(unPaquete, client_socket);
 	default:
 		break;
 	}
@@ -241,4 +243,8 @@ void procesarSolicitudInfoNodo(t_paquete * unPaquete, int * client_socket){
 	printf("Me llego pedido para mandar info \n");
 	enviarInfoDataNode(*client_socket, nomNodo, cantidadBloques,
 			cantidadBloques);
+}
+
+void procesarSolicitudNombre(t_paquete * unPaquete, int * client_socket){
+	enviarNombre(*client_socket,nomNodo);
 }

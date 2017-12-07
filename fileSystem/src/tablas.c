@@ -28,7 +28,7 @@ void crearTablaDirectorioSegunArchivo(char * ruta) {
 	string_append(&rutaArchivo, "metadata/directorios.dat");
 
 	//Creo la estructura de configuracion
-	configTablaDirectorios = config_create(rutaArchivo);
+	t_config * configTablaDirectorios = config_create(rutaArchivo);
 
 	//Lleno el bitmap
 	llenarBitmap();
@@ -64,7 +64,7 @@ void crearTablaDirectorioSegunArchivo(char * ruta) {
 
 	//Libero memoria
 	free(rutaArchivo);
-
+	config_destroy(configTablaDirectorios);
 }
 
 void crearArchivoTablaDirectorios(char * ruta) {
@@ -78,9 +78,7 @@ void crearArchivoTablaDirectorios(char * ruta) {
 	//Cierro el archivo
 	fclose(file);
 
-	//Creo la estructura de configuracion
-	configTablaDirectorios = config_create(rutaArchivo);
-
+	//Libero memoria
 	free(rutaArchivo);
 }
 
@@ -101,6 +99,14 @@ void agregarDirectorioTabla(t_directory * registroTabla, char * ruta) {
 
 	char * stringIndex = string_itoa(index);
 
+	//Abro el archivo para usarlo
+	char * rutaArchivo = string_new();
+	string_append(&rutaArchivo, RUTA_METADATA);
+	string_append(&rutaArchivo, "metadata/directorios.dat");
+
+	//Creo la estructura de configuracion
+	t_config * configTablaDirectorios = config_create(rutaArchivo);
+
 	config_set_value(configTablaDirectorios, stringIndex, registro);
 
 	//Agrego a la tabla el registro del directorio
@@ -110,8 +116,12 @@ void agregarDirectorioTabla(t_directory * registroTabla, char * ruta) {
 
 	config_save(configTablaDirectorios);
 
+	//Libero memoria
 	free(stringIndex);
 	free(registro);
+	free(rutaArchivo);
+	config_destroy(configTablaDirectorios);
+
 }
 
 void eliminarDirectorioTabla(char * nombreDirectorio, int padreDirectorio) {
@@ -126,14 +136,25 @@ void eliminarDirectorioTabla(char * nombreDirectorio, int padreDirectorio) {
 
 	char * stringIndex = string_itoa(registro->index);
 
+	//Abro el archivo para usarlo
+	char * rutaArchivo = string_new();
+	string_append(&rutaArchivo, RUTA_METADATA);
+	string_append(&rutaArchivo, "metadata/directorios.dat");
+
+	//Creo la estructura de configuracion
+	t_config * configTablaDirectorios = config_create(rutaArchivo);
+
 	config_set_value(configTablaDirectorios, stringIndex, "[###]");
 
 	config_save(configTablaDirectorios);
 
 	bitMapDirectorio[registro->index] = true;
 
+	//Libero memoria
 	free(registro);
 	free(stringIndex);
+	free(rutaArchivo);
+	config_destroy(configTablaDirectorios);
 }
 
 void modificarDirectorioTabla(t_directory * registroTabla, char * nombreFinal,
@@ -146,12 +167,22 @@ void modificarDirectorioTabla(t_directory * registroTabla, char * nombreFinal,
 
 	char * stringIndex = string_itoa(registroTabla->index);
 
+	//Abro el archivo para usarlo
+	char * rutaArchivo = string_new();
+	string_append(&rutaArchivo, RUTA_METADATA);
+	string_append(&rutaArchivo, "metadata/directorios.dat");
+
+	//Creo la estructura de configuracion
+	t_config * configTablaDirectorios = config_create(rutaArchivo);
+
 	config_set_value(configTablaDirectorios, stringIndex, registro);
 
 	config_save(configTablaDirectorios);
 
 	free(stringIndex);
 	free(registro);
+	free(rutaArchivo);
+	config_destroy(configTablaDirectorios);
 }
 
 /*-------------------------Tabla de archivos-------------------------*/
@@ -176,10 +207,10 @@ t_config * crearArchivoTablaArchivo(char * origen, char *destino, char * nombre,
 	int indexPadre;
 
 	if (posicion == 0) {
-			indexPadre = obtenerIndex("root");
-		} else {
-			indexPadre = obtenerIndex(listaDestino[posicion-1]);
-		}
+		indexPadre = obtenerIndex("root");
+	} else {
+		indexPadre = obtenerIndex(listaDestino[posicion - 1]);
+	}
 
 	char * indexPadreString = string_itoa(indexPadre);
 
@@ -299,14 +330,14 @@ char ** buscarBloque(t_config * configArchivo, int bloque, int copia) {
 	return bloqueEncontrado;
 }
 
-int buscarTamBloque(t_config * configArchivo, int numeroBloqueArchivo){
-	char * key=string_new();
-	string_append(&key,"BLOQUE");
+int buscarTamBloque(t_config * configArchivo, int numeroBloqueArchivo) {
+	char * key = string_new();
+	string_append(&key, "BLOQUE");
 	char * ordenChar = string_itoa(numeroBloqueArchivo);
-	string_append(&key,ordenChar);
-	string_append(&key,"BYTES");
+	string_append(&key, ordenChar);
+	string_append(&key, "BYTES");
 
-	int tamBuffer = config_get_int_value(configArchivo,key);
+	int tamBuffer = config_get_int_value(configArchivo, key);
 
 	free(key);
 	free(ordenChar);
@@ -369,10 +400,10 @@ void crearTablaNodosSegunArchivo(char * ruta) {
 	tablaNodos = malloc(sizeof(t_tabla_nodo));
 
 	//Tamanio
-	tablaNodos->tamanio = config_get_int_value(configTablaNodo, "TAMANIO");
+	tablaNodos->tamanio = 0;
 
 	//Libre
-	tablaNodos->libres = config_get_int_value(configTablaNodo, "LIBRE");
+	tablaNodos->libres = 0;
 
 	//Nombre de nodos
 	tablaNodos->nomNodos = list_create();
@@ -415,8 +446,6 @@ void crearTablaNodosSegunArchivo(char * ruta) {
 		free(nombreNodoTotal);
 		free(nombreNodo);
 		free(numeroNodoChar);
-		free(nodo->nombre);
-		free(nodo);
 
 		nombreNodo = string_new();
 		string_append(&nombreNodo, "Nodo");
@@ -453,9 +482,6 @@ void agregarNodoTablaNodos(t_nodo_info * info) {
 	char * nombre = malloc(string_length(info->nombre) + 1);
 	memcpy(nombre, info->nombre, string_length(info->nombre) + 1);
 	list_add(tablaNodos->nomNodos, nombre);
-
-	//Creo su bitMaps
-	crearArchivoTablaBitmap(info);
 
 	persistirTablaNodos();
 }
@@ -580,12 +606,13 @@ void persistirTablaNodos() {
 	config_save(configTablaNodo);
 }
 
-void quitarEspacioNodo(char * nomNodo){
-	bool esNodoBuscado(t_nodo_info * nodo){
-		return string_equals_ignore_case(nodo->nombre,nomNodo);
+void quitarEspacioNodo(char * nomNodo) {
+	bool esNodoBuscado(t_nodo_info * nodo) {
+		return string_equals_ignore_case(nodo->nombre, nomNodo);
 	}
 
-	t_nodo_info * nodo = list_find(tablaNodos->infoDeNodo,(void*)esNodoBuscado);
+	t_nodo_info * nodo = list_find(tablaNodos->infoDeNodo,
+			(void*) esNodoBuscado);
 
 	//Actualizo tabla de nodos
 	tablaNodos->libres--;

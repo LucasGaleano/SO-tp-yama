@@ -200,18 +200,16 @@ void ejecutarExit(bool * ejecutar) {
 void formatearFilesystem() {
 	formateado = true;
 
+	borrarArchivosDirectorios("/home/utnso/Escritorio/metadata/bitmaps");
+
 	crearTablaNodos("/home/utnso/Escritorio/metadata");
-	crearTablaSockets();
+	crearTablaDirectorios("/home/utnso/Escritorio/metadata");
 
-	//Creo la tabla de sockets
-	crearTablaSockets();
-
-	void pedirInfo(int * socket) {
-		printf("Le envio al socket: %d la solicitud \n", *socket);
-		enviarSolicitudInfoDataNode(*socket);
+	void pedirInfo(t_tabla_sockets * socket) {
+		enviarSolicitudInfoDataNode(socket->socket);
 	}
 
-	list_iterate(nodoSinFormatear, (void*) pedirInfo);
+	list_iterate(tablaSockets, (void*) pedirInfo);
 
 }
 
@@ -1055,6 +1053,15 @@ void listarArchivos(char * linea) {
 
 	//Busco los directorios hijos del direcorio
 	int i;
+
+	//Abro el archivo para usarlo
+	char * rutaArchivo = string_new();
+	string_append(&rutaArchivo, RUTA_METADATA);
+	string_append(&rutaArchivo, "metadata/directorios.dat");
+
+	//Creo la estructura de configuracion
+	t_config * configTablaDirectorios = config_create(rutaArchivo);
+
 	int cantidadMaximaDirectorios = config_keys_amount(configTablaDirectorios);
 	for (i = 0; i < cantidadMaximaDirectorios; ++i) {
 		char * iChar = string_itoa(i);
@@ -1083,6 +1090,9 @@ void listarArchivos(char * linea) {
 	destruirSubstring(separado);
 	free(rutaFS);
 	free(indexChar);
+	free(rutaArchivo);
+	config_destroy(configTablaDirectorios);
+
 }
 
 void mostrarInfo(char * linea) {
@@ -1261,6 +1271,29 @@ void listarArchivosDirectorios(char * ruta) {
 	while ((ent = readdir(dir)) != NULL) {
 		if (ent->d_name[0] != '.') {
 			printf("%s \n", ent->d_name);
+		}
+	}
+
+	closedir(dir);
+}
+
+void borrarArchivosDirectorios(char * ruta) {
+	DIR *dir;
+	struct dirent *ent;
+
+	dir = opendir(ruta);
+
+	if (dir == NULL)
+		return;
+
+	while ((ent = readdir(dir)) != NULL) {
+		if (ent->d_name[0] != '.') {
+			char * archivoABorrar = string_new();
+			string_append(&archivoABorrar, ruta);
+			string_append(&archivoABorrar, "/");
+			string_append(&archivoABorrar, ent->d_name);
+			remove(archivoABorrar);
+			free(archivoABorrar);
 		}
 	}
 

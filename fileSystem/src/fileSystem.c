@@ -3,6 +3,9 @@
 int main(int argc, char **argv) {
 	formateado = false;
 
+	//Creo la tabla de sockets
+	crearTablaSockets();
+
 	//Verifico si ignoro o no el estado anterior
 	manejoDeEstado(argv[1]);
 
@@ -38,11 +41,14 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	case HANDSHAKE:
 		procesarHandshake(unPaquete, client_socket);
 		break;
+	case ENVIAR_NOMBRE:
+		procesarNombre(unPaquete, client_socket);
+		break;
 	case ENVIAR_INFO_DATANODE:
 		procesarInfoNodo(unPaquete, *client_socket);
 		break;
 	case ENVIAR_ERROR:
-		procesarError(unPaquete);
+		procesarError(unPaquete, client_socket);
 		break;
 	case ENVIAR_BLOQUE_ARCHIVO_TEMPORAL:
 		procesarBloqueArchivoTemporal(unPaquete);
@@ -62,17 +68,18 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 void procesarHandshake(t_paquete * unPaquete, int * client_socket) {
 	switch (recibirHandshake(unPaquete)) {
 	case DATANODE:
-		;
-		int * a = malloc(sizeof(int));
-		memcpy(a,client_socket,sizeof(int));
-		list_add(nodoSinFormatear,a);
+		if (formateado) {
+			*client_socket = -1;
+		} else {
+			enviarSolicitudNombre(*client_socket);
+		}
 		break;
 	case YAMA:
-		if (formateado == false)
+		if (!formateado)
 			*client_socket = -1;
 		break;
 	case WORKER:
-		if (formateado == false)
+		if (!formateado)
 			*client_socket = -1;
 		break;
 	default:
@@ -85,37 +92,17 @@ void procesarInfoNodo(t_paquete * unPaquete, int client_socket) {
 	//Recibo info
 	t_nodo_info * info = recibirInfoDataNode(unPaquete);
 
-	//Verifico si existe
-	bool esNodoBuscado(char * nodo) {
-		return string_equals_ignore_case(info->nombre, nodo);
-	}
-	bool yaExiste = list_any_satisfy(tablaNodos->nomNodos,
-			(void*) esNodoBuscado);
+	//Agrego elemento a la tabla de nodos
+	agregarNodoTablaNodos(info);
 
-	//Agrego elemento a la lista de nodos por sockets
-	agregarNodoTablaSockets(info->nombre, client_socket);
-
-	if (!yaExiste) {
-		//Agrego elemento a la tabla de nodos
-		agregarNodoTablaNodos(info);
-
-		//Creo una tabla de Bitmap del nodo
-		crearArchivoTablaBitmap(info);
-	} else {
-		free(info->nombre);
-		free(info);
-	}
+	//Creo una tabla de Bitmap del nodo
+	crearArchivoTablaBitmap(info);
 
 }
 
-void procesarError(t_paquete * unPaquete) {
-	//int cliente_desconectado;
-	//memcpy(&cliente_desconectado, unPaquete->buffer->data, sizeof(int));
-
-	//char * nomNodo = eliminarNodoTablaSockets(cliente_desconectado);
-
-	//eliminarNodoTablaNodos(nomNodo);
-
+void procesarError(t_paquete * unPaquete, int * client_socket) {
+	char * nomNodo = eliminarNodoTablaSockets(*client_socket);
+	free(nomNodo);
 }
 
 void procesarBloqueArchivoTemporal(t_paquete * unPaquete) {
@@ -226,6 +213,29 @@ void procesarBloqueGenerarCopia(t_paquete * unPaquete) {
 	free(bloqueGenerarCopia);
 }
 
+void procesarNombre(t_paquete * unPaquete, int * client_socket) {
+	char * nomNodo = recibirNombre(unPaquete);
+
+	//Agrego elemento a la lista de nodos por sockets
+	agregarNodoTablaSockets(nomNodo, *client_socket);
+
+	if (estadoAnterior) {
+		bool soyNodoBuscado(t_nodo_info * nodo){
+			return string_equals_ignore_case(nodo->nombre,nomNodo);
+		}
+
+		t_nodo_info * nodo = list_find(tablaNodos->infoDeNodo,(void*)soyNodoBuscado);
+
+		nodo->disponible = true;
+
+		tablaNodos->tamanio += nodo->total;
+		tablaNodos->libres += nodo->libre;
+
+		persistirTablaNodos();
+	}
+	free(nomNodo);
+}
+
 /*-------------------------Manejos de estado-------------------------*/
 void manejoDeEstado(char * comando) {
 	if (comando != NULL) {
@@ -241,6 +251,8 @@ void manejoDeEstado(char * comando) {
 
 void ignoroEstadoAnterior() {
 	printf("Ignoro estado anterior \n");
+
+	estadoAnterior = false;
 
 	//Verifico que la carpeta metadata exista
 	char * ruta = string_new();
@@ -261,17 +273,14 @@ void ignoroEstadoAnterior() {
 		mkdir(ruta, 0777);
 	}
 
-	//Creo las nuevas tablas administrativas
-	nodoSinFormatear = list_create();
-//	crearTablaDirectorios(ruta);
-
-
 	//Libero memoria
 	free(ruta);
 }
 
 void consideroEstadoAnterior() {
 	printf("Considero estado anterior \n");
+
+	estadoAnterior = true;
 
 	//Verifico que la carpeta metadata exista
 	char * ruta = string_new();

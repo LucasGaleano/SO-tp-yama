@@ -42,5 +42,6 @@ void procesarError(t_paquete * unPaquete);
 void procesarSolicitudLecturaArchivoTemporal(t_paquete * unPaquete,int * client_socket);
 void procesarSolicitudLecturaBloqueGenerarCopia(t_paquete * unPaquete,int * client_socket);
 void procesarSolicitudInfoNodo(t_paquete * unPaquete, int * client_socket);
+void procesarSolicitudNombre(t_paquete * unPaquete, int * client_socket);
 
 #endif /*DATANODE_H_*/

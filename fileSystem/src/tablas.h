@@ -17,7 +17,6 @@
 typedef struct {
 	int socket;
 	char * nombre;
-	bool disponible;
 } t_tabla_sockets;
 
 //Tabla de bitMaps
@@ -53,7 +52,6 @@ t_tabla_nodo * tablaNodos;
 t_list * tablaDirectorios;
 t_list * tablaTareas;
 
-t_config * configTablaDirectorios;
 t_config * configTablaNodo;
 
 bool bitMapDirectorio[100];
