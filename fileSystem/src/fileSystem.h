@@ -18,15 +18,17 @@
 
 /*------------------------Variables globales-------------------------*/
 t_log* logFileSystem;
+bool estadoAnterior;
 
 /*------------------------Procesamiento paquetes-------------------------*/
 void 				procesarPaquete						(t_paquete *, int *);
 void 				procesarHandshake					(t_paquete *, int *);
 void 				procesarInfoNodo					(t_paquete *, int);
-void 				procesarError						(t_paquete *);
+void 				procesarError						(t_paquete *, int *);
 void 				procesarBloqueArchivoTemporal		(t_paquete *);
 void				procesarRespuestaEscrituraBloque	(t_paquete *, int);
 void 				procesarBloqueGenerarCopia			(t_paquete *);
+void 				procesarNombre						(t_paquete *, int *);
 
 /*-------------------------Manejos de estado-------------------------*/
 void 				manejoDeEstado						(char *);

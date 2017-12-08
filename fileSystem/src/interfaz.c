@@ -9,7 +9,7 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 
 	void * archivo = abrirArchivo(rutaArchivo, &tamArch, &archivofd);
 
-	if(archivo == NULL){
+	if (archivo == NULL) {
 		printf("%s: No existe el archivo o el directorio", rutaArchivo);
 		return;
 	}
@@ -150,22 +150,34 @@ void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
 }
 
 char * buscarNodoMenosCargado() {
+
+	bool estaDisponible(t_nodo_info * nodo) {
+		return nodo->disponible;
+	}
+
+	t_list * disponibles = list_filter(tablaNodos->infoDeNodo,
+			(void*) estaDisponible);
+
 	bool nodoMenosCargado(t_nodo_info * cargado, t_nodo_info * menosCargado) {
 		int cargadoNum = cargado->total - cargado->libre;
 		int menosCargadoNum = menosCargado->total - menosCargado->libre;
 		return cargadoNum < menosCargadoNum;
 	}
 
-	list_sort(tablaNodos->infoDeNodo, (void*) nodoMenosCargado);
+	list_sort(disponibles, (void*) nodoMenosCargado);
 
-	t_nodo_info * nodo = list_get(tablaNodos->infoDeNodo, 0);
+	t_nodo_info * nodo = list_get(disponibles, 0);
 
 	//Actualizo tabla de nodos
 	tablaNodos->libres--;
 	nodo->libre--;
 	persistirTablaNodos();
 
-	return nodo->nombre;
+	char * nomNodo = strdup(nodo->nombre);
+
+	list_destroy(disponibles);
+
+	return nomNodo;
 }
 
 int buscarBloqueAEscribir(char * nombreNodo) {
@@ -320,6 +332,22 @@ t_tarea * nodoMenosSaturado(char ** nodoBloqueOriginal, char ** nodoBloqueCopia)
 
 	t_tarea * tarea = malloc(sizeof(t_tarea));
 
+	if (!nodoDisponible(nodoBloqueOriginal[0])) {
+		int tamNombre = strlen(nodoBloqueCopia[0]) + 1;
+		tarea->nomNodo = malloc(tamNombre);
+		memcpy(tarea->nomNodo, nodoBloqueCopia[0], tamNombre);
+		tarea->bloque = atoi(nodoBloqueCopia[1]);
+		return tarea;
+	}
+
+	if (!nodoDisponible(nodoBloqueCopia[0])) {
+		int tamNombre = strlen(nodoBloqueOriginal[0]) + 1;
+		tarea->nomNodo = malloc(tamNombre);
+		memcpy(tarea->nomNodo, nodoBloqueOriginal[0], tamNombre);
+		tarea->bloque = atoi(nodoBloqueOriginal[1]);
+		return tarea;
+	}
+
 	int cumplenOriginal = cantidadTareas(nodoBloqueOriginal);
 
 	int cumplenCopia = cantidadTareas(nodoBloqueCopia);
@@ -345,4 +373,14 @@ int cantidadTareas(char ** nodoBloqueOriginal) {
 	}
 
 	return list_count_satisfying(tablaTareas, (void*) cantidadDeTareas);
+
+}
+
+bool nodoDisponible(char * nomNodo) {
+	bool estaDisponible(t_nodo_info * nodo) {
+		return nodo->disponible
+				&& string_equals_ignore_case(nodo->nombre, nomNodo);
+	}
+
+	return list_any_satisfy(tablaNodos->infoDeNodo, (void*) estaDisponible);
 }

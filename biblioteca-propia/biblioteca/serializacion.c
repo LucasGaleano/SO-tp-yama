@@ -533,9 +533,7 @@ int deserializarNumero(t_stream* buffer) {
 }
 
 char * deserializarPalabra(t_stream * buffer) {
-	char * palabra = malloc(buffer->size);
-
-	palabra = strdup(buffer->data);
+	char * palabra = strdup(buffer->data);
 
 	return palabra;
 }

@@ -17,5 +17,6 @@ char * 				generarBloque					(void *, int);
 char* 				leerArchivo						(char *);
 t_tarea * 			nodoMenosSaturado				(char **, char **);
 int 				cantidadTareas					(char **);
+bool 				nodoDisponible					(char *);
 
 #endif /* INTERFAZ_H_ */

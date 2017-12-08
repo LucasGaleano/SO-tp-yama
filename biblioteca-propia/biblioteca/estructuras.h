@@ -42,9 +42,14 @@ enum emisor {
 enum cod_op{
 	HANDSHAKE=0,
 
+	ENVIAR_SOLICITUD_NOMBRE,
+	ENVIAR_NOMBRE,
+
 	ENVIAR_MENSAJE,
 	ENVIAR_RUTA_ARCHIVO,
 	ENVIAR_ARCHIVO,
+	ENVIAR_SOLICITUD_INFO_DATANODE,
+
 	ENVIAR_INFO_DATANODE,
 	ENVIAR_ERROR,
 
@@ -145,6 +150,7 @@ typedef struct {
 	char * nombre;
 	int total;
 	int libre;
+	bool disponible;
 } t_nodo_info;
 
 /*------------------------------Estructuras de comunicacion Yama Master------------------------------*/

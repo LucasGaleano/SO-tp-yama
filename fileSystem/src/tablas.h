@@ -52,7 +52,6 @@ t_tabla_nodo * tablaNodos;
 t_list * tablaDirectorios;
 t_list * tablaTareas;
 
-t_config * configTablaDirectorios;
 t_config * configTablaNodo;
 
 bool bitMapDirectorio[100];
