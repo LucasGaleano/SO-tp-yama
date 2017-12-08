@@ -15,6 +15,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <commons/collections/list.h>
+
 /*------------------------------Estructuras------------------------------*/
 //#define TAM_BLOQUE 1048576
 #define TAM_BLOQUE 1024
@@ -242,7 +244,5 @@ typedef struct {
 	t_list * nodoBloque;
 	t_list * puertoIP;
 } t_lista_nodobloque;
-
-
 
 #endif /* BIBLIOTECA_ESTRUCTURAS_H_ */
