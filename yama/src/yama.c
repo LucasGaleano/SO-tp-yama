@@ -24,7 +24,7 @@ int main(void) {
 
 	iniciarPlanificador(config->algoritmo);
 
-	config_destroy(config);
+	destruirConfiguracion(config);
 //	list_destroy_and_destroy_elements(tabla_de_estados, (void*) eliminarElemento() ); //TODO PREGUNTAR SI ESTA BIEN LIBERAR DESPUES DE USAR
 	return 0;
 }
@@ -61,6 +61,8 @@ t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 			configuracion->puerto_yama, configuracion->ip,
 			configuracion->puerto, configuracion->retardo,
 			configuracion->algoritmo, configuracion->disponibilidad_base);
+
+	config_destroy(config);
 
 	return configuracion;
 }
@@ -243,3 +245,10 @@ long generarJob() {
 	return idJob;
 }
 
+void destruirConfiguracion(t_configuracion * configuracion){
+	free(configuracion->algoritmo);
+	free(configuracion->ip);
+	free(configuracion->puerto);
+	free(configuracion->puerto_yama);
+	free(configuracion);
+}

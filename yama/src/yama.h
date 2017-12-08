@@ -54,5 +54,5 @@ void 							procesarTareaCompleta					(t_paquete * unPaquete, int client_socket)
 /*----------------------------------Funciones auxiliares----------------------------------*/
 t_indicacionTransformacion* 	bloqueAT_indicacionTranformacion		(int tamanio, t_bloque_ubicacion* ubicacion, char* nombreTemp);
 long 							generarJob								(void);
-
+void 							destruirConfiguracion					(t_configuracion * configuracion);
 #endif /* YAMA_H_ */
