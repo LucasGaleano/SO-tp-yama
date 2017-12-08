@@ -35,23 +35,24 @@ t_list* masterConectados;
 //	int disponibilidad_base;
 //} t_sockets;
 
-/*------------------------Configuracion proyecto-------------------------*/
-t_configuracion *   leerArchivoDeConfiguracionYAMA     (char* path);
+/*----------------------------------Configuracion proyecto----------------------------------*/
+t_configuracion * 				leerArchivoDeConfiguracionYAMA     		(char* path);
 
-/*------------------------Manejo de conexiones-------------------------*/
-void                iniciarServidor                    (char* unPuerto);
+/*----------------------------------Manejo de conexiones-----------------------------------*/
+void    	            		iniciarServidor                    		(char* unPuerto);
 
-/*------------------------Procesamiento paquetes-------------------------*/
-void 				procesarPaquete					(t_paquete *, int *);
-void 				recibirInfoNodo					(t_paquete *, int);
-void 				recibirError					(t_paquete *);
+/*----------------------------------Procesamiento paquetes-----------------------------------*/
+void	 						procesarPaquete							(t_paquete * unPaquete, int * client_socket);
+void 							procesarRecibirHandshake				(t_paquete * unPaquete, int * client_socket);
+void 							procesarRecibirMensaje					(t_paquete * unPaquete);
+void 							procesarRecibirArchivo					(t_paquete * unPaquete);
+void 							procesarRecibirError					(t_paquete * unPaquete);
+void 							procesarEnviarSolicitudTransformacion	(t_paquete * unPaquete, int * client_socket);
+void 							procesarEnviarIndicacionTransformacion	(t_paquete * unPaquete);
+void 							procesarTareaCompleta					(t_paquete * unPaquete, int client_socket);
 
-
-void 				enviarRutaArchivo				(int, char *);
-
-long 			    generarJob                      ();
-
-t_indicacionTransformacion* bloqueAT_indicacionTranformacion(int, t_bloque_ubicacion* ,char*);
-
+/*----------------------------------Funciones auxiliares----------------------------------*/
+t_indicacionTransformacion* 	bloqueAT_indicacionTranformacion		(int tamanio, t_bloque_ubicacion* ubicacion, char* nombreTemp);
+long 							generarJob								(void);
 
 #endif /* YAMA_H_ */
