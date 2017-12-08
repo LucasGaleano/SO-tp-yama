@@ -8,12 +8,13 @@
 #include <commons/collections/list.h>
 #include <commons/collections/queue.h>
 #include <biblioteca/sockets.h>
-//#include <biblioteca/estructurasMasterYama.h>
 #include <biblioteca/estructurasWorkerMaster.h>
 #include <commons/string.h>
 #include <pthread.h>
+
 #include "tablas.h"
 
+/*----------------------------------Estructuras----------------------------------*/
 typedef struct {
 	char * ip;
 	char * puerto;
@@ -23,17 +24,16 @@ typedef struct {
 	int disponibilidad_base;
 } t_configuracion;
 
-int socketFS;
-t_queue* cola_master;
-
-long idJob;
-
-t_list* masterConectados;
-
 //typedef struct {
 //	char * ;
 //	int disponibilidad_base;
 //} t_sockets;
+
+/*----------------------------------Variables globales----------------------------------*/
+int socketFS;
+t_queue* cola_master;
+long idJob;
+t_list* masterConectados;
 
 /*----------------------------------Configuracion proyecto----------------------------------*/
 t_configuracion * 				leerArchivoDeConfiguracionYAMA     		(char* path);

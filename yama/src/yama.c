@@ -2,16 +2,19 @@
 
 int main(void) {
 
+	//Levanto el archivo de configuracion
 	char* path_config_yama =
 			"/home/utnso/workspace/tp-2017-2c-NULL/configuraciones/yama.cfg";
 
 	t_configuracion * config = leerArchivoDeConfiguracionYAMA(path_config_yama);
 
-	//Creo el thread para escuchar conexiones
-	pthread_t threadServerYama;
+	//Creo estructuras administrativas
 	idJob = 0;
 	cola_master = queue_create();
 	masterConectados = list_create();
+
+	//Creo el thread para escuchar conexiones
+	pthread_t threadServerYama;
 
 	if (pthread_create(&threadServerYama, NULL, (void*) iniciarServidor,
 			config->puerto_yama)) {
@@ -22,7 +25,7 @@ int main(void) {
 	//Me conecto con el file system
 	socketFS = conectarCliente(config->ip, config->puerto, YAMA);
 
-	iniciarPlanificador(config->algoritmo);
+	//iniciarPlanificador(config->algoritmo); todo
 
 	destruirConfiguracion(config);
 //	list_destroy_and_destroy_elements(tabla_de_estados, (void*) eliminarElemento() ); //TODO PREGUNTAR SI ESTA BIEN LIBERAR DESPUES DE USAR
@@ -119,11 +122,11 @@ void procesarRecibirHandshake(t_paquete * unPaquete, int * client_socket) {
 	}
 }
 
-void procesarRecibirMensaje(t_paquete * unPaquete){
+void procesarRecibirMensaje(t_paquete * unPaquete) {
 	//char * mensaje = recibirMensaje(unPaquete); todo Comento para que no tire error
 }
 
-void procesarRecibirArchivo(t_paquete * unPaquete){
+void procesarRecibirArchivo(t_paquete * unPaquete) {
 	//void * archivo = recibirArchivo(unPaquete);  todo Comento para que no tire error
 }
 
@@ -139,7 +142,7 @@ void procesarRecibirError(t_paquete * unPaquete) {
 
 void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete,
 		int *client_socket) {
-	queue_push(cola_master, client_socket);// todo-->Verificar que esto haga lo que realmente quiero
+	queue_push(cola_master, client_socket);	// todo-->Verificar que esto haga lo que realmente quiero
 	char * nomArchivo = recibirMensaje(unPaquete);
 	enviarRutaArchivo(socketFS, nomArchivo);
 }
@@ -245,7 +248,7 @@ long generarJob() {
 	return idJob;
 }
 
-void destruirConfiguracion(t_configuracion * configuracion){
+void destruirConfiguracion(t_configuracion * configuracion) {
 	free(configuracion->algoritmo);
 	free(configuracion->ip);
 	free(configuracion->puerto);
