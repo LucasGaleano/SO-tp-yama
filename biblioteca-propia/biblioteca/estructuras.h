@@ -236,6 +236,7 @@ typedef struct {
 } t_nodo_bloque;
 
 typedef struct {
+	char* nomNodo;
 	char * puerto;
 	char * IP;
 } t_puerto_ip;
