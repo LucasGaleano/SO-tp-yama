@@ -76,4 +76,7 @@ t_indicacionAlmacenadoFinal* 	deserializarIndicacionAlmacenadoFinal			(t_stream 
 /*----------------------------------------Funciones auxiliares----------------------------------------*/
 void * 							abrirArchivo									(char *, size_t *, FILE **);
 
+void serializarListaNodoBloques(t_paquete * unPaquete, t_list * listaNodoBloque);
+t_list * deserializarListaNodoBloques(t_stream *);
+
 #endif /* BIBLIOTECA_SERIALIZACION_H_ */

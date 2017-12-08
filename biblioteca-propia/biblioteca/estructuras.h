@@ -82,6 +82,8 @@ enum cod_op{
 	RESPUESTA_INFO_ARCHIVO,
 
 	INDICACION_TERMINO_TAREA,
+
+	ENVIAR_LISTA_NODO_BLOQUES,
 };
 
 enum continuaMensaje{
@@ -225,5 +227,22 @@ typedef struct{
 typedef struct {
 	char* rutaArchivo;
 } t_solicitudArchivo;
+
+typedef struct {
+	char* nomNodo;
+	int bloque;
+} t_nodo_bloque;
+
+typedef struct {
+	char * puerto;
+	char * IP;
+} t_puerto_ip;
+
+typedef struct {
+	t_list * nodoBloque;
+	t_list * puertoIP;
+} t_lista_nodobloque;
+
+
 
 #endif /* BIBLIOTECA_ESTRUCTURAS_H_ */

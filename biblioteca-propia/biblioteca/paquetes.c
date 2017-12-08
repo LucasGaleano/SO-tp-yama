@@ -437,6 +437,16 @@ void enviarTareaCompletada(int server_socket, int cod_tarea) {
 	enviarPaquetes(server_socket, unPaquete);
 }
 
+void enviarListaNodoBloques(int server_socket, t_list * listaNodoBloque) {
+	t_paquete* unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_LISTA_NODO_BLOQUES;
+
+	serializarListaNodoBloques(unPaquete, listaNodoBloque);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
+
 /*-------------------------Recibir-------------------------*/
 
 int recibirHandshake(t_paquete * unPaquete) {
@@ -548,3 +558,6 @@ int recibirError(t_paquete * unPaquete) {
 int recibirTareaCompletada(t_paquete * unPaquete) {
 	return deserializarNumero(unPaquete->buffer);
 }
+ t_list * recibirListaNodoBloques(t_paquete * unPaquete){
+	 return deserializarListaNodoBloques(unPaquete->buffer);
+ }
