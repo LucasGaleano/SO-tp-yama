@@ -48,6 +48,13 @@ t_queue* cola_master;
 long idJob;
 t_list* masterConectados;
 
+/*----------------------------------Planificador--------------------------------------------*/
+typedef struct{
+	int bloqueArchivo;
+	t_list* nodosEnLosQueEsta;
+} t_nodos_por_bloque;
+
+t_list* tablaPlanificador;
 
 /*----------------------------------Configuracion proyecto----------------------------------*/
 t_configuracion * 				leerArchivoDeConfiguracionYAMA     		(char* path);
@@ -66,7 +73,7 @@ void 							procesarEnviarIndicacionTransformacion	(t_paquete * unPaquete);
 void 							procesarTareaCompleta					(t_paquete * unPaquete, int client_socket);
 
 /*----------------------------------Funciones auxiliares----------------------------------*/
-t_indicacionTransformacion* 	bloqueAT_indicacionTranformacion		(int tamanio, t_bloque_ubicacion* ubicacion, char* nombreTemp);
 long 							generarJob								(void);
 void 							destruirConfiguracion					(t_configuracion * configuracion);
+
 #endif /* YAMA_H_ */

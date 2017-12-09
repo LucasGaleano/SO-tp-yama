@@ -16,6 +16,7 @@ int main(void) {
 	cola_master = queue_create();
 	masterConectados = list_create(); //TODO VER QUE ONDA COMO HAGO CON LOS MASTERS
 	tabla_de_estados = list_create();
+	tablaPlanificador = Planificador_create();
 
 	//Creo el thread para escuchar conexiones
 	pthread_t threadServerYama;
@@ -54,13 +55,10 @@ t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 
 	configuracion->ip = config_get_string_value(config, "FS_IP");
 	configuracion->puerto = config_get_string_value(config, "FS_PUERTO");
-	configuracion->retardo = config_get_int_value(config,
-			"RETARDO_PLANIFICACION");
-	configuracion->algoritmo = config_get_string_value(config,
-			"ALGORITMO_BALANCEO");
+	configuracion->retardo = config_get_int_value(config, "RETARDO_PLANIFICACION");
+	configuracion->algoritmo = config_get_string_value(config, "ALGORITMO_BALANCEO");
 	configuracion->puerto_yama = config_get_string_value(config, "PUERTO_YAMA");
-	configuracion->disponibilidad_base = config_get_int_value(config,
-			"DISPONIBILIDAD_BASE");
+	configuracion->disponibilidad_base = config_get_int_value(config, "DISPONIBILIDAD_BASE");
 
 	printf(
 			"Se levanto el proceso YAMA con: YAMA_PUERTO: %s  FS_IP: %s - FS_PUERTO: %s - RETARDO: %d - ALGORITMO: %s - DISPONIBILIDAD BASE: %d \n",
@@ -93,8 +91,11 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_ERROR:
 		procesarRecibirError(unPaquete);
 		break;
-	case ENVIAR_SOLICITUD_TRANSFORMACION:
-		procesarEnviarSolicitudTransformacion(unPaquete, client_socket);
+	case ENVIAR_SOLICITUD_TRANSFORMACION: //RECIBO SOLICITUD DE TRANSFORMACION CON PATH DE ARCHIVO
+		procesarEnviarSolicitudTransformacion(unPaquete, client_socket); //ENVIO A FS PATH DE ARCHIVO
+		break;
+	case ENVIAR_LISTA_NODO_BLOQUES: //RECIBO LISTA DE ARCHIVOS DE FS CON UBICACIONES Y BLOQUES
+		procesarEnviarListaNodoBloques(unPaquete); //
 		break;
 	case ENVIAR_INDICACION_TRANSFORMACION:
 		procesarEnviarIndicacionTransformacion(unPaquete);
@@ -159,47 +160,34 @@ void procesarRecibirError(t_paquete * unPaquete) {
 //todo HACER ALGO ANTE EL ERROR
 }
 
-void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete,
-		int *client_socket) {
+void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete,int *client_socket) {
 	queue_push(cola_master, client_socket);	// todo-->Verificar que esto haga lo que realmente quiero
 	char * nomArchivo = recibirMensaje(unPaquete);
 	enviarRutaArchivo(socketFS, nomArchivo);
 }
 
-void procesarEnviarIndicacionTransformacion(t_paquete * unPaquete) {
-//int socket_master = queue_pop(cola_master);
+void procesarEnviarListaNodoBloques(t_paquete * unPaquete){
+	t_nodos_bloques * nodosBloques = recibirListaNodoBloques(unPaquete);
 
-//me llega la respuesta de FS y despues de procesarla la envio al master de la lista masterconectados.
+	t_list* listNodoBloque = nodosBloques.nodoBloque;
 
-	t_list* listaDeBloque = recibirListaDeBloques(unPaquete);//recibir lista de FS
+	t_list* listaBloquesConNodos = agruparNodosPorBloque(listNodoBloque);
+	t_list* nodosSinRepetidos = nodosSinRepetidos(listNodoBloque);
+
+	void agregarATablaPlanificador(char* nombreNodo){
+		planificador_agregarWorker(tablaPlanificador, nombreNodo);
+	}
+
+	list_iterate(nodosSinRepetidos,(void*) agregarATablaPlanificador);
+
+	void planificador(int algoritmo, t_list * listaDeBloques,t_list* tablaPlanificador, int DispBase);
+	planificador(configuracion->algoritmo, listaBloquesConNodos, tablaPlanificador, configuracion->disponibilidad_base);
+
+
 }
 /*-------------------------Funciones auxiliares-------------------------*/
 
-t_indicacionTransformacion* bloqueAT_indicacionTranformacion(int tamanio,
-		t_bloque_ubicacion* ubicacion, char* nombreTemp) {
-
-	t_indicacionTransformacion* indTransform = malloc(
-			sizeof(t_indicacionTransformacion));
-
-//indTransform->bloque = malloc(ubicacion->numBloque);
-//indTransform->bytes = malloc(tamanio);
-	indTransform->ip = malloc(string_length(ubicacion->ip));
-	indTransform->nodo = malloc(string_length(ubicacion->nodo));
-	indTransform->puerto = malloc(string_length(ubicacion->puerto));
-	indTransform->rutaArchivoTemporal = malloc(string_length(nombreTemp));
-
-	indTransform->bloque = ubicacion->numBloque;
-	indTransform->bytes = tamanio;
-	indTransform->ip = ubicacion->ip;
-	indTransform->nodo = ubicacion->nodo;
-	indTransform->puerto = ubicacion->puerto;
-	indTransform->rutaArchivoTemporal = nombreTemp;
-
-	return indTransform;
-}
-
-void destruirIndicacionDeTransformacion(
-		t_indicacionTransformacion* indTransform) {
+void destruirIndicacionDeTransformacion(t_indicacionTransformacion* indTransform) {
 	free(indTransform->nodo);
 	free(indTransform->ip);
 	free(indTransform->puerto);
@@ -215,14 +203,54 @@ long generarJob() {
 	return idJob;
 }
 
-t_list* agruparBloquesPorNodo(t_list* listaDeNodoBloque) {
-	t_list* nombreNodosSinRepetidos = list_create(); //TODO LIBERAR LISTA
+t_list* agruparNodosPorBloque(t_list* listaDeNodoBloque) {
+	t_list* bloquesSinRepetidos = list_create(); //TODO LIBERAR LISTA
+
+	bool existeNodoEnLaLista(int numeroBloque) {
+		bool booleano = false;
+		for (int x = 0; x < bloquesSinRepetidos->elements_count; x++) {
+			if (list_get(bloquesSinRepetidos, x), numeroBloque) {
+				booleano = true;
+				break;
+			}
+		}
+		return booleano;
+	}
+
+	void tomarBloquesSinRepetidos(t_nodo_bloque* t_nodo_bloque) {
+		if (!existeNodoEnLaLista(t_nodo_bloque->bloqueArchivo)) {
+			list_add(bloquesSinRepetidos, t_nodo_bloque->bloqueArchivo);
+		}
+	}
+
+	list_iterate(listaDeNodoBloque, (void*) tomarBloquesSinRepetidos);
+
+	t_list* listaBloquesConListaDeNodos = list_create(); //TODO LIBERAR MEMORIA
+
+	void obtenerNodosDeBloque(int numeroBloque) {
+		t_nodos_por_bloque* bloqueConListaNodos = malloc(sizeof(t_nodos_por_bloque)); //TODO LIBERAR MEMORIA
+		for (int y = 0; y < listaDeNodoBloque->elements_count; y++) {
+			t_nodo_bloque* nodoBloque = list_get(listaDeNodoBloque, y);
+			if (numeroBloque == nodoBloque->bloqueArchivo) {
+				list_add(bloqueConListaNodos->nodosEnLosQueEsta, nodoBloque->nomNodo);
+			}
+		}
+		list_add(listaBloquesConListaDeNodos, bloqueConListaNodos);
+	}
+
+	list_iterate(bloquesSinRepetidos, (void*) obtenerNodosDeBloque);
+
+	return listaBloquesConListaDeNodos;
+}
+
+t_list* nodosSinRepetidos(t_list* listaDeNodoBloque){
+
+	t_list* nodosSinRepetidos = list_create(); //TODO LIBERAR LISTA
 
 	bool existeNodoEnLaLista(char* nombreNodo) {
 		bool booleano = false;
-		for (int x = 0; x < nombreNodosSinRepetidos->elements_count; x++) {
-			if (string_equals_ignore_case(list_get(nombreNodosSinRepetidos, x),
-					nombreNodo)) {
+		for (int x = 0; x < nodosSinRepetidos->elements_count; x++) {
+			if (string_equals_ignore_case(list_get(nodosSinRepetidos, x), nombreNodo)) {
 				booleano = true;
 				break;
 			}
@@ -232,28 +260,13 @@ t_list* agruparBloquesPorNodo(t_list* listaDeNodoBloque) {
 
 	void tomarNodosSinRepetidos(t_nodo_bloque* t_nodo_bloque) {
 		if (!existeNodoEnLaLista(t_nodo_bloque->nomNodo)) {
-			list_add(nombreNodosSinRepetidos, t_nodo_bloque->nomNodo);
+			list_add(nodosSinRepetidos, t_nodo_bloque->nomNodo);
 		}
 	}
 
 	list_iterate(listaDeNodoBloque, (void*) tomarNodosSinRepetidos);
 
-	t_list* listaNodosConListaDeBloques = list_create(); //TODO LIBERAR MEMORIA
-	void obtenerBloquesDeNodo(char* nombreNodo) {
-		t_nodo_lista_bloques* nodoConListaBloques = malloc(
-				sizeof(t_nodo_lista_bloques)); //TODO LIBERAR MEMORIA
-		for (int y = 0; y < listaDeNodoBloque->elements_count; y++) {
-			t_nodo_bloque* nodoBloque = list_get(listaDeNodoBloque, y);
-			if (string_equals_ignore_case(nodoBloque->nomNodo, nombreNodo)) {
-				list_add(nodoConListaBloques->bloques, &nodoBloque->bloque);
-			}
-		}
-		list_add(listaNodosConListaDeBloques, nodoConListaBloques);
-	}
-
-	list_iterate(nombreNodosSinRepetidos, (void*) obtenerBloquesDeNodo);
-
-	return listaNodosConListaDeBloques;
+	return nodosSinRepetidos;
 }
 
 void destruirConfiguracion(t_configuracion * configuracion) {
