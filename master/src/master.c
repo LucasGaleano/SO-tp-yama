@@ -113,9 +113,7 @@ int leerConfiguracion(){
 	t_config * config = config_create(ruta);
 
 	char * puerto = config_get_string_value(config, "YAMA_PUERTO");
-	printf("%s", puerto);
 	char * ip = config_get_string_value(config, "YAMA_IP");
-    printf("%s", ip);
 
     int socketYama = conectarCliente(ip, puerto, MASTER);
 
@@ -508,22 +506,22 @@ void signal_capturer(int numeroSenial){
 	{
 
 		case 8:
-			enviarMensaje(conexionYama,"division por 0");
+			enviarError(conexionYama,ERROR_MASTER);
 			log_error(logMaster, "PROCESO MASTER CIERRA POR ERROR DE COMA FLOTANTE");
 			exit(EXIT_FAILURE);
 			break;
 		case 11:
-			enviarMensaje(conexionYama,"Segmentation fault");
+			enviarError(conexionYama,ERROR_MASTER);
 			log_error(logMaster, "PROCESO MASTER CIERRA POR SEGMENTATION FAULT");
 			exit(EXIT_FAILURE);
 			break;
 		case 16:
-			enviarMensaje(conexionYama,"Stack Overflow");
+			enviarError(conexionYama,ERROR_MASTER);
 			log_error(logMaster, "PROCESO MASTER CIERRA POR STACK OVERFLOW");
 			exit(EXIT_FAILURE);
 			break;
 		default:
-			enviarMensaje(conexionYama, "Rompi por una razon desconocida");
+			enviarError(conexionYama,ERROR_MASTER);
 			log_error(logMaster, "PROCESO MASTER CIERRA POR NUMERO DE SEÑAL %d", numeroSenial);
 			exit(EXIT_FAILURE);
 			break;

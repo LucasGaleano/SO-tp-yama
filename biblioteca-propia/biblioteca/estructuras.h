@@ -91,6 +91,9 @@ enum cod_op{
 	INDICACION_TERMINO_TAREA,
 
 	ENVIAR_LISTA_NODO_BLOQUES,
+
+	ENVIAR_ERROR_JOB,
+
 };
 
 enum continuaMensaje{
@@ -204,7 +207,7 @@ typedef struct {
 	char* puerto;
 	char* archivoDeReduccionLocal;
 	char* archivoDeReduccionGlobal;
-	char* encargado;
+	int encargado;
 } t_indicacionReduccionGlobal;
 
 typedef struct {

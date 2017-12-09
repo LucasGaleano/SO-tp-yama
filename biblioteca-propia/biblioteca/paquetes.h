@@ -52,6 +52,10 @@ void							enviarTareaCompletada						(int, int);
 
 void							enviarListaNodoBloques						(int, t_list *);
 
+void 							enviarRutaParaArrancarTransformacion		(int server_socket, char * ruta);
+
+char * 							recibirRutaParaArrancarTransformacion		(t_paquete * unPaquete);
+
 /*-----------------------------------Recibir paquetes-----------------------------------*/
 int 							recibirHandshake							(t_paquete *);
 
