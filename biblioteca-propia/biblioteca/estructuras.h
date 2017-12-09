@@ -208,21 +208,11 @@ typedef struct {
 	char* rutaArchivoReduccionGlobal;
 } t_indicacionAlmacenadoFinal;
 
-
 typedef struct{
-	char* ip;
-	char* nodo;
-	char* puerto;
-	int numBloque;
-} t_bloque_ubicacion;
+	int estadoOperacion;
+	t_indicacionTransformacion* indicacionTransformacion;
+} t_resultado_transformacion;
 
-typedef struct{
-	t_bloque_ubicacion* copia0;
-	t_bloque_ubicacion* copia1;
-	int tamanioOcupado;
-} t_bloque;
-
-//Verificados
 
 
 /*------------------------------Estructuras de comunicacion Yama File System------------------------------*/
@@ -230,20 +220,22 @@ typedef struct {
 	char* rutaArchivo;
 } t_solicitudArchivo;
 
-typedef struct {
-	char* nomNodo;
-	int bloque;
+typedef struct{
+	char * nomNodo;
+	int bloqueNodo;
+	int bloqueArchivo;
+	int originalidad;
 } t_nodo_bloque;
 
-typedef struct {
-	char* nomNodo;
+typedef struct{
+	char * nomNodo;
 	char * puerto;
-	char * IP;
+	char * ip;
 } t_puerto_ip;
 
 typedef struct {
 	t_list * nodoBloque;
 	t_list * puertoIP;
-} t_lista_nodobloque;
+} t_nodos_bloques;
 
 #endif /* BIBLIOTECA_ESTRUCTURAS_H_ */
