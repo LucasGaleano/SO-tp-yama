@@ -60,7 +60,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		procesarBloqueGenerarCopia(unPaquete);
 		break;
 	case ENVIAR_RUTA_ARCHIVO:
-		procesarEnviarRutaArchivo(unPaquete);
+		procesarEnviarRutaArchivo(unPaquete, *client_socket);
 		break;
 	default:
 		break;
@@ -216,7 +216,7 @@ void procesarBloqueGenerarCopia(t_paquete * unPaquete) {
 	free(bloqueGenerarCopia);
 }
 
-void procesarEnviarRutaArchivo(t_paquete * unPaquete) {
+void procesarEnviarRutaArchivo(t_paquete * unPaquete, int client_socket) {
 	char * archivoPedido = recibirRutaArchivo(unPaquete);
 
 	//Busco el nombre del directorio
@@ -260,7 +260,8 @@ void procesarEnviarRutaArchivo(t_paquete * unPaquete) {
 	}
 
 	//Busco los bloques
-	int cantidadDeBloques = config_get_int_value(configArchivo,"CANTIDAD_BLOQUES");
+	int cantidadDeBloques = config_get_int_value(configArchivo,
+			"CANTIDAD_BLOQUES");
 
 	int numeroBloque = 0;
 	int numeroCopia;
@@ -272,46 +273,96 @@ void procesarEnviarRutaArchivo(t_paquete * unPaquete) {
 
 	for (numeroTotal = 0; numeroTotal < cantidadDeBloques; ++numeroTotal) {
 
-		bloque = buscarBloque(configArchivo,numeroBloque,0);
+		bloque = buscarBloque(configArchivo, numeroBloque, 0);
 
-		for(numeroCopia = 1; bloque != NULL;numeroCopia ++){
+		char * key = string_new();
+		string_append(&key, "BLOQUE");
+		char * bloqueChar = string_itoa(numeroBloque);
+		string_append(&key, bloqueChar);
+		string_append(&key, "BYTES");
+
+		int tamanioBloque = config_get_int_value(configArchivo, key);
+
+		while (bloque != NULL) {
 			t_nodo_bloque * nodoBloque = malloc(sizeof(t_nodo_bloque));
+
 			nodoBloque->nomNodo = strdup(bloque[0]);
-			nodoBloque->bloque = atoi((char*)bloque[1]);
+			nodoBloque->bloqueNodo = atoi((char*) bloque[1]);
+			nodoBloque->originalidad = numeroCopia;
+			nodoBloque->bloqueArchivo = numeroBloque;
+			nodoBloque->tamanio = tamanioBloque;
+
 			list_add(listaBloques, bloque);
-			numeroTotal ++;
+			numeroTotal++;
+			numeroCopia++;
 			destruirSubstring(bloque);
-			bloque = buscarBloque(configArchivo,numeroBloque,numeroCopia);
+			bloque = buscarBloque(configArchivo, numeroBloque, numeroCopia);
 		}
 		numeroBloque++;
 	}
 
 	//Busco nodos disponibles
-
-	bool estoyDisponible(t_nodo_info * nodo){
-		return nodo->
+	bool estoyDisponible(t_nodo_info * nodo) {
+		return nodo->disponible;
 	}
 
-	t_list * nodosDisponibles = list_filter(tablaNodos->infoDeNodo,(void*)estoyDisponible);
+	t_list * nodosDisponibles = list_filter(tablaNodos->infoDeNodo,
+			(void*) estoyDisponible);
+
+	//Armo la lista final de los nodos
+	t_nodos_bloques * nodosBloques = malloc(sizeof(nodosBloques));
+	nodosBloques->nodoBloque = list_create();
+
+	int i;
+	for (i = 0; i < nodosDisponibles->elements_count; i++) {
+		t_nodo_info * nodoDisponible = list_get(nodosDisponibles, i);
+
+		void agregarSiEstaDisponible(t_nodo_bloque * nodo) {
+			if (string_equals_ignore_case(nodoDisponible->nombre,
+					nodo->nomNodo))
+				list_add(nodosBloques->nodoBloque, nodo);
+		}
+
+		list_iterate(listaBloques, (void*) agregarSiEstaDisponible);
+	}
+
+	//Armo con los disponibles los puerto y ip
+	nodosBloques->puertoIP = list_create();
+
+	void agregoAListaIpPuerto(t_nodo_info * nodoDisponble){
+		t_tabla_sockets_ip_puerto * ipPuerto = buscarIpPuertoPorNombre(nodoDisponble->nombre);
+		t_puerto_ip * puertoIpFinal = malloc(sizeof(t_puerto_ip));
+		puertoIpFinal->ip = strdup(ipPuerto->ip);
+		puertoIpFinal->puerto = strdup(ipPuerto->puerto);
+		puertoIpFinal->nomNodo = strdup(nodoDisponble->nombre);
+
+		list_add(nodosBloques->puertoIP,puertoIpFinal);
+	}
+
+	list_iterate(nodosDisponibles,(void*)agregoAListaIpPuerto);
+
+	enviarListaNodoBloques(client_socket, nodosBloques);
 
 	free(archivoPedido);
 	destruirSubstring(separado);
 	free(rutaFS);
 	free(indexPadreChar);
 	config_destroy(configArchivo);
+}
 
 void procesarNombre(t_paquete * unPaquete, int * client_socket) {
-	char * nomNodo = recibirNombre(unPaquete);
+	t_nodo_nombre * nodo = recibirNombre(unPaquete);
 
 	//Agrego elemento a la lista de nodos por sockets
-	agregarNodoTablaSockets(nomNodo, *client_socket);
+	agregarNodoTablaSockets(nodo->nombre, *client_socket, nodo->ip, nodo->puerto);
 
 	if (estadoAnterior) {
-		bool soyNodoBuscado(t_nodo_info * nodo){
-			return string_equals_ignore_case(nodo->nombre,nomNodo);
+		bool soyNodoBuscado(t_nodo_info * nodoTabla) {
+			return string_equals_ignore_case(nodoTabla->nombre, nodo->nombre);
 		}
 
-		t_nodo_info * nodo = list_find(tablaNodos->infoDeNodo,(void*)soyNodoBuscado);
+		t_nodo_info * nodo = list_find(tablaNodos->infoDeNodo,
+				(void*) soyNodoBuscado);
 
 		nodo->disponible = true;
 
@@ -320,7 +371,10 @@ void procesarNombre(t_paquete * unPaquete, int * client_socket) {
 
 		persistirTablaNodos();
 	}
-	free(nomNodo);
+	free(nodo->ip);
+	free(nodo->nombre);
+	free(nodo->puerto);
+	free(nodo);
 }
 
 /*-------------------------Manejos de estado-------------------------*/

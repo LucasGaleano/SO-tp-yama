@@ -142,6 +142,7 @@ void recibirSolicitud(t_paquete * unPaquete, int * client_socket) {
 		break;
 	case ENVIAR_SOLICITUD_NOMBRE:
 		procesarSolicitudNombre(unPaquete, client_socket);
+		break;
 	default:
 		break;
 	}
@@ -246,5 +247,5 @@ void procesarSolicitudInfoNodo(t_paquete * unPaquete, int * client_socket){
 }
 
 void procesarSolicitudNombre(t_paquete * unPaquete, int * client_socket){
-	enviarNombre(*client_socket,nomNodo);
+	enviarNombre(*client_socket,nomNodo,"127.0.0.1","3200");
 }

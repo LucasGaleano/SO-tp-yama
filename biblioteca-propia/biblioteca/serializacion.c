@@ -307,7 +307,7 @@ void serializarSolicitudReduccionGlobal(t_paquete * unPaquete,
 	int desplazamiento = 0;
 
 	memcpy(unPaquete->buffer->data + desplazamiento,
-			solicitud->cantWorkerInvolucradros, cantidadWorker);
+			&solicitud->cantWorkerInvolucradros, cantidadWorker);
 	desplazamiento += cantidadWorker;
 
 	memcpy(unPaquete->buffer->data + desplazamiento, solicitud->ip,
@@ -322,8 +322,8 @@ void serializarSolicitudReduccionGlobal(t_paquete * unPaquete,
 			solicitud->archivoReduccionPorWorker, tamArchivoReduccionPorWorker);
 	desplazamiento += tamArchivoReduccionPorWorker;
 
-	memcpy(unPaquete->buffer->data + desplazamiento, solicitud->workerEncargado,
-			tamWorkerEncargdo);
+	memcpy(unPaquete->buffer->data + desplazamiento,
+			&solicitud->workerEncargado, tamWorkerEncargdo);
 	desplazamiento += tamWorkerEncargdo;
 
 	memcpy(unPaquete->buffer->data + desplazamiento,
@@ -524,8 +524,119 @@ void serializarIndicacionAlmacenadoFinal(t_paquete * unPaquete,
 
 }
 
-void serializarListaDeBloques(t_paquete* unPaquete, t_list* listaBloques) {
-//	TODO SERIALIZAR LA LISTA DE BLOQUES
+void serializarListaNodoBloques(t_paquete * unPaquete,
+		t_nodos_bloques * listaNodoBloque) {
+
+	unPaquete->buffer = malloc(sizeof(t_stream));
+	unPaquete->buffer->size = 0;
+	int desplazamiento = 0;
+
+	//Cantidad de elementos de las listas
+	int cantNodoBloque = listaNodoBloque->nodoBloque->elements_count;
+	int cantPuertoIP = listaNodoBloque->puertoIP->elements_count;
+
+	//Serializo nodo-bloque
+	unPaquete->buffer->data = malloc(sizeof(int));
+
+	memcpy(unPaquete->buffer->data, &cantNodoBloque, sizeof(int));
+
+	desplazamiento += sizeof(int);
+	unPaquete->buffer->size += desplazamiento;
+
+	void serializarNodoBloque(t_nodo_bloque * nodoBloque) {
+
+		int tamNomNodo = strlen(nodoBloque->nomNodo) + 1;
+		int tamNum = sizeof(int);
+
+		int tamNodoBloque = tamNomNodo + (tamNum * 4);
+
+		unPaquete->buffer->size += tamNodoBloque;
+
+		unPaquete->buffer->data = realloc(unPaquete->buffer->data,
+				unPaquete->buffer->size + tamNodoBloque);
+
+		memcpy(unPaquete->buffer->data + desplazamiento, nodoBloque->nomNodo,
+				tamNomNodo);
+		desplazamiento += tamNomNodo;
+
+		memcpy(unPaquete->buffer->data + desplazamiento,
+				&nodoBloque->bloqueNodo, tamNum);
+		desplazamiento += tamNum;
+
+		memcpy(unPaquete->buffer->data + desplazamiento,
+				&nodoBloque->bloqueArchivo, tamNum);
+		desplazamiento += tamNum;
+
+		memcpy(unPaquete->buffer->data + desplazamiento,
+				&nodoBloque->originalidad, tamNum);
+		desplazamiento += tamNum;
+
+		memcpy(unPaquete->buffer->data + desplazamiento, &nodoBloque->tamanio,
+				tamNum);
+		desplazamiento += tamNum;
+	}
+
+	list_iterate(listaNodoBloque->nodoBloque, (void*) serializarNodoBloque);
+
+	//Serializo puertoIp
+	unPaquete->buffer->data = realloc(unPaquete->buffer->data,
+			unPaquete->buffer->size + sizeof(int));
+
+	memcpy(unPaquete->buffer->data, &cantPuertoIP, sizeof(int));
+
+	desplazamiento += sizeof(int);
+	unPaquete->buffer->size += desplazamiento;
+
+	void serializarPuertoIP(t_puerto_ip * puertoIp) {
+
+		int tamNomNodo = strlen(puertoIp->nomNodo) + 1;
+		int tamPuerto = strlen(puertoIp->puerto) + 1;
+		int tamIp = strlen(puertoIp->ip) + 1;
+
+		int tamPuertoIp = tamNomNodo + tamPuerto + tamIp;
+
+		unPaquete->buffer->size += tamPuertoIp;
+
+		unPaquete->buffer->data = realloc(unPaquete->buffer->data,
+				unPaquete->buffer->size + tamPuertoIp);
+
+		memcpy(unPaquete->buffer->data + desplazamiento, puertoIp->nomNodo,
+				tamNomNodo);
+		desplazamiento += tamNomNodo;
+
+		memcpy(unPaquete->buffer->data + desplazamiento, puertoIp->puerto,
+				tamPuerto);
+		desplazamiento += tamPuerto;
+
+		memcpy(unPaquete->buffer->data + desplazamiento, puertoIp->ip, tamIp);
+		desplazamiento += tamIp;
+	}
+	list_iterate(listaNodoBloque->puertoIP, (void*) serializarPuertoIP);
+
+}
+
+void serializarNombreIPPuerto(t_paquete * unPaquete, char * nomNodo, char * ip,
+		char * puerto) {
+	int tamNomNodo = strlen(nomNodo) + 1;
+	int tamIp = strlen(ip) + 1;
+	int tamPuerto = strlen(puerto) + 1;
+
+	int tamTotal = tamNomNodo + tamIp + tamPuerto;
+
+	unPaquete->buffer = malloc(sizeof(t_stream));
+	unPaquete->buffer->size = tamTotal;
+
+	unPaquete->buffer->data = malloc(tamTotal);
+
+	int desplazamiento = 0;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, nomNodo, tamNomNodo);
+	desplazamiento += tamNomNodo;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, ip, tamIp);
+	desplazamiento += tamIp;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, puerto, tamPuerto);
 }
 
 /*-------------------------Deserializacion-------------------------*/
@@ -883,8 +994,84 @@ t_indicacionAlmacenadoFinal * deserializarIndicacionAlmacenadoFinal(
 	return indicacion;
 }
 
-t_list * deserializarListaDeBloques(t_stream * buffer) {
-	return list_create(); //	TODO DESERIALIZAR LA LISTA DE BLOQUES
+t_nodos_bloques * deserializarListaNodoBloques(t_stream * buffer) {
+	t_nodos_bloques * nodosBloques = malloc(sizeof(t_nodos_bloques));
+	int desplazamiento = 0;
+
+	//Deserializo nodo-bloque
+	int cantNodosBloques = 0;
+
+	memcpy(&cantNodosBloques, buffer->data + desplazamiento, sizeof(int));
+	desplazamiento += sizeof(int);
+
+	nodosBloques->nodoBloque = list_create();
+
+	int i;
+	for (i = 0; i < cantNodosBloques; ++i) {
+		t_nodo_bloque * nodoBloque = malloc(sizeof(t_nodo_bloque));
+
+		nodoBloque->nomNodo = strdup(buffer->data + desplazamiento);
+		desplazamiento += strlen(nodoBloque->nomNodo) + 1;
+
+		memcpy(&nodoBloque->bloqueNodo, buffer->data + desplazamiento,
+				sizeof(int));
+		desplazamiento += sizeof(int);
+
+		memcpy(&nodoBloque->bloqueArchivo, buffer->data + desplazamiento,
+				sizeof(int));
+		desplazamiento += sizeof(int);
+
+		memcpy(&nodoBloque->originalidad, buffer->data + desplazamiento,
+				sizeof(int));
+		desplazamiento += sizeof(int);
+
+		memcpy(&nodoBloque->tamanio, buffer->data + desplazamiento,
+				sizeof(int));
+		desplazamiento += sizeof(int);
+
+		list_add(nodosBloques->nodoBloque, nodoBloque);
+	}
+
+	//Deserializo puertoIp
+	int cantPuertoIP = 0;
+
+	memcpy(&cantPuertoIP, buffer->data + desplazamiento, sizeof(int));
+	desplazamiento += sizeof(int);
+
+	nodosBloques->puertoIP = list_create();
+
+	for (i = 0; i < cantPuertoIP; ++i) {
+		t_puerto_ip * puertoIp = malloc(sizeof(t_puerto_ip));
+
+		puertoIp->nomNodo = strdup(buffer->data + desplazamiento);
+		desplazamiento += strlen(puertoIp->nomNodo) + 1;
+
+		puertoIp->puerto = strdup(buffer->data + desplazamiento);
+		desplazamiento += strlen(puertoIp->puerto) + 1;
+
+		puertoIp->ip = strdup(buffer->data + desplazamiento);
+		desplazamiento += strlen(puertoIp->ip) + 1;
+
+		list_add(nodosBloques->puertoIP, puertoIp);
+	}
+
+	return nodosBloques;
+}
+
+t_nodo_nombre * deserializarNombreIPPuerto(t_stream * buffer){
+	t_nodo_nombre * nodoNombre = malloc(sizeof(t_nodo_nombre));
+
+	int desplazamiento = 0;
+
+	nodoNombre->nombre = strdup(buffer->data + desplazamiento);
+	desplazamiento += strlen(nodoNombre->nombre) + 1;
+
+	nodoNombre->ip = strdup(buffer->data + desplazamiento);
+	desplazamiento += strlen(nodoNombre->ip) + 1;
+
+	nodoNombre->puerto = strdup(buffer->data + desplazamiento);
+
+	return nodoNombre;
 }
 
 /*-------------------------Funciones auxiliares-------------------------*/
@@ -892,8 +1079,8 @@ void * abrirArchivo(char * rutaArchivo, size_t * tamArc, FILE ** archivo) {
 	//Abro el archivo
 	*archivo = fopen(rutaArchivo, "r");
 
-	if(*archivo == NULL){
-		printf("%s: No existe el archivo o el directorio",rutaArchivo);
+	if (*archivo == NULL) {
+		printf("%s: No existe el archivo o el directorio", rutaArchivo);
 		return NULL;
 	}
 
@@ -911,4 +1098,3 @@ void * abrirArchivo(char * rutaArchivo, size_t * tamArc, FILE ** archivo) {
 
 	return dataArchivo;
 }
-

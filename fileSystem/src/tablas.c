@@ -290,10 +290,12 @@ void agregarRegistroTablaArchivos(char * nodoElegido, int bloqueAEscribir,
 	config_set_value(configTablaArchivo, key, valor);
 
 	//Lo agrego a la cantidad de bloques totales
-	int totalesAnterior = config_get_int_value(configTablaArchivo, "CANTIDAD_BLOQUES");
-	totalesAnterior ++;
+	int totalesAnterior = config_get_int_value(configTablaArchivo,
+			"CANTIDAD_BLOQUES");
+	totalesAnterior++;
 	char * totalesActualesChar = string_itoa(totalesAnterior);
-	config_set_value(configTablaArchivo, "CANTIDAD_BLOQUES", totalesActualesChar);
+	config_set_value(configTablaArchivo, "CANTIDAD_BLOQUES",
+			totalesActualesChar);
 
 	config_save(configTablaArchivo);
 
@@ -637,12 +639,15 @@ void crearTablaSockets(void) {
 	tablaSockets = list_create();
 }
 
-void agregarNodoTablaSockets(char * nombreNodo, int client_socket) {
+void agregarNodoTablaSockets(char * nombreNodo, int client_socket, char * ip,
+		char *puerto) {
 	t_tabla_sockets * registroSocket = malloc(sizeof(t_tabla_nodo));
 	registroSocket->nombre = malloc(string_length(nombreNodo) + 1);
 
 	memcpy(registroSocket->nombre, nombreNodo, string_length(nombreNodo) + 1);
 	memcpy(&registroSocket->socket, &client_socket, sizeof(int));
+	memcpy(&registroSocket->ip, ip, strlen(ip) + 1);
+	memcpy(&registroSocket->puerto, puerto, strlen(puerto) + 1);
 
 	list_add(tablaSockets, registroSocket);
 }
@@ -661,6 +666,8 @@ char * eliminarNodoTablaSockets(int cliente_desconectado) {
 			string_length(registroSocket->nombre) + 1);
 
 	free(registroSocket->nombre);
+	free(registroSocket->ip);
+	free(registroSocket->puerto);
 	free(registroSocket);
 
 	return nom;
@@ -697,6 +704,22 @@ void modificarNodoTablaSockets(char * nombreNodo, int client_socket) {
 			(void*) esNodoBuscado);
 
 	registro->socket = client_socket;
+}
+
+t_tabla_sockets_ip_puerto * buscarIpPuertoPorNombre(char * nombreNodo){
+	bool esNombreBuscado(t_tabla_sockets * nodo) {
+		return string_ends_with(nombreNodo,nodo->nombre);
+	}
+
+	t_tabla_sockets * registroSocket = list_find(tablaSockets,
+			(void*) esNombreBuscado);
+
+	t_tabla_sockets_ip_puerto * ipPuerto = malloc(sizeof(t_tabla_sockets_ip_puerto));
+	ipPuerto->ip = strdup(registroSocket->ip);
+	ipPuerto->puerto = strdup(registroSocket->puerto);
+
+	return ipPuerto;
+
 }
 
 /*-------------------------Tabla de Bitmap-------------------------*/

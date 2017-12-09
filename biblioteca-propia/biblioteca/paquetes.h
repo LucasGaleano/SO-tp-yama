@@ -17,7 +17,7 @@ void 							mostrarPaquete						(t_paquete *);
 void 							enviarHandshake								(int, int);
 
 void 							enviarSolicitudNombre						(int);
-void 							enviarNombre								(int, char *);
+void 							enviarNombre								(int, char *, char *, char *);
 
 void 							enviarMensaje								(int, char *);
 
@@ -50,7 +50,7 @@ void 							enviarIndicacionAlmacenadoFinal				(int, t_indicacionAlmacenadoFinal
 void							enviarError									(int, int);
 void							enviarTareaCompletada						(int, int);
 
-void							enviarListaNodoBloques						(int, t_list *);
+void							enviarListaNodoBloques						(int, t_nodos_bloques *);
 
 void 							enviarRutaParaArrancarTransformacion		(int server_socket, char * ruta);
 
@@ -59,7 +59,7 @@ char * 							recibirRutaParaArrancarTransformacion		(t_paquete * unPaquete);
 /*-----------------------------------Recibir paquetes-----------------------------------*/
 int 							recibirHandshake							(t_paquete *);
 
-char *		 					recibirNombre								(t_paquete *);
+t_nodo_nombre *					recibirNombre								(t_paquete *);
 
 char * 							recibirMensaje								(t_paquete *);
 
@@ -93,6 +93,6 @@ t_indicacionAlmacenadoFinal* 	recibirIndicacionAlmacenadoFinal			(t_paquete *);
 int								recibirError								(t_paquete *);
 int								recibirTareaCompletada						(t_paquete *);
 
-t_list * 						recibirListaNodoBloques						(t_paquete *);
+t_nodos_bloques *				recibirListaNodoBloques						(t_paquete *);
 
 #endif /* SRC_PROCESAMIENTOPAQUETES_H_ */

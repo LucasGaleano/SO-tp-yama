@@ -156,6 +156,13 @@ typedef struct {
 	bool disponible;
 } t_nodo_info;
 
+typedef struct {
+	char * nombre;
+	char * ip;
+	char * puerto;
+} t_nodo_nombre;
+
+
 /*------------------------------Estructuras de comunicacion Yama Master------------------------------*/
 typedef struct {
 	char* rutaScriptTransformacion;
@@ -234,6 +241,7 @@ typedef struct{
 	int bloqueNodo;
 	int bloqueArchivo;
 	int originalidad;
+	int tamanio;
 } t_nodo_bloque;
 
 typedef struct{

@@ -17,7 +17,14 @@
 typedef struct {
 	int socket;
 	char * nombre;
+	char * ip;
+	char * puerto;
 } t_tabla_sockets;
+
+typedef struct {
+	char * ip;
+	char * puerto;
+} t_tabla_sockets_ip_puerto;
 
 //Tabla de bitMaps
 typedef struct {
@@ -57,48 +64,49 @@ t_config * configTablaNodo;
 bool bitMapDirectorio[100];
 
 /*-------------------------Tabla de directorios-------------------------*/
-void 				crearTablaDirectorios			(char *);
-void 				crearTablaDirectorioSegunArchivo(char *);
-void 				crearArchivoTablaDirectorios	(char *);
-void 				agregarDirectorioTabla			(t_directory *, char *);
-void 				eliminarDirectorioTabla			(char *, int);
-void 				modificarDirectorioTabla		(t_directory *, char *, int);
+void 						crearTablaDirectorios			(char *);
+void 						crearTablaDirectorioSegunArchivo(char *);
+void 						crearArchivoTablaDirectorios	(char *);
+void 						agregarDirectorioTabla			(t_directory *, char *);
+void 						eliminarDirectorioTabla			(char *, int);
+void 						modificarDirectorioTabla		(t_directory *, char *, int);
 
 /*-------------------------Tabla de archivos-------------------------*/
-t_config *			crearArchivoTablaArchivo		(char *, char *, char *, int);
-void 				agregarRegistroTablaArchivos	(char *, int,int, int, t_config *);
-void 				guardoBytesPorBloque			(int, int, t_config *);
-char ** 			buscarBloque					(t_config *, int, int);
-int 				buscarTamBloque					(t_config *, int);
+t_config *					crearArchivoTablaArchivo		(char *, char *, char *, int);
+void 						agregarRegistroTablaArchivos	(char *, int,int, int, t_config *);
+void 						guardoBytesPorBloque			(int, int, t_config *);
+char ** 					buscarBloque					(t_config *, int, int);
+int 						buscarTamBloque					(t_config *, int);
 
 /*-------------------------Tabla de nodos-------------------------*/
-void	 			crearTablaNodos					(char *);
-void 				crearArchivoTablaNodos			(char *);
-void 				crearTablaNodosSegunArchivo		(char *);
-void 				agregarNodoTablaNodos			(t_nodo_info *);
-void 				eliminarNodoTablaNodos			(char *);
-void 				liberarBloqueTablaNodos			(char *, int);
-void 				persistirTablaNodos				(void);
-void 				quitarEspacioNodo				(char *);
+void	 					crearTablaNodos					(char *);
+void 						crearArchivoTablaNodos			(char *);
+void 						crearTablaNodosSegunArchivo		(char *);
+void 						agregarNodoTablaNodos			(t_nodo_info *);
+void 						eliminarNodoTablaNodos			(char *);
+void 						liberarBloqueTablaNodos			(char *, int);
+void 						persistirTablaNodos				(void);
+void 						quitarEspacioNodo				(char *);
 
 /*-------------------------Tabla de sockets-------------------------*/
-void 				crearTablaSockets				(void);
-void 				agregarNodoTablaSockets			(char *, int);
-char * 				eliminarNodoTablaSockets		(int);
-int 				buscarSocketPorNombre			(char *);
-char * 				buscarNombrePorSocket			(int);
-void 				modificarNodoTablaSockets		(char *, int);
+void 						crearTablaSockets				(void);
+void 						agregarNodoTablaSockets			(char *, int, char *, char *);
+char * 						eliminarNodoTablaSockets		(int);
+int 						buscarSocketPorNombre			(char *);
+char * 						buscarNombrePorSocket			(int);
+void 						modificarNodoTablaSockets		(char *, int);
+t_tabla_sockets_ip_puerto * buscarIpPuertoPorNombre	(char *);
 
 /*-------------------------Tabla de Bitmap-------------------------*/
-void 				crearArchivoTablaBitmap			(t_nodo_info *);
-int 				buscarBloqueLibre				(t_config *);
-void 				liberarBloquebitMap				(char *, int);
+void 						crearArchivoTablaBitmap			(t_nodo_info *);
+int 						buscarBloqueLibre				(t_config *);
+void 						liberarBloquebitMap				(char *, int);
 
 /*-------------------------Funciones auxiliares-------------------------*/
-char * 				armarRegistroDirectorio			(char *, int);
-int 				buscarIndexLibre				(void);
-int 				obtenerIndex					(char *);
-void 				llenarBitmap					(void);
-void 				destruirSubstring				(char **);
+char * 						armarRegistroDirectorio			(char *, int);
+int 						buscarIndexLibre				(void);
+int 						obtenerIndex					(char *);
+void 						llenarBitmap					(void);
+void 						destruirSubstring				(char **);
 
 #endif /* TABLAS_H_ */

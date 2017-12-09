@@ -179,12 +179,12 @@ void enviarSolicitudNombre(int server_socket) {
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarNombre(int server_socket, char * nombre){
+void enviarNombre(int server_socket, char * nombre, char* ip, char * puerto){
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_NOMBRE;
 
-	serializarPalabra(unPaquete, nombre);
+	serializarNombreIPPuerto(unPaquete, nombre, ip, puerto);
 
 	enviarPaquetes(server_socket, unPaquete);
 }
@@ -435,18 +435,6 @@ void enviarRutaParaArrancarTransformacion(int server_socket, char * ruta) {
 	serializarMensaje(unPaquete, ruta);
 }
 
-void enviarListaBloques(int server_socket, t_list* listaBloques) {
-	t_paquete * unPaquete = malloc(
-			sizeof(t_bloque) * listaBloques->elements_count);
-
-	unPaquete->codigoOperacion = RESPUESTA_INFO_ARCHIVO;
-
-	serializarListaDeBloques(unPaquete, listaBloques);
-
-	enviarPaquetes(server_socket, unPaquete);
-
-}
-
 void enviarError(int server_socket, int cod_error) {
 	t_paquete* unPaquete = malloc(sizeof(t_paquete));
 
@@ -467,7 +455,7 @@ void enviarTareaCompletada(int server_socket, int cod_tarea) {
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarListaNodoBloques(int server_socket, t_list * listaNodoBloque) {
+void enviarListaNodoBloques(int server_socket, t_nodos_bloques * listaNodoBloque) {
 	t_paquete* unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_LISTA_NODO_BLOQUES;
@@ -487,8 +475,8 @@ char * recibirRutaArchivo(t_paquete * unPaquete) {
 	return deserializarMensaje(unPaquete->buffer);
 }
 
-char * recibirNombre(t_paquete * unPaquete){
-	return deserializarPalabra(unPaquete->buffer);
+t_nodo_nombre * recibirNombre(t_paquete * unPaquete){
+	return deserializarNombreIPPuerto(unPaquete->buffer);
 }
 
 char * recibirMensaje(t_paquete * unPaquete) {
@@ -576,10 +564,6 @@ char * recibirRutaParaArrancarTransformacion(t_paquete * unPaquete) {
 	return deserializarMensaje(unPaquete->buffer);
 }
 
-t_list* recibirListaDeBloques(t_paquete * unPaquete) {
-	return deserializarListaDeBloques(unPaquete->buffer);
-}
-
 char * recibirRegistro(t_paquete * unPaquete) {
 
 	return deserializarMensaje(unPaquete->buffer);
@@ -592,6 +576,6 @@ int recibirError(t_paquete * unPaquete) {
 int recibirTareaCompletada(t_paquete * unPaquete) {
 	return deserializarNumero(unPaquete->buffer);
 }
- t_list * recibirListaNodoBloques(t_paquete * unPaquete){
+t_nodos_bloques * recibirListaNodoBloques(t_paquete * unPaquete){
 	 return deserializarListaNodoBloques(unPaquete->buffer);
  }
