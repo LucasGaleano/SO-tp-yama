@@ -48,6 +48,9 @@ t_queue* cola_master;
 long idJob;
 t_list* masterConectados;
 
+/*----------------------------------Planificador--------------------------------------------*/
+
+t_list* tablaPlanificador;
 
 /*----------------------------------Configuracion proyecto----------------------------------*/
 t_configuracion * 				leerArchivoDeConfiguracionYAMA     		(char* path);
@@ -62,11 +65,16 @@ void 							procesarRecibirMensaje					(t_paquete * unPaquete);
 void 							procesarRecibirArchivo					(t_paquete * unPaquete);
 void 							procesarRecibirError					(t_paquete * unPaquete);
 void 							procesarEnviarSolicitudTransformacion	(t_paquete * unPaquete, int * client_socket);
-void 							procesarEnviarIndicacionTransformacion	(t_paquete * unPaquete);
-void 							procesarTareaCompleta					(t_paquete * unPaquete, int client_socket);
+void 							procesarEnviarListaNodoBloques			(t_paquete * unPaquete);
+void							procesarEnviarIndicacionTransformacion	(t_paquete * unPaquete);
+void							procesarTareaCompleta					(t_paquete * unPaquete, int client_socket);
+
+/*----------------------------------Procesamiento de nodos y bloques-----------------------------------*/
+t_list* 						agruparNodosPorBloque					(t_list*);
+t_list* 						extraerNodosSinRepetidos				(t_list*);
 
 /*----------------------------------Funciones auxiliares----------------------------------*/
-t_indicacionTransformacion* 	bloqueAT_indicacionTranformacion		(int tamanio, t_bloque_ubicacion* ubicacion, char* nombreTemp);
 long 							generarJob								(void);
 void 							destruirConfiguracion					(t_configuracion * configuracion);
+
 #endif /* YAMA_H_ */

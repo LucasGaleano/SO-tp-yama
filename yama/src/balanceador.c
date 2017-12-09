@@ -6,8 +6,10 @@ static void CalcularDisponibilidadCadaWorkerClock(t_list* tablaPlanificador, int
 static int avanzarPuntero(int puntero, int n);
 static void SumarDisponibilidad(t_registro_Tabla_Planificador* registroWorker, int sub);
 static void SumarDisponibilidadTodos(t_list* tablaPlanificador, int n);
-static bool estaBloqueEnWorker(t_bloque* bloque, int worker);  //check
+static bool estaBloqueEnWorker(t_nodos_por_bloque* bloque, int worker);  //check
 static void insertarBloqueEnRegistroWorker(t_list* tablaPlanificador,int Worker,int numBloque);
+static int extraerIddelNodo(char* nodo);
+
 
 void planificador(int algoritmo, t_list * listaDeBloques,
 		t_list* tablaPlanificador, int DispBase) {
@@ -18,16 +20,14 @@ void planificador(int algoritmo, t_list * listaDeBloques,
 	int proximoWorker=0;
 
 	//Se calcularán los valores de disponibilidades para cada Worker
-	switch (algoritmo){
 
-	case Clock:
+	if(string_equals_ignore_case(algoritmo, "CLOCK")){
 		CalcularDisponibilidadCadaWorkerClock(tablaPlanificador, DispBase);
-		break;
-
-	case W_Clock:
-		CalcularDisponibilidadCadaWorkerW_Clock(tablaPlanificador, DispBase);
-		break;
 	}
+	if(string_equals_ignore_case(algoritmo, "W-CLOCK")){
+		CalcularDisponibilidadCadaWorkerW_Clock(tablaPlanificador, DispBase);
+	}
+	else(printf("El algoritmo: %s que fue configurado no existe \n", algoritmo));
 
 	//Se posicionará el Clock en el Worker de mayor disponibilidad, desempatando por el primer worker que tenga menor cantidad de tareas realizadas históricamente.
 	int punteroClock = PosicionarClockMayorDisp(tablaPlanificador);
@@ -37,7 +37,7 @@ void planificador(int algoritmo, t_list * listaDeBloques,
 	for (; numBloque < cantBloques; numBloque++) {
 
 
-		t_bloque* bloqueAsignar = list_get(listaDeBloques, numBloque); // TRAE BLOQUES UNO POR UNO.
+		t_nodos_por_bloque* bloqueAsignar = list_get(listaDeBloques, numBloque); // TRAE BLOQUES UNO POR UNO.
 
 		RegistroWorker = list_get(tablaPlanificador, punteroClock);
 
@@ -136,26 +136,38 @@ static void SumarDisponibilidad(t_registro_Tabla_Planificador* registroWorker, i
 
 }
 
-static bool estaBloqueEnWorker(t_bloque* bloque, int worker) {
+static bool estaBloqueEnWorker(t_nodos_por_bloque* bloque, int worker) {
 
-	char* ubic0 = malloc(string_length(bloque->copia0->nodo) );
-	char* ubic1 = malloc(string_length(bloque->copia0->nodo) );
-	strcpy(ubic0, bloque->copia0->nodo);
-	strcpy(ubic1, bloque->copia1->nodo);
 
-	ubic0 = string_substring(ubic0, 4, 1); //ejemlo "Nodo1" devuelve "1"
-	ubic1 = string_substring(ubic1, 4, 1);
+	bool EstaEnUnNodo=false;
+	int cantCopias = list_size(bloque->nodosEnLosQueEsta);
+	char* ubic;
+	char* numUbic;
+	int i=0;
+	for(;i<cantCopias;i++){
+	 	ubic = list_get(bloque->nodosEnLosQueEsta,i);
+		numUbic = string_substring(ubic, 4, 1); //ejemplo "Nodo1" devuelve "1"
+		char* CWorker = string_itoa(worker);
 
-	if ( (!strcmp(string_itoa(worker),ubic0)) || (!strcmp(string_itoa(worker),ubic1)) ) {
-		free(ubic0);
-		free(ubic1);
-		return true;
+		if ( (!strcmp(CWorker,numUbic)) ){
+			EstaEnUnNodo=true;
+		}
+		free(CWorker);
+		free (numUbic);
 	}
-	free(ubic0);
-	free(ubic1);
-	return false;
 
+	return EstaEnUnNodo;
 }
+
+static int extraerIddelNodo(char* nodo){
+
+	char* numUbic = string_substring(nodo, 4, 1); //ejemplo "Nodo1" devuelve "1"
+	int n = atoi(numUbic);
+	free (numUbic);
+	return n;
+}
+
+
 
 static int avanzarPuntero(int puntero, int n) {
 
@@ -165,12 +177,12 @@ static int avanzarPuntero(int puntero, int n) {
 	return puntero;
 }
 
-void planificador_agregarWorker(t_list* tablaPlanificador, int numWorkerId) {
+void planificador_agregarWorker(t_list* tablaPlanificador, char* idWorker ) {
 
 	t_registro_Tabla_Planificador* registro = malloc(
 			sizeof(t_registro_Tabla_Planificador));
 
-	registro->id = numWorkerId;
+	registro->id = extraerIddelNodo(idWorker);
 	registro->disponibilidad = 0;
 	registro->WL_Total = 0;
 	registro->WL_actual = 0;
@@ -178,14 +190,14 @@ void planificador_agregarWorker(t_list* tablaPlanificador, int numWorkerId) {
 	list_add(tablaPlanificador, registro);
 }
 
-void planificador_sacarWorker(t_list* tablaPlanificador, int numWorkerId){
+void planificador_sacarWorker(t_list* tablaPlanificador, char* numWorkerId){
 
 	int contworkers = 0;
 	int cantWorkers = list_size(tablaPlanificador);
 	for (; contworkers < cantWorkers; contworkers++) {
 
 		t_registro_Tabla_Planificador* registro = list_get(tablaPlanificador, contworkers);
-		if(registro->id == numWorkerId){
+		if(registro->id == extraerIddelNodo(numWorkerId)){
 
 			list_remove(tablaPlanificador, contworkers);
 			cantWorkers--;
@@ -206,13 +218,8 @@ void Planificador_destroy(t_list* planificador) {
 	int cantElementos = list_size(planificador);
 	for (; cont < cantElementos; cont++) {
 		t_registro_Tabla_Planificador* registro = list_get(planificador, cont);
-		int j = 0;
-		int elementos = list_size(registro->listaBloques);
-		for (; j < elementos; j++) {
-			t_registro_Tabla_Planificador* registro = list_get(planificador, j);
-			list_destroy(registro->listaBloques);
-		}
-
+		list_destroy(registro->listaBloques);
+		free(registro);
 	}
 	list_destroy(planificador);
 
