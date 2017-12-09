@@ -253,7 +253,7 @@ char * leerArchivo(char * rutaArchivo) {
 	}
 
 	//Busco los bloques en los nodos
-	int cantidadDeBloques = (config_keys_amount(configArchivo) - 2) / 3;
+	int cantidadDeBloques = config_get_int_value(configArchivo,"CANTIDAD_BLOQUES");
 
 	int i;
 
