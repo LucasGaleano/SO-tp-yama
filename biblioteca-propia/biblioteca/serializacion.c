@@ -452,7 +452,7 @@ void serializarIndicacionReduccionGlobal(t_paquete * unPaquete,
 			indicacion->archivoDeReduccionLocal) + 1;
 	int tamArchivoDeReduccionGlobal = string_length(
 			indicacion->archivoDeReduccionGlobal) + 1;
-	int tamEncargado = string_length(indicacion->encargado) + 1;
+	int tamEncargado = sizeof(int);
 
 	int tamTotal = tamNodo + tamDireccion + tamPuerto
 			+ tamArchivoDeReduccionLocal + tamArchivoDeReduccionGlobal
@@ -484,9 +484,10 @@ void serializarIndicacionReduccionGlobal(t_paquete * unPaquete,
 			indicacion->archivoDeReduccionGlobal, tamArchivoDeReduccionGlobal);
 	desplazamiento += tamArchivoDeReduccionGlobal;
 
-	memcpy(unPaquete->buffer->data + desplazamiento, indicacion->encargado,
+	memcpy(unPaquete->buffer->data + desplazamiento, &indicacion->encargado,
 			tamEncargado);
 	desplazamiento += tamEncargado;
+
 }
 
 void serializarIndicacionAlmacenadoFinal(t_paquete * unPaquete,
@@ -533,9 +534,7 @@ int deserializarNumero(t_stream* buffer) {
 }
 
 char * deserializarPalabra(t_stream * buffer) {
-	char * palabra = malloc(buffer->size);
-
-	palabra = strdup(buffer->data);
+	char * palabra = strdup(buffer->data);
 
 	return palabra;
 }
@@ -856,7 +855,8 @@ t_indicacionReduccionGlobal * deserializarIndicacionReduccionGlobal(
 			buffer->data + desplazamiento);
 	desplazamiento += strlen(indicacion->archivoDeReduccionGlobal) + 1;
 
-	indicacion->encargado = strdup(buffer->data + desplazamiento);
+	memcpy(&indicacion->encargado, buffer->data + desplazamiento, sizeof(int));
+	desplazamiento += sizeof(int);
 
 	return indicacion;
 }

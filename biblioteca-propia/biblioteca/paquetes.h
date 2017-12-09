@@ -16,10 +16,14 @@ void 							mostrarPaquete						(t_paquete *);
 /*-----------------------------------Enviar paquetes-----------------------------------*/
 void 							enviarHandshake								(int, int);
 
+void 							enviarSolicitudNombre						(int);
+void 							enviarNombre								(int, char *);
+
 void 							enviarMensaje								(int, char *);
 
 void 							enviarArchivo								(int, char *);
 
+void 							enviarSolicitudInfoDataNode					(int);
 void 							enviarInfoDataNode							(int, char *, int, int);
 
 void 							enviarBloque								(int, char*);
@@ -48,8 +52,14 @@ void							enviarTareaCompletada						(int, int);
 
 void							enviarListaNodoBloques						(int, t_list *);
 
+void 							enviarRutaParaArrancarTransformacion		(int server_socket, char * ruta);
+
+char * 							recibirRutaParaArrancarTransformacion		(t_paquete * unPaquete);
+
 /*-----------------------------------Recibir paquetes-----------------------------------*/
 int 							recibirHandshake							(t_paquete *);
+
+char *		 					recibirNombre								(t_paquete *);
 
 char * 							recibirMensaje								(t_paquete *);
 

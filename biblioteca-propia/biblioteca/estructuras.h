@@ -42,9 +42,14 @@ enum emisor {
 enum cod_op{
 	HANDSHAKE=0,
 
+	ENVIAR_SOLICITUD_NOMBRE,
+	ENVIAR_NOMBRE,
+
 	ENVIAR_MENSAJE,
 	ENVIAR_RUTA_ARCHIVO,
 	ENVIAR_ARCHIVO,
+	ENVIAR_SOLICITUD_INFO_DATANODE,
+
 	ENVIAR_INFO_DATANODE,
 	ENVIAR_ERROR,
 
@@ -86,6 +91,9 @@ enum cod_op{
 	INDICACION_TERMINO_TAREA,
 
 	ENVIAR_LISTA_NODO_BLOQUES,
+
+	ENVIAR_ERROR_JOB,
+
 };
 
 enum continuaMensaje{
@@ -145,6 +153,7 @@ typedef struct {
 	char * nombre;
 	int total;
 	int libre;
+	bool disponible;
 } t_nodo_info;
 
 /*------------------------------Estructuras de comunicacion Yama Master------------------------------*/
@@ -198,7 +207,7 @@ typedef struct {
 	char* puerto;
 	char* archivoDeReduccionLocal;
 	char* archivoDeReduccionGlobal;
-	char* encargado;
+	int encargado;
 } t_indicacionReduccionGlobal;
 
 typedef struct {
