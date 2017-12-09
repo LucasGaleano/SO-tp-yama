@@ -15,6 +15,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <commons/collections/list.h>
+
 /*------------------------------Estructuras------------------------------*/
 //#define TAM_BLOQUE 1048576
 #define TAM_BLOQUE 1024
@@ -40,9 +42,14 @@ enum emisor {
 enum cod_op{
 	HANDSHAKE=0,
 
+	ENVIAR_SOLICITUD_NOMBRE,
+	ENVIAR_NOMBRE,
+
 	ENVIAR_MENSAJE,
 	ENVIAR_RUTA_ARCHIVO,
 	ENVIAR_ARCHIVO,
+	ENVIAR_SOLICITUD_INFO_DATANODE,
+
 	ENVIAR_INFO_DATANODE,
 	ENVIAR_ERROR,
 
@@ -82,6 +89,11 @@ enum cod_op{
 	RESPUESTA_INFO_ARCHIVO,
 
 	INDICACION_TERMINO_TAREA,
+
+	ENVIAR_LISTA_NODO_BLOQUES,
+
+	ENVIAR_ERROR_JOB,
+
 };
 
 enum continuaMensaje{
@@ -141,6 +153,7 @@ typedef struct {
 	char * nombre;
 	int total;
 	int libre;
+	bool disponible;
 } t_nodo_info;
 
 /*------------------------------Estructuras de comunicacion Yama Master------------------------------*/
@@ -194,7 +207,7 @@ typedef struct {
 	char* puerto;
 	char* archivoDeReduccionLocal;
 	char* archivoDeReduccionGlobal;
-	char* encargado;
+	int encargado;
 } t_indicacionReduccionGlobal;
 
 typedef struct {
@@ -225,5 +238,21 @@ typedef struct{
 typedef struct {
 	char* rutaArchivo;
 } t_solicitudArchivo;
+
+typedef struct {
+	char* nomNodo;
+	int bloque;
+} t_nodo_bloque;
+
+typedef struct {
+	char* nomNodo;
+	char * puerto;
+	char * IP;
+} t_puerto_ip;
+
+typedef struct {
+	t_list * nodoBloque;
+	t_list * puertoIP;
+} t_lista_nodobloque;
 
 #endif /* BIBLIOTECA_ESTRUCTURAS_H_ */
