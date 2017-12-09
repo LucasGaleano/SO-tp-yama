@@ -544,6 +544,13 @@ void eliminarBloque(char * linea) {
 	config_set_value(configArchivo, key, nuevoValor);
 	config_save(configArchivo);
 
+	//Actualizo el valor total de bloques
+	int totalesAnterior = config_get_int_value(configArchivo, "CANTIDAD_BLOQUES");
+	totalesAnterior --;
+	char * totalesActualesChar = string_itoa(totalesAnterior);
+	config_set_value(configArchivo, "CANTIDAD_BLOQUES", totalesActualesChar);
+
+
 	//Libero memoria
 	free(path_archivo);
 	free(nro_bloque);
@@ -556,6 +563,7 @@ void eliminarBloque(char * linea) {
 	config_destroy(configArchivo);
 	free(key);
 	free(keyCopia);
+	free(totalesActualesChar);
 }
 
 void modificar(char * linea) {

@@ -249,6 +249,10 @@ t_config * crearArchivoTablaArchivo(char * origen, char *destino, char * nombre,
 		config_set_value(configTablaArchivo, "TIPO", "BINARIO");
 	}
 
+	//Cargo la cantidad de bloques totales
+	char * cantBloques = string_itoa(0);
+	config_set_value(configTablaArchivo, "CANTIDAD_BLOQUES", cantBloques);
+
 	//Guardo en el archivo
 	config_save(configTablaArchivo);
 
@@ -257,6 +261,7 @@ t_config * crearArchivoTablaArchivo(char * origen, char *destino, char * nombre,
 	free(tamArcString);
 	destruirSubstring(listaDestino);
 	free(rutaArchivo);
+	free(cantBloques);
 
 	return configTablaArchivo;
 }
@@ -284,6 +289,12 @@ void agregarRegistroTablaArchivos(char * nodoElegido, int bloqueAEscribir,
 
 	config_set_value(configTablaArchivo, key, valor);
 
+	//Lo agrego a la cantidad de bloques totales
+	int totalesAnterior = config_get_int_value(configTablaArchivo, "CANTIDAD_BLOQUES");
+	totalesAnterior ++;
+	char * totalesActualesChar = string_itoa(totalesAnterior);
+	config_set_value(configTablaArchivo, "CANTIDAD_BLOQUES", totalesActualesChar);
+
 	config_save(configTablaArchivo);
 
 	free(key);
@@ -291,6 +302,7 @@ void agregarRegistroTablaArchivos(char * nodoElegido, int bloqueAEscribir,
 	free(numeroBloqueAEscribirChar);
 	free(numeroBloqueDelArchivoChar);
 	free(numeroCopiaChar);
+	free(totalesActualesChar);
 }
 
 void guardoBytesPorBloque(int numeroBloque, int tamBuffer,

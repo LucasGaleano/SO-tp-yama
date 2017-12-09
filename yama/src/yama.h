@@ -8,12 +8,13 @@
 #include <commons/collections/list.h>
 #include <commons/collections/queue.h>
 #include <biblioteca/sockets.h>
-//#include <biblioteca/estructurasMasterYama.h>
 #include <biblioteca/estructurasWorkerMaster.h>
 #include <commons/string.h>
 #include <pthread.h>
+
 #include "tablas.h"
 
+/*----------------------------------Estructuras----------------------------------*/
 typedef struct {
 	char * ip;
 	char * puerto;
@@ -23,35 +24,35 @@ typedef struct {
 	int disponibilidad_base;
 } t_configuracion;
 
-int socketFS;
-t_queue* cola_master;
-
-long idJob;
-
-t_list* masterConectados;
-
 //typedef struct {
 //	char * ;
 //	int disponibilidad_base;
 //} t_sockets;
 
-/*------------------------Configuracion proyecto-------------------------*/
-t_configuracion *   leerArchivoDeConfiguracionYAMA     (char* path);
+/*----------------------------------Variables globales----------------------------------*/
+int socketFS;
+t_queue* cola_master;
+long idJob;
+t_list* masterConectados;
 
-/*------------------------Manejo de conexiones-------------------------*/
-void                iniciarServidor                    (char* unPuerto);
+/*----------------------------------Configuracion proyecto----------------------------------*/
+t_configuracion * 				leerArchivoDeConfiguracionYAMA     		(char* path);
 
-/*------------------------Procesamiento paquetes-------------------------*/
-void 				procesarPaquete					(t_paquete *, int *);
-void 				recibirInfoNodo					(t_paquete *, int);
-void 				recibirError					(t_paquete *);
+/*----------------------------------Manejo de conexiones-----------------------------------*/
+void    	            		iniciarServidor                    		(char* unPuerto);
 
+/*----------------------------------Procesamiento paquetes-----------------------------------*/
+void	 						procesarPaquete							(t_paquete * unPaquete, int * client_socket);
+void 							procesarRecibirHandshake				(t_paquete * unPaquete, int * client_socket);
+void 							procesarRecibirMensaje					(t_paquete * unPaquete);
+void 							procesarRecibirArchivo					(t_paquete * unPaquete);
+void 							procesarRecibirError					(t_paquete * unPaquete);
+void 							procesarEnviarSolicitudTransformacion	(t_paquete * unPaquete, int * client_socket);
+void 							procesarEnviarIndicacionTransformacion	(t_paquete * unPaquete);
+void 							procesarTareaCompleta					(t_paquete * unPaquete, int client_socket);
 
-void 				enviarRutaArchivo				(int, char *);
-
-long 			    generarJob                      ();
-
-t_indicacionTransformacion* bloqueAT_indicacionTranformacion(int, t_bloque_ubicacion* ,char*);
-
-
+/*----------------------------------Funciones auxiliares----------------------------------*/
+t_indicacionTransformacion* 	bloqueAT_indicacionTranformacion		(int tamanio, t_bloque_ubicacion* ubicacion, char* nombreTemp);
+long 							generarJob								(void);
+void 							destruirConfiguracion					(t_configuracion * configuracion);
 #endif /* YAMA_H_ */

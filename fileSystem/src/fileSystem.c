@@ -59,6 +59,9 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_BLOQUE_GENERAR_COPIA:
 		procesarBloqueGenerarCopia(unPaquete);
 		break;
+	case ENVIAR_RUTA_ARCHIVO:
+		procesarEnviarRutaArchivo(unPaquete);
+		break;
 	default:
 		break;
 	}
@@ -212,6 +215,90 @@ void procesarBloqueGenerarCopia(t_paquete * unPaquete) {
 	free(bloqueGenerarCopia->rutaArchivo);
 	free(bloqueGenerarCopia);
 }
+
+void procesarEnviarRutaArchivo(t_paquete * unPaquete) {
+	char * archivoPedido = recibirRutaArchivo(unPaquete);
+
+	//Busco el nombre del directorio
+	char ** separado = string_split(archivoPedido, "/");
+
+	int posicion;
+
+	for (posicion = 0; separado[posicion] != NULL; ++posicion) {
+	}
+
+	posicion -= 1;
+
+	//Busco el index del padre
+	int indexPadre;
+
+	if (posicion == 0) {
+		indexPadre = obtenerIndex("root");
+	} else {
+		indexPadre = obtenerIndex(separado[posicion - 1]);
+	}
+
+	//Busco la configuracion del archivo
+	char * rutaFS = string_new();
+	string_append(&rutaFS, RUTA_METADATA);
+	string_append(&rutaFS, "metadata/archivos/");
+	char * indexPadreChar = string_itoa(indexPadre);
+	string_append(&rutaFS, indexPadreChar);
+	string_append(&rutaFS, "/");
+	string_append(&rutaFS, separado[posicion]);
+
+	t_config * configArchivo = config_create(rutaFS);
+
+	if (configArchivo == NULL) {
+
+		//Libero memoria
+		destruirSubstring(separado);
+		free(rutaFS);
+		free(indexPadreChar);
+		free(archivoPedido);
+		return;
+	}
+
+	//Busco los bloques
+	int cantidadDeBloques = config_get_int_value(configArchivo,"CANTIDAD_BLOQUES");
+
+	int numeroBloque = 0;
+	int numeroCopia;
+	int numeroTotal;
+
+	char ** bloque;
+
+	t_list * listaBloques = list_create();
+
+	for (numeroTotal = 0; numeroTotal < cantidadDeBloques; ++numeroTotal) {
+
+		bloque = buscarBloque(configArchivo,numeroBloque,0);
+
+		for(numeroCopia = 1; bloque != NULL;numeroCopia ++){
+			t_nodo_bloque * nodoBloque = malloc(sizeof(t_nodo_bloque));
+			nodoBloque->nomNodo = strdup(bloque[0]);
+			nodoBloque->bloque = atoi((char*)bloque[1]);
+			list_add(listaBloques, bloque);
+			numeroTotal ++;
+			destruirSubstring(bloque);
+			bloque = buscarBloque(configArchivo,numeroBloque,numeroCopia);
+		}
+		numeroBloque++;
+	}
+
+	//Busco nodos disponibles
+
+	bool estoyDisponible(t_nodo_info * nodo){
+		return nodo->
+	}
+
+	t_list * nodosDisponibles = list_filter(tablaNodos->infoDeNodo,(void*)estoyDisponible);
+
+	free(archivoPedido);
+	destruirSubstring(separado);
+	free(rutaFS);
+	free(indexPadreChar);
+	config_destroy(configArchivo);
 
 void procesarNombre(t_paquete * unPaquete, int * client_socket) {
 	char * nomNodo = recibirNombre(unPaquete);
