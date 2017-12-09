@@ -234,6 +234,7 @@ typedef struct{
 /*------------------------------Estructuras de comunicacion Yama File System------------------------------*/
 typedef struct {
 	char* rutaArchivo;
+	int masterSolicitante;
 } t_solicitudArchivo;
 
 typedef struct{
@@ -253,6 +254,7 @@ typedef struct{
 typedef struct {
 	t_list * nodoBloque;
 	t_list * puertoIP;
+	int masterSolicitante;
 } t_nodos_bloques;
 
 #endif /* BIBLIOTECA_ESTRUCTURAS_H_ */
