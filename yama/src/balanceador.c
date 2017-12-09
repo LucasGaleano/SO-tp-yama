@@ -6,7 +6,7 @@ static void CalcularDisponibilidadCadaWorkerClock(t_list* tablaPlanificador, int
 static int avanzarPuntero(int puntero, int n);
 static void SumarDisponibilidad(t_registro_Tabla_Planificador* registroWorker, int sub);
 static void SumarDisponibilidadTodos(t_list* tablaPlanificador, int n);
-static bool estaBloqueEnWorker(t_nodo_por_bloque* bloque, int worker);  //check
+static bool estaBloqueEnWorker(t_nodos_por_bloque* bloque, int worker);  //check
 static void insertarBloqueEnRegistroWorker(t_list* tablaPlanificador,int Worker,int numBloque);
 static int extraerIddelNodo(char* nodo);
 
@@ -20,16 +20,14 @@ void planificador(int algoritmo, t_list * listaDeBloques,
 	int proximoWorker=0;
 
 	//Se calcularán los valores de disponibilidades para cada Worker
-	switch (algoritmo){
 
-	case Clock:
+	if(string_equals_ignore_case(algoritmo, "CLOCK")){
 		CalcularDisponibilidadCadaWorkerClock(tablaPlanificador, DispBase);
-		break;
-
-	case W_Clock:
-		CalcularDisponibilidadCadaWorkerW_Clock(tablaPlanificador, DispBase);
-		break;
 	}
+	if(string_equals_ignore_case(algoritmo, "W-CLOCK")){
+		CalcularDisponibilidadCadaWorkerW_Clock(tablaPlanificador, DispBase);
+	}
+	else(printf("El algoritmo: %s que fue configurado no existe \n", algoritmo));
 
 	//Se posicionará el Clock en el Worker de mayor disponibilidad, desempatando por el primer worker que tenga menor cantidad de tareas realizadas históricamente.
 	int punteroClock = PosicionarClockMayorDisp(tablaPlanificador);
@@ -39,7 +37,7 @@ void planificador(int algoritmo, t_list * listaDeBloques,
 	for (; numBloque < cantBloques; numBloque++) {
 
 
-		t_nodo_por_bloque* bloqueAsignar = list_get(listaDeBloques, numBloque); // TRAE BLOQUES UNO POR UNO.
+		t_nodos_por_bloque* bloqueAsignar = list_get(listaDeBloques, numBloque); // TRAE BLOQUES UNO POR UNO.
 
 		RegistroWorker = list_get(tablaPlanificador, punteroClock);
 
@@ -138,7 +136,7 @@ static void SumarDisponibilidad(t_registro_Tabla_Planificador* registroWorker, i
 
 }
 
-static bool estaBloqueEnWorker(t_nodo_por_bloque* bloque, int worker) {
+static bool estaBloqueEnWorker(t_nodos_por_bloque* bloque, int worker) {
 
 
 	bool EstaEnUnNodo=false;

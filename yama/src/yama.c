@@ -98,10 +98,10 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		procesarEnviarListaNodoBloques(unPaquete); //
 		break;
 	case ENVIAR_INDICACION_TRANSFORMACION:
-		procesarEnviarIndicacionTransformacion(unPaquete);
+		procesarEnviarSolicitudTransformacion(unPaquete, client_socket);
 		break;
 	case TAREA_COMPLETADA:
-		procesarTareaCompleta(unPaquete, *client_socket);
+		procesarTareaCompleta(unPaquete, client_socket);
 		break;
 	default:
 		break;
@@ -160,19 +160,20 @@ void procesarRecibirError(t_paquete * unPaquete) {
 //todo HACER ALGO ANTE EL ERROR
 }
 
-void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete,int *client_socket) {
+void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete, int *client_socket) {
 	queue_push(cola_master, client_socket);	// todo-->Verificar que esto haga lo que realmente quiero
 	char * nomArchivo = recibirMensaje(unPaquete);
 	enviarRutaArchivo(socketFS, nomArchivo);
 }
 
 void procesarEnviarListaNodoBloques(t_paquete * unPaquete){
+
 	t_nodos_bloques * nodosBloques = recibirListaNodoBloques(unPaquete);
 
-	t_list* listNodoBloque = nodosBloques.nodoBloque;
+	t_list* listNodoBloque = nodosBloques->nodoBloque;
 
 	t_list* listaBloquesConNodos = agruparNodosPorBloque(listNodoBloque);
-	t_list* nodosSinRepetidos = nodosSinRepetidos(listNodoBloque);
+	t_list* nodosSinRepetidos = extraerNodosSinRepetidos(listNodoBloque);
 
 	void agregarATablaPlanificador(char* nombreNodo){
 		planificador_agregarWorker(tablaPlanificador, nombreNodo);
@@ -180,12 +181,16 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete){
 
 	list_iterate(nodosSinRepetidos,(void*) agregarATablaPlanificador);
 
-	void planificador(int algoritmo, t_list * listaDeBloques,t_list* tablaPlanificador, int DispBase);
 	planificador(configuracion->algoritmo, listaBloquesConNodos, tablaPlanificador, configuracion->disponibilidad_base);
 
+}
+
+void procesarTareaCompleta(t_paquete * unPaquete, int client_socket){
 
 }
+
 /*-------------------------Funciones auxiliares-------------------------*/
+
 
 void destruirIndicacionDeTransformacion(t_indicacionTransformacion* indTransform) {
 	free(indTransform->nodo);
@@ -243,7 +248,7 @@ t_list* agruparNodosPorBloque(t_list* listaDeNodoBloque) {
 	return listaBloquesConListaDeNodos;
 }
 
-t_list* nodosSinRepetidos(t_list* listaDeNodoBloque){
+t_list* extraerNodosSinRepetidos(t_list* listaDeNodoBloque){
 
 	t_list* nodosSinRepetidos = list_create(); //TODO LIBERAR LISTA
 

@@ -10,16 +10,10 @@
 #include "string.h"
 #include <stdint.h>
 
-enum{
-	Clock = 0,
-	W_Clock,
-};
-
 typedef struct{
 	int bloqueArchivo;
 	t_list* nodosEnLosQueEsta;
-
-}t_nodo_por_bloque;
+} t_nodos_por_bloque;
 
 typedef struct {
 	int id;

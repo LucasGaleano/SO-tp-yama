@@ -49,10 +49,6 @@ long idJob;
 t_list* masterConectados;
 
 /*----------------------------------Planificador--------------------------------------------*/
-typedef struct{
-	int bloqueArchivo;
-	t_list* nodosEnLosQueEsta;
-} t_nodos_por_bloque;
 
 t_list* tablaPlanificador;
 
@@ -69,8 +65,13 @@ void 							procesarRecibirMensaje					(t_paquete * unPaquete);
 void 							procesarRecibirArchivo					(t_paquete * unPaquete);
 void 							procesarRecibirError					(t_paquete * unPaquete);
 void 							procesarEnviarSolicitudTransformacion	(t_paquete * unPaquete, int * client_socket);
-void 							procesarEnviarIndicacionTransformacion	(t_paquete * unPaquete);
-void 							procesarTareaCompleta					(t_paquete * unPaquete, int client_socket);
+void 							procesarEnviarListaNodoBloques			(t_paquete * unPaquete);
+void							procesarEnviarIndicacionTransformacion	(t_paquete * unPaquete);
+void							procesarTareaCompleta					(t_paquete * unPaquete, int client_socket);
+
+/*----------------------------------Procesamiento de nodos y bloques-----------------------------------*/
+t_list* 						agruparNodosPorBloque					(t_list*);
+t_list* 						extraerNodosSinRepetidos				(t_list*);
 
 /*----------------------------------Funciones auxiliares----------------------------------*/
 long 							generarJob								(void);
