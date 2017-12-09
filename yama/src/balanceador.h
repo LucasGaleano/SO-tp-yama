@@ -15,6 +15,12 @@ enum{
 	W_Clock,
 };
 
+typedef struct{
+	int bloqueArchivo;
+	t_list* nodosEnLosQueEsta;
+
+}t_nodo_por_bloque;
+
 typedef struct {
 	int id;
 	int disponibilidad;
@@ -27,8 +33,8 @@ typedef struct {
 
 void Planificador_destroy(t_list* planificador);
 t_list* Planificador_create(); //check
-void planificador_agregarWorker(t_list* tablaPlanificador, int numWorkerId); //check
-void planificador_sacarWorker(t_list* tablaPlanificador, int numWorkerId);
+void planificador_agregarWorker(t_list* tablaPlanificador, char* numWorkerId); //check
+void planificador_sacarWorker(t_list* tablaPlanificador, char* numWorkerId);
 void planificador(int algoritmo, t_list * listaDeBloques, t_list* tablaPlanificador, int DispBase);
 void planificador_sumarWLWorker(t_list* tablaPlanificador, int numWorkerId, int WL);
 
