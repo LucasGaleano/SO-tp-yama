@@ -13,6 +13,9 @@
 #include <pthread.h>
 
 #include "tablas.h"
+#include <biblioteca/paquetes.h>
+#include "balanceador.h"
+
 
 /*----------------------------------Estructuras----------------------------------*/
 typedef struct {
@@ -24,16 +27,27 @@ typedef struct {
 	int disponibilidad_base;
 } t_configuracion;
 
-//typedef struct {
-//	char * ;
-//	int disponibilidad_base;
-//} t_sockets;
-
 /*----------------------------------Variables globales----------------------------------*/
+t_configuracion * configuracion;
+
+//Socket FS
+int socketFS;
+
+//Globales Masters
+t_queue* cola_master;
+
+long idJob;
+
+//prefijo archivos temporales
+char* prefijo = "temp";
+
+t_list* masterConectados;
+
 int socketFS;
 t_queue* cola_master;
 long idJob;
 t_list* masterConectados;
+
 
 /*----------------------------------Configuracion proyecto----------------------------------*/
 t_configuracion * 				leerArchivoDeConfiguracionYAMA     		(char* path);

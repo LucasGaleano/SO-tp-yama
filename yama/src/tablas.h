@@ -9,9 +9,7 @@
 #include <string.h>
 #include <commons/temporal.h>
 
-
 t_list* tabla_de_estados;
-
 
 enum etapa{
 	TRANSFORMACION,
@@ -38,16 +36,15 @@ typedef struct {
 /*------------------------Manejo de tabla estado-------------------------*/
 #include "tablas.h"
 
-
 t_elemento_tabla_estado* crearRegistro(int job, int master, char * nombreNodo, int bloque, int etapa, char * nombreArchivoTemporal, int estado);
 
 void agregarRegistro(int job, int master, char * nombreNodo, int bloque, int etapa, char * nombreArchivoTemporal, int estado);
 
-t_elemento_tabla_estado* buscarRegistro(char* nombreNodo, int bloque, int etapa);
+t_elemento_tabla_estado* buscarRegistro(int job, int master, char* nombreNodo, int bloque, int etapa);
 
-void modificarEstadoDeRegistro(char* nombreNodo, int bloque, int etapa, int nuevoEstado);
+void modificarEstadoDeRegistro(int job, int master, char* nombreNodo, int bloque, int etapa, int nuevoEstado);
 
-void eliminarRegistro(char* nombreNodo, int bloque, int etapa);
+void eliminarRegistro(int job, int master, char* nombreNodo, int bloque, int etapa);
 
 
 
