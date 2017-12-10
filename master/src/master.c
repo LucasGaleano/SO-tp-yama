@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
 
 	enviarRutaParaArrancarTransformacion(conexionYama,rutaArchivoParaArrancar);
 
-	// Agarra solicitudes de Transformacion y de reduccion
+	// Agarra solicitudes de Transformacion y de reduccion --> el finDeSolicitudes cambia cuando terminaron de llegar indicaciones de reduccion local
 
 	while(finDeSolicitudes == false)
 	{
@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 		pthread_join(hilosReduccionLocal[i],NULL);
 	}
 
-	finDeSolicitudes = false;
+	finDeSolicitudes = false; // todo -> hay error en redu local. Me cierro? Sigo y veo si hay mas errores?
 
 	while(finDeSolicitudes == false)
 	{
@@ -349,9 +349,9 @@ void gestionarReduccionGlobal()
 		gettimeofday (&t0,NULL);
 		int cantidadSolicitudes = list_size(indicacionesDeReduccionGlobal);
 		int posActual = 0;
-		t_pedidoReduccionGlobal * pedidos[cantidadSolicitudes-1];
+		t_pedidoReduccionGlobal * pedidos[cantidadSolicitudes-2]; // es -2 porque es una menos por el list_size y una menos por la indicacion del encargado (manda esa aparte)
 		int conexionWorker;
-		while(posActual < cantidadSolicitudes)
+		while(posActual < (cantidadSolicitudes-1)) // no sumo posActual si encuentro al encargado
 		{
 			t_pedidoReduccionGlobal * pedido = malloc (sizeof(t_pedidoReduccionGlobal));
 			if(pedido == NULL)
@@ -398,21 +398,31 @@ void gestionarReduccionGlobal()
 			pedido->puerto = indicacion->puerto;
 
 
-			pedidos[posActual] = pedido;
-
 			if ( pedido -> workerEncargado == 1)
 			{
 				conexionWorker= conectarCliente(indicacion->ip,indicacion->puerto, WORKER);
+				enviarSolicitudReduccionGlobal(conexionWorker,pedidos[posActual]);
+
+				free(pedido->ArchivoResultadoReduccionGlobal);
+				free(pedido->archivoReduccionPorWorker);
+				free(pedido->ip);
+				free(pedido->puerto);
+				free(pedido);
+
+			} else
+			{
+				pedidos[posActual] = pedido;
+				posActual ++;
 			}
 
-			posActual ++;
 
 			liberarReduGlobal(indicacion);
 		}
 
 		posActual = 0;
-		while(posActual < cantidadSolicitudes)
+		while(posActual < (cantidadSolicitudes-1))
 		{
+			conexionWorker= conectarCliente(pedidos[posActual]->ip,pedidos[posActual]->puerto, WORKER);
 			enviarSolicitudReduccionGlobal(conexionWorker,pedidos[posActual]);
 
 			free(pedidos[posActual]->ArchivoResultadoReduccionGlobal);
@@ -545,9 +555,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) { // contesto a
 
 
 		t_indicacionTransformacion * indicacionTransformacion = recibirIndicacionTransformacion(unPaquete);
-		pthread_mutex_lock(&mutexTransformaciones);
 		tareasTotalesTransformacion ++;
-		pthread_mutex_unlock(&mutexTransformaciones);
 
 		hilosTransformacion = realloc(&hilosReduccionLocal, sizeof(pthread_t) * tareasTotalesTransformacion);
 	    pthread_create(&hilosTransformacion[tareasTotalesTransformacion-1],NULL, (void *) mandarDatosTransformacion, (void*) indicacionTransformacion);
@@ -560,9 +568,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) { // contesto a
 		 ;
 
 		log_info(logMaster,"LLega solicitud de reduccion local");
-		pthread_mutex_lock(&mutexReduLocal);
 		tareasTotalesReduccionLocal ++;
-		pthread_mutex_unlock(&mutexReduLocal);
 
 		t_indicacionReduccionLocal * indicacionReduLocal = recibirIndicacionReduccionLocal(unPaquete);
 		hilosReduccionLocal = realloc(&hilosReduccionLocal, sizeof(pthread_t) * tareasTotalesReduccionLocal);
