@@ -352,9 +352,9 @@ t_list * buscarBloque(t_config * configArchivo, int bloque) {
 			nodoBloque->bloque = atoi(bloqueEncontrado[1]);
 			nodoBloque->nomNodo = strdup(bloqueEncontrado[0]);
 			list_add(lista, nodoBloque);
-			destruirSubstring(bloqueEncontrado);
 		}
 
+		destruirSubstring(bloqueEncontrado);
 		free(key);
 		free(copiaChar);
 
@@ -506,6 +506,7 @@ void crearTablaNodosSegunArchivo(char * ruta) {
 		nodo->libre = config_get_int_value(configTablaNodo, nombreNodoLibre);
 		nodo->total = config_get_int_value(configTablaNodo, nombreNodoTotal);
 		nodo->nombre = strdup(nombreNodo);
+		nodo->disponible = false;
 
 		list_add(tablaNodos->infoDeNodo, nodo);
 
@@ -1016,7 +1017,7 @@ bool bloqueNodoVacio(char ** bloque) {
 
 bool nodoDisponible(char * nomNodo) {
 	bool estoyLibre(t_nodo_info * nodo) {
-		return string_equals_ignore_case(nomNodo, nodo->nombre) && nodo->libre;
+		return string_equals_ignore_case(nomNodo, nodo->nombre) && nodo->disponible;
 	}
 
 	return list_any_satisfy(tablaNodos->infoDeNodo, (void*) estoyLibre);
