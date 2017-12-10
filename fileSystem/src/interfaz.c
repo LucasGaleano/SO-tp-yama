@@ -70,6 +70,8 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 
 		//Libero memoria
 		free(buffer);
+		free(nodoElegido);
+		free(nodoElegidoCopia);
 	}
 
 	config_destroy(configTablaArchivo);
@@ -265,29 +267,33 @@ char * leerArchivo(char * rutaArchivo) {
 	}
 
 	//Busco los bloques en los nodos
-	int cantidadDeBloques = config_get_int_value(configArchivo,"CANTIDAD_BLOQUES");
+	int bloque = 0;
 
-	int i;
+	t_list * listaNodoBloque = buscarBloque(configArchivo, bloque);
 
-	for (i = 0; i < cantidadDeBloques; ++i) {
+	while (!list_is_empty(listaNodoBloque)) {
+		t_nodoBloque * nodoBloque = nodoMenosSaturado(listaNodoBloque);
 
-		char ** nodoBloqueOriginal = buscarBloque(configArchivo, i, 0);
-		char ** nodoBloqueCopia = buscarBloque(configArchivo, i, 1);
+		enviarSolicitudLecturaArchTemp(
+				buscarSocketPorNombre(nodoBloque->nomNodo), nodoBloque->bloque,
+				bloque);
 
-		t_tarea * tarea = nodoMenosSaturado(nodoBloqueOriginal,
-				nodoBloqueCopia);
+		void eliminarNodo(t_nodoBloque * nodo){
+			free(nodo->nomNodo);
+			free(nodo);
+		}
 
-		list_add(tablaTareas, tarea);
+		list_destroy_and_destroy_elements(listaNodoBloque,(void*)eliminarNodo);
 
-		enviarSolicitudLecturaArchTemp(buscarSocketPorNombre(tarea->nomNodo),
-				tarea->bloque, i);
+		bloque ++;
 
-		destruirSubstring(nodoBloqueOriginal);
-		destruirSubstring(nodoBloqueCopia);
+		listaNodoBloque = buscarBloque(configArchivo, bloque);
 	}
 
+	list_destroy(listaNodoBloque);
+
 	//Espero que lleguen todos los bloques
-	while (list_size(listaTemporal) < i)
+	while (list_size(listaTemporal) < bloque)
 		;
 
 	//Creo el archivo temporal en base a la lista
@@ -302,6 +308,7 @@ char * leerArchivo(char * rutaArchivo) {
 
 	int desplazamiento = 0;
 
+	int i;
 	for (i = 0; i < list_size(listaTemporal); i++) {
 		t_respuestaLecturaArchTemp * bloque = list_get(listaTemporal, i);
 
@@ -313,7 +320,7 @@ char * leerArchivo(char * rutaArchivo) {
 		desplazamiento += tamBuffer;
 	}
 
-	//Libero memoria
+//Libero memoria
 	destruirSubstring(separado);
 	free(rutaFS);
 	free(indexPadreChar);
@@ -328,59 +335,22 @@ char * leerArchivo(char * rutaArchivo) {
 	return archivoTemporal;
 }
 
-t_tarea * nodoMenosSaturado(char ** nodoBloqueOriginal, char ** nodoBloqueCopia) {
+t_nodoBloque * nodoMenosSaturado(t_list * listaNodoBloque) {
 
-	t_tarea * tarea = malloc(sizeof(t_tarea));
-
-	if (!nodoDisponible(nodoBloqueOriginal[0])) {
-		int tamNombre = strlen(nodoBloqueCopia[0]) + 1;
-		tarea->nomNodo = malloc(tamNombre);
-		memcpy(tarea->nomNodo, nodoBloqueCopia[0], tamNombre);
-		tarea->bloque = atoi(nodoBloqueCopia[1]);
-		return tarea;
+	bool nodoMenosCargado(t_nodoBloque * nodo, t_nodoBloque * nodoMasCargado) {
+		int cantTareasNodo = cantidadTareas(nodo->nomNodo);
+		int cantTareasNodoMasCargado = cantidadTareas(nodoMasCargado->nomNodo);
+		return cantTareasNodo < cantTareasNodoMasCargado;
 	}
 
-	if (!nodoDisponible(nodoBloqueCopia[0])) {
-		int tamNombre = strlen(nodoBloqueOriginal[0]) + 1;
-		tarea->nomNodo = malloc(tamNombre);
-		memcpy(tarea->nomNodo, nodoBloqueOriginal[0], tamNombre);
-		tarea->bloque = atoi(nodoBloqueOriginal[1]);
-		return tarea;
-	}
+	list_sort(listaNodoBloque, (void*) nodoMenosCargado);
 
-	int cumplenOriginal = cantidadTareas(nodoBloqueOriginal);
-
-	int cumplenCopia = cantidadTareas(nodoBloqueCopia);
-
-	if (cumplenOriginal > cumplenCopia) {
-		int tamNombre = strlen(nodoBloqueCopia[0]) + 1;
-		tarea->nomNodo = malloc(tamNombre);
-		memcpy(tarea->nomNodo, nodoBloqueCopia[0], tamNombre);
-		tarea->bloque = atoi(nodoBloqueCopia[1]);
-	} else {
-		int tamNombre = strlen(nodoBloqueOriginal[0]) + 1;
-		tarea->nomNodo = malloc(tamNombre);
-		memcpy(tarea->nomNodo, nodoBloqueOriginal[0], tamNombre);
-		tarea->bloque = atoi(nodoBloqueOriginal[1]);
-	}
-
-	return tarea;
+	return list_get(listaNodoBloque, 0);
 }
 
-int cantidadTareas(char ** nodoBloqueOriginal) {
+int cantidadTareas(char * nodoBloqueOriginal) {
 	bool cantidadDeTareas(char ** tarea) {
-		return string_equals_ignore_case(tarea[0], nodoBloqueOriginal[0]);
+		return string_equals_ignore_case(tarea[0], nodoBloqueOriginal);
 	}
-
 	return list_count_satisfying(tablaTareas, (void*) cantidadDeTareas);
-
-}
-
-bool nodoDisponible(char * nomNodo) {
-	bool estaDisponible(t_nodo_info * nodo) {
-		return nodo->disponible
-				&& string_equals_ignore_case(nodo->nombre, nomNodo);
-	}
-
-	return list_any_satisfy(tablaNodos->infoDeNodo, (void*) estaDisponible);
 }

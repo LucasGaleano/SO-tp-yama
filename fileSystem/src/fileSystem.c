@@ -94,6 +94,7 @@ void procesarHandshake(t_paquete * unPaquete, int * client_socket) {
 void procesarInfoNodo(t_paquete * unPaquete, int client_socket) {
 	//Recibo info
 	t_nodo_info * info = recibirInfoDataNode(unPaquete);
+	info->disponible=true;
 
 	//Agrego elemento a la tabla de nodos
 	agregarNodoTablaNodos(info);
@@ -104,7 +105,18 @@ void procesarInfoNodo(t_paquete * unPaquete, int client_socket) {
 }
 
 void procesarError(t_paquete * unPaquete, int * client_socket) {
+	//Elimino de la tabla de sockets
 	char * nomNodo = eliminarNodoTablaSockets(*client_socket);
+
+	//Marco como no disponible en tabla de sockets
+	bool esNodo(t_nodo_info * infoNodo){
+		return string_equals_ignore_case(infoNodo->nombre,nomNodo);
+	}
+
+	t_nodo_info * nodo = list_find(tablaNodos->infoDeNodo,(void*)esNodo);
+	nodo->disponible = false;
+
+	//Libero memoria
 	free(nomNodo);
 }
 
@@ -273,7 +285,7 @@ void procesarEnviarRutaArchivo(t_paquete * unPaquete, int client_socket) {
 
 	for (numeroTotal = 0; numeroTotal < cantidadDeBloques; ++numeroTotal) {
 
-		bloque = buscarBloque(configArchivo, numeroBloque, 0);
+		bloque = buscarBloqueCopia(configArchivo, numeroBloque, 0);
 
 		char * key = string_new();
 		string_append(&key, "BLOQUE");
@@ -296,7 +308,7 @@ void procesarEnviarRutaArchivo(t_paquete * unPaquete, int client_socket) {
 			numeroTotal++;
 			numeroCopia++;
 			destruirSubstring(bloque);
-			bloque = buscarBloque(configArchivo, numeroBloque, numeroCopia);
+			bloque = buscarBloqueCopia(configArchivo, numeroBloque, numeroCopia);
 		}
 		numeroBloque++;
 	}

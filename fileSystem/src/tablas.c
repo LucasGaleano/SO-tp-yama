@@ -326,7 +326,55 @@ void guardoBytesPorBloque(int numeroBloque, int tamBuffer,
 	free(totalDeBytes);
 }
 
-char ** buscarBloque(t_config * configArchivo, int bloque, int copia) {
+t_list * buscarBloque(t_config * configArchivo, int bloque) {
+	t_list * lista = list_create();
+
+	char * keyOriginal = string_new();
+	string_append(&keyOriginal, "BLOQUE");
+	char * bloqueChar = string_itoa(bloque);
+	string_append(&keyOriginal, bloqueChar);
+	string_append(&keyOriginal, "COPIA");
+
+	int copia = 0;
+
+	char * key = string_new();
+	string_append(&key, keyOriginal);
+	char * copiaChar = string_itoa(copia);
+	string_append(&key, copiaChar);
+
+	char * bloqueBuscado = config_get_string_value(configArchivo, key);
+
+	while (bloqueBuscado != NULL) {
+		char ** bloqueEncontrado = config_get_array_value(configArchivo, key);
+		if (!bloqueNodoVacio(bloqueEncontrado)
+				&& nodoDisponible(bloqueEncontrado[0])) {
+			t_nodoBloque * nodoBloque = malloc(sizeof(t_nodoBloque));
+			nodoBloque->bloque = atoi(bloqueEncontrado[1]);
+			nodoBloque->nomNodo = strdup(bloqueEncontrado[0]);
+			list_add(lista, nodoBloque);
+			destruirSubstring(bloqueEncontrado);
+		}
+
+		free(key);
+		free(copiaChar);
+
+		copia++;
+		key = string_new();
+		string_append(&key, keyOriginal);
+		copiaChar = string_itoa(copia);
+		string_append(&key, copiaChar);
+		bloqueBuscado = config_get_string_value(configArchivo, key);
+	}
+
+	free(key);
+	free(keyOriginal);
+	free(bloqueChar);
+	free(copiaChar);
+
+	return lista;
+}
+
+char ** buscarBloqueCopia(t_config * configArchivo, int bloque, int copia) {
 	char * key = string_new();
 	string_append(&key, "BLOQUE");
 	char * bloqueChar = string_itoa(bloque);
@@ -342,6 +390,7 @@ char ** buscarBloque(t_config * configArchivo, int bloque, int copia) {
 	free(copiaChar);
 
 	return bloqueEncontrado;
+
 }
 
 int buscarTamBloque(t_config * configArchivo, int numeroBloqueArchivo) {
@@ -642,12 +691,12 @@ void crearTablaSockets(void) {
 void agregarNodoTablaSockets(char * nombreNodo, int client_socket, char * ip,
 		char *puerto) {
 	t_tabla_sockets * registroSocket = malloc(sizeof(t_tabla_nodo));
-	registroSocket->nombre = malloc(string_length(nombreNodo) + 1);
 
-	memcpy(registroSocket->nombre, nombreNodo, string_length(nombreNodo) + 1);
+	registroSocket->nombre = strdup(nombreNodo);
+	registroSocket->ip = strdup(ip);
+	registroSocket->puerto = strdup(puerto);
+
 	memcpy(&registroSocket->socket, &client_socket, sizeof(int));
-	memcpy(&registroSocket->ip, ip, strlen(ip) + 1);
-	memcpy(&registroSocket->puerto, puerto, strlen(puerto) + 1);
 
 	list_add(tablaSockets, registroSocket);
 }
@@ -706,15 +755,16 @@ void modificarNodoTablaSockets(char * nombreNodo, int client_socket) {
 	registro->socket = client_socket;
 }
 
-t_tabla_sockets_ip_puerto * buscarIpPuertoPorNombre(char * nombreNodo){
+t_tabla_sockets_ip_puerto * buscarIpPuertoPorNombre(char * nombreNodo) {
 	bool esNombreBuscado(t_tabla_sockets * nodo) {
-		return string_ends_with(nombreNodo,nodo->nombre);
+		return string_ends_with(nombreNodo, nodo->nombre);
 	}
 
 	t_tabla_sockets * registroSocket = list_find(tablaSockets,
 			(void*) esNombreBuscado);
 
-	t_tabla_sockets_ip_puerto * ipPuerto = malloc(sizeof(t_tabla_sockets_ip_puerto));
+	t_tabla_sockets_ip_puerto * ipPuerto = malloc(
+			sizeof(t_tabla_sockets_ip_puerto));
 	ipPuerto->ip = strdup(registroSocket->ip);
 	ipPuerto->puerto = strdup(registroSocket->puerto);
 
@@ -872,5 +922,17 @@ void destruirSubstring(char ** sub) {
 	}
 	free(sub[i]);
 	free(sub);
+}
+
+bool bloqueNodoVacio(char ** bloque) {
+	return string_equals_ignore_case(bloque[1], "#");
+}
+
+bool nodoDisponible(char * nomNodo) {
+	bool estoyLibre(t_nodo_info * nodo) {
+		return string_equals_ignore_case(nomNodo, nodo->nombre) && nodo->libre;
+	}
+
+	return list_any_satisfy(tablaNodos->infoDeNodo, (void*) estoyLibre);
 }
 

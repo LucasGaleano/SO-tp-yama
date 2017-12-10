@@ -41,7 +41,6 @@ void 				mostrarInfo								(char *);
 
 /*------------------------------Auxiliares------------------------------*/
 char * 				obtenerParametro				(char *, int);
-void 				destruirSubstring				(char **);
 int 				obtenerIndex					(char *);
 bool 				verificarDuplicados				(t_directory *);
 char ** 			buscarBloqueABorar				(int, int *, int *, t_config *);

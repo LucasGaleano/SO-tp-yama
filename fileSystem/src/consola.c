@@ -895,12 +895,12 @@ void crearCopiaBloqueEnNodo(char * linea) {
 
 	//Busco el bloque a copiar
 	int i = 0;
-	char ** bloqueBuscado = buscarBloque(configArchivo,
+	char ** bloqueBuscado = buscarBloqueCopia(configArchivo,
 			atoi(numeroBloqueArchivo), i);
 	while (string_equals_ignore_case(bloqueBuscado[0], "#")) {
 		i++;
 		destruirSubstring(bloqueBuscado);
-		bloqueBuscado = buscarBloque(configArchivo, atoi(numeroBloqueArchivo),
+		bloqueBuscado = buscarBloqueCopia(configArchivo, atoi(numeroBloqueArchivo),
 				i);
 	}
 
