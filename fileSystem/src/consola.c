@@ -200,6 +200,10 @@ void ejecutarExit(bool * ejecutar) {
 void formatearFilesystem() {
 	formateado = true;
 
+	destruirTablaNodos();
+	destruirTablaDirectorios();
+	destruirTablaTareas();
+
 	borrarArchivosDirectorios("/home/utnso/Escritorio/metadata/bitmaps");
 
 	crearTablaNodos("/home/utnso/Escritorio/metadata");

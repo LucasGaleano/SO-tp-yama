@@ -888,6 +888,10 @@ void liberarBloquebitMap(char * nomNodo, int bloque) {
 
 /*-------------------------Eliminar listas-------------------------*/
 void destruirTablaSockets() {
+	//Verifico que no este vacio
+	if (tablaSockets == NULL)
+		return;
+
 	void eliminarRegistroTablaSockets(t_tabla_sockets * registro) {
 		free(registro->ip);
 		free(registro->nombre);
@@ -899,6 +903,10 @@ void destruirTablaSockets() {
 }
 
 void destruirTablaNodos() {
+	//Verifico que no este vacio
+	if (tablaNodos == NULL)
+		return;
+
 	//Elimino la lista de info de Nodos
 	void eliminarRegistroInfoNodo(t_nodo_info * registro) {
 		free(registro->nombre);
@@ -919,6 +927,10 @@ void destruirTablaNodos() {
 }
 
 void destruirTablaDirectorios() {
+	//Verifico que no este vacio
+	if (tablaDirectorios == NULL)
+		return;
+
 	void eliminarRegistroDirectorio(t_directory * registro) {
 		free(registro);
 	}
@@ -928,6 +940,10 @@ void destruirTablaDirectorios() {
 }
 
 void destruirTablaTareas() {
+	//Verifico que no este vacio
+	if (tablaTareas == NULL)
+		return;
+
 	void eliminarRegistroTarea(t_nodoBloque * registro) {
 		free(registro->nomNodo);
 		free(registro);
