@@ -32,6 +32,12 @@ int main(int argc, char **argv) {
 	//Destruo archivo de log
 	log_destroy(logFileSystem);
 
+	//Libero memoria
+	destruirTablaSockets();
+	destruirTablaNodos();
+	destruirTablaDirectorios();
+	destruirTablaTareas();
+
 	return EXIT_SUCCESS;
 }
 

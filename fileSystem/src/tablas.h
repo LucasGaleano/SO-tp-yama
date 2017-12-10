@@ -101,6 +101,12 @@ void 						crearArchivoTablaBitmap			(t_nodo_info *);
 int 						buscarBloqueLibre				(t_config *);
 void 						liberarBloquebitMap				(char *, int);
 
+/*-------------------------Eliminar listas-------------------------*/
+void 						destruirTablaSockets			(void);
+void 						destruirTablaNodos				(void);
+void 						destruirTablaDirectorios		(void);
+void 						destruirTablaTareas				(void);
+
 /*-------------------------Funciones auxiliares-------------------------*/
 char * 						armarRegistroDirectorio			(char *, int);
 int 						buscarIndexLibre				(void);

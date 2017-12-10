@@ -274,7 +274,11 @@ char * leerArchivo(char * rutaArchivo) {
 	while (!list_is_empty(listaNodoBloque)) {
 		t_nodoBloque * nodoBloque = nodoMenosSaturado(listaNodoBloque);
 
-		list_add(tablaTareas,nodoBloque);
+		t_nodoBloque * tarea = malloc(sizeof(t_nodoBloque));
+		tarea->nomNodo = strdup(nodoBloque->nomNodo);
+		tarea->bloque = nodoBloque->bloque;
+
+		list_add(tablaTareas,tarea);
 
 		enviarSolicitudLecturaArchTemp(
 				buscarSocketPorNombre(nodoBloque->nomNodo), nodoBloque->bloque,

@@ -887,7 +887,54 @@ void liberarBloquebitMap(char * nomNodo, int bloque) {
 }
 
 /*-------------------------Eliminar listas-------------------------*/
+void destruirTablaSockets() {
+	void eliminarRegistroTablaSockets(t_tabla_sockets * registro) {
+		free(registro->ip);
+		free(registro->nombre);
+		free(registro->puerto);
+		free(registro);
+	}
+	list_destroy_and_destroy_elements(tablaSockets,
+			(void*) eliminarRegistroTablaSockets);
+}
 
+void destruirTablaNodos() {
+	//Elimino la lista de info de Nodos
+	void eliminarRegistroInfoNodo(t_nodo_info * registro) {
+		free(registro->nombre);
+		free(registro);
+	}
+	list_destroy_and_destroy_elements(tablaNodos->infoDeNodo,
+			(void*) eliminarRegistroInfoNodo);
+
+	//Elimino la lista de nombre de Nodos
+	void eliminarRegistroNombreNodo(char * registro) {
+		free(registro);
+	}
+	list_destroy_and_destroy_elements(tablaNodos->nomNodos,
+			(void*) eliminarRegistroNombreNodo);
+
+	//Elimino el puntero a la estructura
+	free(tablaNodos);
+}
+
+void destruirTablaDirectorios() {
+	void eliminarRegistroDirectorio(t_directory * registro) {
+		free(registro);
+	}
+
+	list_destroy_and_destroy_elements(tablaDirectorios,
+			(void*) eliminarRegistroDirectorio);
+}
+
+void destruirTablaTareas() {
+	void eliminarRegistroTarea(t_nodoBloque * registro) {
+		free(registro->nomNodo);
+		free(registro);
+	}
+	list_destroy_and_destroy_elements(tablaTareas,
+			(void*) eliminarRegistroTarea);
+}
 
 /*-------------------------Funciones auxiliares-------------------------*/
 char * armarRegistroDirectorio(char * nombreDirectorio, int indexPadre) {
