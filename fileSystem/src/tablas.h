@@ -59,8 +59,6 @@ t_tabla_nodo * tablaNodos;
 t_list * tablaDirectorios;
 t_list * tablaTareas;
 
-t_config * configTablaNodo;
-
 bool bitMapDirectorio[100];
 
 /*-------------------------Tabla de directorios-------------------------*/
@@ -109,7 +107,7 @@ int 						buscarIndexLibre				(void);
 int 						obtenerIndex					(char *);
 void 						llenarBitmap					(void);
 void 						destruirSubstring				(char **);
-bool bloqueNodoVacio(char ** bloque);
+bool 						bloqueNodoVacio					(char **);
+bool 						nodoDisponible					(char *);
 
-bool nodoDisponible(char * nomNodo);
 #endif /* TABLAS_H_ */

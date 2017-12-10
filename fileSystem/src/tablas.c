@@ -436,7 +436,7 @@ void crearArchivoTablaNodos(char * ruta) {
 	fclose(file);
 
 	//Creo la estructura de configuracion
-	configTablaNodo = config_create(rutaArchivo);
+	t_config * configTablaNodo = config_create(rutaArchivo);
 
 	//Seteo las variables en cero
 	config_set_value(configTablaNodo, "TAMANIO", "0");
@@ -444,6 +444,8 @@ void crearArchivoTablaNodos(char * ruta) {
 	config_set_value(configTablaNodo, "NODOS", "[]");
 
 	config_save(configTablaNodo);
+
+	config_destroy(configTablaNodo);
 
 	free(rutaArchivo);
 }
@@ -457,7 +459,11 @@ void crearTablaNodosSegunArchivo(char * ruta) {
 	tablaTareas = list_create();
 
 	//Creo la estructura de configuracion
-	configTablaNodo = config_create(rutaArchivo);
+	char * rutaTabla = string_new();
+	string_append(&rutaTabla, RUTA_METADATA);
+	string_append(&rutaTabla, "metadata/nodos.bin");
+
+	t_config * configTablaNodo = config_create(rutaTabla);
 
 	//Creo la lista
 	tablaNodos = malloc(sizeof(t_tabla_nodo));
@@ -530,6 +536,8 @@ void crearTablaNodosSegunArchivo(char * ruta) {
 	free(numeroNodoChar);
 	free(rutaArchivo);
 	destruirSubstring(nomNodos);
+	free(rutaTabla);
+	config_destroy(configTablaNodo);
 }
 
 void agregarNodoTablaNodos(t_nodo_info * info) {
@@ -604,19 +612,27 @@ void liberarBloqueTablaNodos(char * nomNodo, int bloque) {
 }
 
 void persistirTablaNodos() {
-//Persisto el tamanio de la tabla
+
+	//Creo la estructura de configuracion
+	char * rutaTabla = string_new();
+	string_append(&rutaTabla, RUTA_METADATA);
+	string_append(&rutaTabla, "metadata/nodos.bin");
+
+	t_config * configTablaNodo = config_create(rutaTabla);
+
+	//Persisto el tamanio de la tabla
 	int tamanio = tablaNodos->tamanio;
 	char * stringTamanio = string_itoa(tamanio);
 	config_set_value(configTablaNodo, "TAMANIO", stringTamanio);
 	free(stringTamanio);
 
-//Persisto los bloquees libres de la tabla
+	//Persisto los bloquees libres de la tabla
 	int libres = tablaNodos->libres;
 	char * stringLibres = string_itoa(libres);
 	config_set_value(configTablaNodo, "LIBRE", stringLibres);
 	free(stringLibres);
 
-//Persisto los nombres de los nodos
+	//Persisto los nombres de los nodos
 	char* nomNodos = string_new();
 
 	string_append(&nomNodos, "[");
@@ -641,7 +657,7 @@ void persistirTablaNodos() {
 
 	free(nomNodos);
 
-//Persisto la info de cada nodo
+	//Persisto la info de cada nodo
 	for (i = 0; i < tablaNodos->infoDeNodo->elements_count; i++) {
 		t_nodo_info * info = list_get(tablaNodos->infoDeNodo, i);
 
@@ -667,6 +683,10 @@ void persistirTablaNodos() {
 	}
 
 	config_save(configTablaNodo);
+
+	free(rutaTabla);
+	config_destroy(configTablaNodo);
+
 }
 
 void quitarEspacioNodo(char * nomNodo) {
@@ -865,6 +885,9 @@ void liberarBloquebitMap(char * nomNodo, int bloque) {
 	free(bloqueChar);
 	free(valor);
 }
+
+/*-------------------------Eliminar listas-------------------------*/
+
 
 /*-------------------------Funciones auxiliares-------------------------*/
 char * armarRegistroDirectorio(char * nombreDirectorio, int indexPadre) {
