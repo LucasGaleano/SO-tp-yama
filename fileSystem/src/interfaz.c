@@ -274,6 +274,8 @@ char * leerArchivo(char * rutaArchivo) {
 	while (!list_is_empty(listaNodoBloque)) {
 		t_nodoBloque * nodoBloque = nodoMenosSaturado(listaNodoBloque);
 
+		list_add(tablaTareas,nodoBloque);
+
 		enviarSolicitudLecturaArchTemp(
 				buscarSocketPorNombre(nodoBloque->nomNodo), nodoBloque->bloque,
 				bloque);
@@ -349,8 +351,8 @@ t_nodoBloque * nodoMenosSaturado(t_list * listaNodoBloque) {
 }
 
 int cantidadTareas(char * nodoBloqueOriginal) {
-	bool cantidadDeTareas(char ** tarea) {
-		return string_equals_ignore_case(tarea[0], nodoBloqueOriginal);
+	bool cantidadDeTareas(t_nodoBloque * tarea) {
+		return string_equals_ignore_case(tarea->nomNodo, nodoBloqueOriginal);
 	}
 	return list_count_satisfying(tablaTareas, (void*) cantidadDeTareas);
 }
