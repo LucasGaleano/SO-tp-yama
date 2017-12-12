@@ -94,6 +94,8 @@ enum cod_op{
 
 	ENVIAR_ERROR_JOB,
 
+	RESULTADO_TRANSFORMACION
+
 };
 
 enum continuaMensaje{

@@ -1074,6 +1074,10 @@ t_nodo_nombre * deserializarNombreIPPuerto(t_stream * buffer){
 	return nodoNombre;
 }
 
+t_resultado_transformacion* deserializarResultadoTransformacion(unPaquete->buffer){
+	//TODO HACER SEREALIZACION DE RECEPCION DE RESULTADO DE TRANSFORMACION
+}
+
 /*-------------------------Funciones auxiliares-------------------------*/
 void * abrirArchivo(char * rutaArchivo, size_t * tamArc, FILE ** archivo) {
 	//Abro el archivo

@@ -80,17 +80,14 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_ERROR:
 		procesarRecibirError(unPaquete);
 		break;
-	case ENVIAR_SOLICITUD_TRANSFORMACION: //RECIBO SOLICITUD DE TRANSFORMACION CON PATH DE ARCHIVO
+	case ENVIAR_RUTA_PARA_ARRANCAR_TRANSFORMACION: //RECIBO SOLICITUD DE TRANSFORMACION CON PATH DE ARCHIVO
 		procesarEnviarSolicitudTransformacion(unPaquete, client_socket); //ENVIO A FS PATH DE ARCHIVO
 		break;
 	case ENVIAR_LISTA_NODO_BLOQUES: //RECIBO LISTA DE ARCHIVOS DE FS CON UBICACIONES Y BLOQUES
 		procesarEnviarListaNodoBloques(unPaquete); //
 		break;
-	case ENVIAR_INDICACION_TRANSFORMACION:
-		procesarEnviarSolicitudTransformacion(unPaquete, client_socket);
-		break;
-	case TAREA_COMPLETADA:
-		procesarTareaCompleta(unPaquete, client_socket);
+	case RESULTADO_TRANSFORMACION:
+		procesarResultadoTranformacion(unPaquete, client_socket);
 		break;
 	default:
 		break;
@@ -151,7 +148,7 @@ void procesarRecibirError(t_paquete * unPaquete) {
 
 void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete, int *client_socket) {
 	char * nomArchivo = recibirMensaje(unPaquete);
-	enviarRutaArchivo(socketFS, nomArchivo);
+	enviarRutaParaArrancarTransformacion(socketFS, nomArchivo);
 }
 
 void procesarEnviarListaNodoBloques(t_paquete * unPaquete){
@@ -215,8 +212,20 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete){
 	list_iterate(indicacionesDeTransformacionParaMaster, (void*) registrarYEnviarAMaster);
 }
 
-void procesarTareaCompleta(t_paquete * unPaquete, int client_socket){
+void procesarResultadoTranformacion(t_paquete * unPaquete, int client_socket){
+	t_resultado_transformacion* resultado = recibirResultadoTransformacion(unPaquete);
 
+	if(resultado->estadoOperacion == ????????){
+
+	};
+
+	//ACTUALIZAR REGISTRO Y CONTINUAR O REPLANIFICAR ALGUN BLOQUE (VER REPLANIFICACION)
+	//FIJARSE QUE PASA CON LA TABLA DE ESTADO EN EL CASO DE QUE FALLE ALGUNA ETAPA
+
+	//MIRAR SI PARA UN MISMO NODO, TERMINARON TODAS LAS TRANSFORMACIONES
+	//SI -> MANDAR A HACER TODAS LAS REDUCCIONES LOCALES DE ESE NODO
+
+	//ACTUALIZAR TABLA DE ESTADO AVANZANDO LA ETAPA
 }
 
 /*-------------------------Funciones auxiliares-------------------------*/
