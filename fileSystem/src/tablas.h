@@ -51,15 +51,13 @@ typedef struct {
 typedef struct {
 	char * nomNodo;
 	int bloque;
-} t_tarea;
+} t_nodoBloque;
 
 /*------------------------Variables globales-------------------------*/
 t_list * tablaSockets;
 t_tabla_nodo * tablaNodos;
 t_list * tablaDirectorios;
 t_list * tablaTareas;
-
-t_config * configTablaNodo;
 
 bool bitMapDirectorio[100];
 
@@ -75,7 +73,8 @@ void 						modificarDirectorioTabla		(t_directory *, char *, int);
 t_config *					crearArchivoTablaArchivo		(char *, char *, char *, int);
 void 						agregarRegistroTablaArchivos	(char *, int,int, int, t_config *);
 void 						guardoBytesPorBloque			(int, int, t_config *);
-char ** 					buscarBloque					(t_config *, int, int);
+t_list *					buscarBloque					(t_config *, int);
+char **						buscarBloqueCopia				(t_config *, int, int);
 int 						buscarTamBloque					(t_config *, int);
 
 /*-------------------------Tabla de nodos-------------------------*/
@@ -102,11 +101,19 @@ void 						crearArchivoTablaBitmap			(t_nodo_info *);
 int 						buscarBloqueLibre				(t_config *);
 void 						liberarBloquebitMap				(char *, int);
 
+/*-------------------------Eliminar listas-------------------------*/
+void 						destruirTablaSockets			(void);
+void 						destruirTablaNodos				(void);
+void 						destruirTablaDirectorios		(void);
+void 						destruirTablaTareas				(void);
+
 /*-------------------------Funciones auxiliares-------------------------*/
 char * 						armarRegistroDirectorio			(char *, int);
 int 						buscarIndexLibre				(void);
 int 						obtenerIndex					(char *);
 void 						llenarBitmap					(void);
 void 						destruirSubstring				(char **);
+bool 						bloqueNodoVacio					(char **);
+bool 						nodoDisponible					(char *);
 
 #endif /* TABLAS_H_ */
