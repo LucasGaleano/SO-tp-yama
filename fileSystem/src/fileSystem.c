@@ -2,6 +2,7 @@
 
 int main(int argc, char **argv) {
 	formateado = false;
+	estadoEstable = false;
 
 	//Creo la tabla de sockets
 	crearTablaSockets();
@@ -84,11 +85,11 @@ void procesarHandshake(t_paquete * unPaquete, int * client_socket) {
 		}
 		break;
 	case YAMA:
-		if (!formateado)
+		if (!estadoEstable)
 			*client_socket = -1;
 		break;
 	case WORKER:
-		if (!formateado)
+		if (!estadoEstable)
 			*client_socket = -1;
 		break;
 	default:
