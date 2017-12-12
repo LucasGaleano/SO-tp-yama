@@ -38,6 +38,12 @@ enum emisor {
 	YAMA = 904,
 };
 
+enum estadoTransformacion{
+	PROCESANDO,
+	ERROR,
+	FINALIZADO_OK
+};
+
 enum cod_op{
 	HANDSHAKE=0,
 
