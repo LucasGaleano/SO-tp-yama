@@ -11,7 +11,7 @@ static void insertarBloqueEnRegistroWorker(t_list* tablaPlanificador,int Worker,
 static int extraerIddelNodo(char* nodo);
 
 
-void planificador(int algoritmo, t_list * listaDeBloques,
+void planificador(char* algoritmo, t_list * listaDeBloques,
 		t_list* tablaPlanificador, int DispBase) {
 
 	t_registro_Tabla_Planificador* RegistroWorker;
