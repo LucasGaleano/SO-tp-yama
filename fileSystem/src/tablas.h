@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <commons/log.h>
 
 #include <biblioteca/sockets.h>
 
@@ -60,6 +61,8 @@ t_list * tablaDirectorios;
 t_list * tablaTareas;
 
 bool bitMapDirectorio[100];
+
+t_log* logFileSystem;
 
 /*-------------------------Tabla de directorios-------------------------*/
 void 						crearTablaDirectorios			(char *);

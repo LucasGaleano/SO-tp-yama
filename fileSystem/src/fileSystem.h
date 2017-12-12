@@ -17,7 +17,6 @@
 #define PUERTO_FILESYSTEM "3200"
 
 /*------------------------Variables globales-------------------------*/
-t_log* logFileSystem;
 bool estadoAnterior;
 
 /*------------------------Procesamiento paquetes-------------------------*/

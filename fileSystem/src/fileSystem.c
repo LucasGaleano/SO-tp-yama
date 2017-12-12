@@ -4,16 +4,16 @@ int main(int argc, char **argv) {
 	formateado = false;
 	estadoEstable = false;
 
+	//Creo archivo de log
+	logFileSystem = log_create("log_FileSystem.log", "fileSystem", false,
+			LOG_LEVEL_TRACE);
+	log_trace(logFileSystem, "Inicio el proceso fileSystem \n");
+
 	//Creo la tabla de sockets
 	crearTablaSockets();
 
 	//Verifico si ignoro o no el estado anterior
 	manejoDeEstado(argv[1]);
-
-	//Creo archivo de log
-	logFileSystem = log_create("log_FileSystem.log", "fileSystem", false,
-			LOG_LEVEL_TRACE);
-	log_info(logFileSystem, "Inicio el proceso fileSystem \n");
 
 	//Creo el thread para escuchar conexiones
 	pthread_t threadServer;
@@ -142,10 +142,12 @@ void procesarRespuestaEscrituraBloque(t_paquete * unPaquete, int client_socket) 
 	char * nomNodo = buscarNombrePorSocket(client_socket);
 
 	if (respuesta->exito) {
-		printf("Se pudo guardar el bloque: %d en el nodo: %s \n",
+		log_trace(logFileSystem,
+				"Se pudo guardar el bloque: %d en el nodo: %s \n",
 				respuesta->numBloque, nomNodo);
 	} else {
-		printf("No se pudo guardar el bloque: %d en el nodo: %s \n",
+		log_warning(logFileSystem,
+				"No se pudo guardar el bloque: %d en el nodo: %s \n",
 				respuesta->numBloque, nomNodo);
 	}
 
@@ -403,15 +405,15 @@ void procesarNombre(t_paquete * unPaquete, int * client_socket) {
 
 		persistirTablaNodos();
 
-		if (verificarEstadoEstable()){
+		if (verificarEstadoEstable()) {
 			estadoEstable = true;
-			printf("Estoy en estado estable \n");
+			log_trace(logFileSystem,
+					"El proceso FileSystem está en un estado estable \n");
 		} else {
-			printf("No estoy en estado estable \n");
+			log_trace(logFileSystem,
+					"El proceso FileSystem está en un estado no-estable \n");
 		}
-
 	}
-
 
 	free(nodo->ip);
 	free(nodo->nombre);
@@ -425,7 +427,8 @@ void manejoDeEstado(char * comando) {
 		if (string_equals_ignore_case(comando, "--clean")) {
 			ignoroEstadoAnterior();
 		} else {
-			printf("Parametro inexistente, concidero estado anterior \n");
+			log_trace(logFileSystem,
+					"Parametro inexistente, concidero estado anterior \n");
 		}
 	} else {
 		consideroEstadoAnterior();
@@ -433,11 +436,11 @@ void manejoDeEstado(char * comando) {
 }
 
 void ignoroEstadoAnterior() {
-	printf("Ignoro estado anterior \n");
+	log_trace(logFileSystem, "Ignoro estado anterior \n");
 
 	estadoAnterior = false;
 
-	//Verifico que la carpeta metadata exista
+//Verifico que la carpeta metadata exista
 	char * ruta = string_new();
 	string_append(&ruta, RUTA_METADATA);
 	string_append(&ruta, "metadata");
@@ -456,16 +459,16 @@ void ignoroEstadoAnterior() {
 		mkdir(ruta, 0777);
 	}
 
-	//Libero memoria
+//Libero memoria
 	free(ruta);
 }
 
 void consideroEstadoAnterior() {
-	printf("Considero estado anterior \n");
+	log_trace(logFileSystem, "Considero estado anterior \n");
 
 	estadoAnterior = true;
 
-	//Verifico que la carpeta metadata exista
+//Verifico que la carpeta metadata exista
 	char * ruta = string_new();
 	string_append(&ruta, RUTA_METADATA);
 	string_append(&ruta, "metadata");
@@ -486,11 +489,12 @@ void consideroEstadoAnterior() {
 bool verificarEstadoEstable() {
 	t_list * listaArchivos = buscarTodosArchivos();
 
-	bool estoyEnEstadoEstable(char * rutaArchivo){
+	bool estoyEnEstadoEstable(char * rutaArchivo) {
 		return soyEstable(rutaArchivo);
 	}
 
-	bool todosEstanEstables = list_all_satisfy(listaArchivos,(void*)estoyEnEstadoEstable);
+	bool todosEstanEstables = list_all_satisfy(listaArchivos,
+			(void*) estoyEnEstadoEstable);
 
 	list_destroy_and_destroy_elements(listaArchivos, free);
 
@@ -501,20 +505,20 @@ t_list * buscarTodosArchivos() {
 	t_list * listaCarpetas = list_create();
 
 	char * ruta = string_new();
-	string_append(&ruta,RUTA_METADATA);
-	string_append(&ruta,"metadata/archivos");
+	string_append(&ruta, RUTA_METADATA);
+	string_append(&ruta, "metadata/archivos");
 
-	listarCarpetasDeArchivos(ruta,listaCarpetas);
+	listarCarpetasDeArchivos(ruta, listaCarpetas);
 
 	t_list *listaArchivos = list_create();
 
-	void listarArchivos(char * ruta){
-		listarArchivosDeMismaCarpeta(ruta,listaArchivos);
+	void listarArchivos(char * ruta) {
+		listarArchivosDeMismaCarpeta(ruta, listaArchivos);
 	}
 
-	list_iterate(listaCarpetas, (void*)listarArchivos);
+	list_iterate(listaCarpetas, (void*) listarArchivos);
 
-	list_destroy_and_destroy_elements(listaCarpetas,free);
+	list_destroy_and_destroy_elements(listaCarpetas, free);
 
 	free(ruta);
 

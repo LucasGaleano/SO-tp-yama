@@ -825,11 +825,17 @@ t_tabla_sockets_ip_puerto * buscarIpPuertoPorNombre(char * nombreNodo) {
 void crearArchivoTablaBitmap(t_nodo_info * info) {
 //Abro el archivo para usarlo
 	char * rutaArchivo = string_new();
-	string_append(&rutaArchivo, "/home/utnso/Escritorio/metadata/bitmaps/");
+	string_append(&rutaArchivo, RUTA_METADATA);
+	string_append(&rutaArchivo, "metadata/bitmaps/");
 	string_append(&rutaArchivo, info->nombre);
 	string_append(&rutaArchivo, ".dat");
 
-	mkdir("/home/utnso/Escritorio/metadata/bitmaps", 0777);
+	char * aux = string_new();
+	string_append(&aux,RUTA_METADATA);
+	string_append(&aux,"metadata/bitmaps");
+	mkdir(aux, 0777);
+	free(aux);
+
 	FILE* file = fopen(rutaArchivo, "w+b");
 
 //Cierro el archivo
@@ -891,7 +897,8 @@ int buscarBloqueLibre(t_config * tablaBitMaps) {
 
 void liberarBloquebitMap(char * nomNodo, int bloque) {
 	char * rutaBitMap = string_new();
-	string_append(&rutaBitMap, "/home/utnso/Escritorio/metadata/bitmaps/");
+	string_append(&rutaBitMap,RUTA_METADATA);
+	string_append(&rutaBitMap, "metadata/bitmaps/");
 	string_append(&rutaBitMap, nomNodo);
 	string_append(&rutaBitMap, ".dat");
 

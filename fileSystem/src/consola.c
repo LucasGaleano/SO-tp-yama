@@ -205,10 +205,15 @@ void formatearFilesystem() {
 	destruirTablaDirectorios();
 	destruirTablaTareas();
 
-	borrarArchivosDirectorios("/home/utnso/Escritorio/metadata/bitmaps");
+	char * archivoDirectorio = string_new();
+	string_append(&archivoDirectorio,RUTA_METADATA);
+	borrarArchivosDirectorios("metadata/bitmaps");
 
-	crearTablaNodos("/home/utnso/Escritorio/metadata");
-	crearTablaDirectorios("/home/utnso/Escritorio/metadata");
+	char * ruta = string_new();
+	string_append(&ruta,RUTA_METADATA);
+	string_append(&ruta,"metadata");
+	crearTablaNodos(ruta);
+	crearTablaDirectorios(ruta);
 
 	void pedirInfo(t_tabla_sockets * socket) {
 		enviarSolicitudInfoDataNode(socket->socket);
@@ -216,6 +221,9 @@ void formatearFilesystem() {
 
 	list_iterate(tablaSockets, (void*) pedirInfo);
 
+	//Libero memoria
+	free(archivoDirectorio);
+	free(ruta);
 }
 
 void eliminarArchivo(char * linea) {
@@ -269,24 +277,27 @@ void eliminarArchivo(char * linea) {
 	}
 
 	//Marco como libre los bloques en el bitmap de cada nodo
-	int cantBloques = config_keys_amount(configArchivo);
-	cantBloques -= 2;
-	cantBloques = cantBloques / 3;
-	cantBloques *= 2;
+	int cantBloques = config_get_int_value(configArchivo,"CANTIDAD_BLOQUES");
 
 	int i;
-	int numeroBloque = 0;
-	int numeroCopia = 0;
 
 	for (i = 0; i < cantBloques; i++) {
-		char ** nodoBloqueABorar = buscarBloqueABorar(i, &numeroCopia,
-				&numeroBloque, configArchivo);
 
-		int numeroBloque = atoi(nodoBloqueABorar[1]);
+		t_list * listaBloques = buscarBloque(configArchivo,i);
 
-		liberarBloqueTablaNodos(nodoBloqueABorar[0], numeroBloque);
+		void liberar(t_nodoBloque * nodoBloque){
+			liberarBloqueTablaNodos(nodoBloque->nomNodo, nodoBloque->bloque);
+		}
 
-		destruirSubstring(nodoBloqueABorar);
+		list_iterate(listaBloques,(void*)liberar);
+
+		void eliminar(t_nodoBloque * nodoBloque){
+			free(nodoBloque->nomNodo);
+			free(nodoBloque);
+		}
+
+		list_destroy_and_destroy_elements(listaBloques,(void*)eliminar);
+
 	}
 
 	//Borro el archivo de la tabla de archivos

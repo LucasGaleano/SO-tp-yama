@@ -10,7 +10,7 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 	void * archivo = abrirArchivo(rutaArchivo, &tamArch, &archivofd);
 
 	if (archivo == NULL) {
-		printf("%s: No existe el archivo o el directorio", rutaArchivo);
+		log_warning(logFileSystem,"%s: No existe el archivo o el directorio", rutaArchivo);
 		return;
 	}
 
@@ -33,9 +33,14 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 		case TEXTO:
 			buffer = dividirBloqueArchivoTexto(archivo, &desplazamiento);
 			tamBuffer = strlen(buffer);
+			//Verifico que el buffer no sea superior a el tamanio del bloque
+			if (tamBuffer > TAM_BLOQUE){
+				log_warning(logFileSystem,"El espacio del bloque no es suficiente para guardar el buffer \n");
+				log_warning(logFileSystem,"Bloque %d corrupto \n", numeroBloque);
+			}
 			break;
 		default:
-			printf("No puedo enviar el archivo xq no conosco su tipo de dato");
+			log_warning(logFileSystem,"No puedo enviar el archivo xq no conosco su tipo de dato");
 			return;
 			break;
 		}
@@ -287,20 +292,21 @@ char * leerArchivo(char * rutaArchivo) {
 		tarea->nomNodo = strdup(nodoBloque->nomNodo);
 		tarea->bloque = nodoBloque->bloque;
 
-		list_add(tablaTareas,tarea);
+		list_add(tablaTareas, tarea);
 
 		enviarSolicitudLecturaArchTemp(
 				buscarSocketPorNombre(nodoBloque->nomNodo), nodoBloque->bloque,
 				bloque);
 
-		void eliminarNodo(t_nodoBloque * nodo){
+		void eliminarNodo(t_nodoBloque * nodo) {
 			free(nodo->nomNodo);
 			free(nodo);
 		}
 
-		list_destroy_and_destroy_elements(listaNodoBloque,(void*)eliminarNodo);
+		list_destroy_and_destroy_elements(listaNodoBloque,
+				(void*) eliminarNodo);
 
-		bloque ++;
+		bloque++;
 
 		listaNodoBloque = buscarBloque(configArchivo, bloque);
 	}
