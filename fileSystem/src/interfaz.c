@@ -33,6 +33,11 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 		case TEXTO:
 			buffer = dividirBloqueArchivoTexto(archivo, &desplazamiento);
 			tamBuffer = strlen(buffer);
+			//Verifico que el buffer no sea superior a el tamanio del bloque
+			if (tamBuffer > TAM_BLOQUE){
+				printf("El espacio del bloque no es suficiente para guardar el buffer \n");
+				printf("Bloque %d corrupto \n", numeroBloque);
+			}
 			break;
 		default:
 			printf("No puedo enviar el archivo xq no conosco su tipo de dato");
@@ -287,20 +292,21 @@ char * leerArchivo(char * rutaArchivo) {
 		tarea->nomNodo = strdup(nodoBloque->nomNodo);
 		tarea->bloque = nodoBloque->bloque;
 
-		list_add(tablaTareas,tarea);
+		list_add(tablaTareas, tarea);
 
 		enviarSolicitudLecturaArchTemp(
 				buscarSocketPorNombre(nodoBloque->nomNodo), nodoBloque->bloque,
 				bloque);
 
-		void eliminarNodo(t_nodoBloque * nodo){
+		void eliminarNodo(t_nodoBloque * nodo) {
 			free(nodo->nomNodo);
 			free(nodo);
 		}
 
-		list_destroy_and_destroy_elements(listaNodoBloque,(void*)eliminarNodo);
+		list_destroy_and_destroy_elements(listaNodoBloque,
+				(void*) eliminarNodo);
 
-		bloque ++;
+		bloque++;
 
 		listaNodoBloque = buscarBloque(configArchivo, bloque);
 	}

@@ -412,7 +412,6 @@ void procesarNombre(t_paquete * unPaquete, int * client_socket) {
 
 	}
 
-
 	free(nodo->ip);
 	free(nodo->nombre);
 	free(nodo->puerto);
