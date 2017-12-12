@@ -525,7 +525,7 @@ void serializarIndicacionAlmacenadoFinal(t_paquete * unPaquete,
 }
 
 void serializarListaNodoBloques(t_paquete * unPaquete,
-		t_nodos_bloques * listaNodoBloque) {
+		t_nodos_bloques * listaNodoBloque, int masterSolicitante) {
 
 	unPaquete->buffer = malloc(sizeof(t_stream));
 	unPaquete->buffer->size = 0;
@@ -553,7 +553,7 @@ void serializarListaNodoBloques(t_paquete * unPaquete,
 		unPaquete->buffer->size += tamNodoBloque;
 
 		unPaquete->buffer->data = realloc(unPaquete->buffer->data,
-				unPaquete->buffer->size + tamNodoBloque);
+				unPaquete->buffer->size);
 
 		memcpy(unPaquete->buffer->data + desplazamiento, nodoBloque->nomNodo,
 				tamNomNodo);
@@ -598,7 +598,7 @@ void serializarListaNodoBloques(t_paquete * unPaquete,
 		unPaquete->buffer->size += tamPuertoIp;
 
 		unPaquete->buffer->data = realloc(unPaquete->buffer->data,
-				unPaquete->buffer->size + tamPuertoIp);
+				unPaquete->buffer->size);
 
 		memcpy(unPaquete->buffer->data + desplazamiento, puertoIp->nomNodo,
 				tamNomNodo);
@@ -612,6 +612,15 @@ void serializarListaNodoBloques(t_paquete * unPaquete,
 		desplazamiento += tamIp;
 	}
 	list_iterate(listaNodoBloque->puertoIP, (void*) serializarPuertoIP);
+
+	//Serializo el socket del master solicitante
+	unPaquete->buffer->size += sizeof(int);
+
+	unPaquete->buffer->data = realloc(unPaquete->buffer->data,
+			unPaquete->buffer->size);
+
+	memcpy(unPaquete->buffer->data + desplazamiento, &masterSolicitante,
+			sizeof(int));
 
 }
 
@@ -637,6 +646,28 @@ void serializarNombreIPPuerto(t_paquete * unPaquete, char * nomNodo, char * ip,
 	desplazamiento += tamIp;
 
 	memcpy(unPaquete->buffer->data + desplazamiento, puerto, tamPuerto);
+}
+
+void serializarRutaArchivo(t_paquete * unPaquete, char * rutaArchivo,
+		int masterSolicitante) {
+	int tamRutaArchivo = strlen(rutaArchivo) + 1;
+	int tamMasterSolicitante = sizeof(int);
+
+	int tamTotal = tamRutaArchivo + tamMasterSolicitante;
+
+	unPaquete->buffer = malloc(sizeof(t_stream));
+	unPaquete->buffer->size = tamTotal;
+
+	unPaquete->buffer->data = malloc(tamTotal);
+
+	int desplazamiento = 0;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, rutaArchivo,
+			tamRutaArchivo);
+	desplazamiento += tamRutaArchivo;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, &masterSolicitante,
+			tamMasterSolicitante);
 }
 
 /*-------------------------Deserializacion-------------------------*/
@@ -1055,10 +1086,13 @@ t_nodos_bloques * deserializarListaNodoBloques(t_stream * buffer) {
 		list_add(nodosBloques->puertoIP, puertoIp);
 	}
 
+	//Deserializo socket master solicitante
+	memcpy(&nodosBloques->masterSolicitante, buffer->data + desplazamiento, sizeof(int));
+
 	return nodosBloques;
 }
 
-t_nodo_nombre * deserializarNombreIPPuerto(t_stream * buffer){
+t_nodo_nombre * deserializarNombreIPPuerto(t_stream * buffer) {
 	t_nodo_nombre * nodoNombre = malloc(sizeof(t_nodo_nombre));
 
 	int desplazamiento = 0;
@@ -1074,8 +1108,22 @@ t_nodo_nombre * deserializarNombreIPPuerto(t_stream * buffer){
 	return nodoNombre;
 }
 
+t_solicitudArchivo * deserializarRutaArchivo(t_stream * buffer) {
+	t_solicitudArchivo * solicitud = malloc(sizeof(t_solicitudArchivo));
+
+	int desplazamiento = 0;
+
+	solicitud->rutaArchivo = strdup(buffer->data + desplazamiento);
+	desplazamiento += strlen(solicitud->rutaArchivo) + 1;
+
+	memcpy(&solicitud->masterSolicitante, buffer->data + desplazamiento,
+			sizeof(int));
+
+	return solicitud;
+
 t_resultado_transformacion* deserializarResultadoTransformacion(unPaquete->buffer){
 	//TODO HACER SEREALIZACION DE RECEPCION DE RESULTADO DE TRANSFORMACION
+ master
 }
 
 /*-------------------------Funciones auxiliares-------------------------*/

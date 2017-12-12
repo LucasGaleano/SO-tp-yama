@@ -19,6 +19,8 @@ void 							enviarHandshake								(int, int);
 void 							enviarSolicitudNombre						(int);
 void 							enviarNombre								(int, char *, char *, char *);
 
+void 							enviarRutaArchivo							(int, char *, int);
+
 void 							enviarMensaje								(int, char *);
 
 void 							enviarArchivo								(int, char *);
@@ -50,7 +52,7 @@ void 							enviarIndicacionAlmacenadoFinal				(int, t_indicacionAlmacenadoFinal
 void							enviarError									(int, int);
 void							enviarTareaCompletada						(int, int);
 
-void							enviarListaNodoBloques						(int, t_nodos_bloques *);
+void							enviarListaNodoBloques						(int, t_nodos_bloques *, int);
 
 void 							enviarRutaParaArrancarTransformacion		(int server_socket, char * ruta);
 
@@ -63,7 +65,7 @@ t_nodo_nombre *					recibirNombre								(t_paquete *);
 
 char * 							recibirMensaje								(t_paquete *);
 
-char * 							recibirRutaArchivo							(t_paquete *);
+t_solicitudArchivo *			recibirRutaArchivo							(t_paquete *);
 
 void * 							recibirArchivo								(t_paquete *);
 

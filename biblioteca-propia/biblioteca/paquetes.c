@@ -189,12 +189,12 @@ void enviarNombre(int server_socket, char * nombre, char* ip, char * puerto){
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarRutaArchivo(int server_socket, char * mensaje) {
+void enviarRutaArchivo(int server_socket, char * rutaArchivo, int masterSolicitante) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_RUTA_ARCHIVO;
 
-	serializarMensaje(unPaquete, mensaje);
+	serializarRutaArchivo(unPaquete, rutaArchivo, masterSolicitante);
 
 	enviarPaquetes(server_socket, unPaquete);
 }
@@ -455,12 +455,12 @@ void enviarTareaCompletada(int server_socket, int cod_tarea) {
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarListaNodoBloques(int server_socket, t_nodos_bloques * listaNodoBloque) {
+void enviarListaNodoBloques(int server_socket, t_nodos_bloques * listaNodoBloque, int masterSolicitante) {
 	t_paquete* unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_LISTA_NODO_BLOQUES;
 
-	serializarListaNodoBloques(unPaquete, listaNodoBloque);
+	serializarListaNodoBloques(unPaquete, listaNodoBloque, masterSolicitante);
 
 	enviarPaquetes(server_socket, unPaquete);
 }
@@ -471,8 +471,8 @@ int recibirHandshake(t_paquete * unPaquete) {
 	return deserializarHandshake(unPaquete->buffer);
 }
 
-char * recibirRutaArchivo(t_paquete * unPaquete) {
-	return deserializarMensaje(unPaquete->buffer);
+t_solicitudArchivo * recibirRutaArchivo(t_paquete * unPaquete) {
+	return deserializarRutaArchivo(unPaquete->buffer);
 }
 
 t_nodo_nombre * recibirNombre(t_paquete * unPaquete){

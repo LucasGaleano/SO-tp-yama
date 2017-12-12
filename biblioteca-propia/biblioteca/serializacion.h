@@ -39,9 +39,11 @@ void 							serializarIndicacionReduccionLocal				(t_paquete *, t_indicacionRedu
 void 							serializarIndicacionReduccionGlobal				(t_paquete *, t_indicacionReduccionGlobal *);
 void 							serializarIndicacionAlmacenadoFinal				(t_paquete *, t_indicacionAlmacenadoFinal *);
 
-void 							serializarListaNodoBloques						(t_paquete *, t_nodos_bloques *);
+void 							serializarListaNodoBloques						(t_paquete *, t_nodos_bloques *, int);
 
 void							serializarNombreIPPuerto						(t_paquete *, char *, char *, char *);
+
+void 							serializarRutaArchivo							(t_paquete *, char *, int);
 
 /*----------------------------------------Deserializacion----------------------------------------*/
 int 							deserializarNumero								(t_stream *);
@@ -80,6 +82,8 @@ t_indicacionAlmacenadoFinal* 	deserializarIndicacionAlmacenadoFinal			(t_stream 
 t_nodos_bloques *				deserializarListaNodoBloques					(t_stream *);
 
 t_nodo_nombre *					deserializarNombreIPPuerto						(t_stream *);
+
+t_solicitudArchivo * 			deserializarRutaArchivo							(t_stream *);
 
 /*----------------------------------------Funciones auxiliares----------------------------------------*/
 void * 							abrirArchivo									(char *, size_t *, FILE **);
