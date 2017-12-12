@@ -235,10 +235,10 @@ void procesarBloqueGenerarCopia(t_paquete * unPaquete) {
 }
 
 void procesarEnviarRutaArchivo(t_paquete * unPaquete, int client_socket) {
-	char * archivoPedido = recibirRutaArchivo(unPaquete);
+	t_solicitudArchivo * archivoPedido = recibirRutaArchivo(unPaquete);
 
 	//Busco el nombre del directorio
-	char ** separado = string_split(archivoPedido, "/");
+	char ** separado = string_split(archivoPedido->rutaArchivo, "/");
 
 	int posicion;
 
@@ -359,7 +359,7 @@ void procesarEnviarRutaArchivo(t_paquete * unPaquete, int client_socket) {
 
 	list_iterate(nodosDisponibles,(void*)agregoAListaIpPuerto);
 
-	enviarListaNodoBloques(client_socket, nodosBloques);
+	enviarListaNodoBloques(client_socket, nodosBloques, archivoPedido->masterSolicitante);
 
 	free(archivoPedido);
 	destruirSubstring(separado);
