@@ -1120,11 +1120,11 @@ t_solicitudArchivo * deserializarRutaArchivo(t_stream * buffer) {
 			sizeof(int));
 
 	return solicitud;
-
-t_resultado_transformacion* deserializarResultadoTransformacion(unPaquete->buffer){
-	//TODO HACER SEREALIZACION DE RECEPCION DE RESULTADO DE TRANSFORMACION
- master
 }
+
+//t_resultado_transformacion* deserializarResultadoTransformacion(t_stream * buffer){
+//	//TODO HACER SEREALIZACION DE RECEPCION DE RESULTADO DE TRANSFORMACION
+//}
 
 /*-------------------------Funciones auxiliares-------------------------*/
 void * abrirArchivo(char * rutaArchivo, size_t * tamArc, FILE ** archivo) {
