@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
 
 void inicializarVariablesGlobales()
 {
-	logMaster = log_create("master.log", "master",false,LOG_LEVEL_ERROR);
+	logMaster = log_create("master.log", "master",true,LOG_LEVEL_ERROR);
 
 	hilosReduccionLocal = malloc(sizeof(pthread_t));
 	if (hilosReduccionLocal == NULL)
@@ -211,7 +211,7 @@ void mandarDatosTransformacion(t_indicacionTransformacion * transformacion){
 		{
 			tablaMetricas.cantidadFallosTransformacion ++;
 			pthread_mutex_unlock(&mutexErrorTransformacion);
-			enviarError(conexionYama,ERROR_TRANSFORMACION);
+			transformacion->estado = ERROR;
 			enviarIndicacionTransformacion(conexionYama,transformacion);
 			log_error(logMaster, "Error en la transformacion, worker de conexion %s : %s", transformacion->ip, transformacion->puerto);
 
@@ -219,7 +219,7 @@ void mandarDatosTransformacion(t_indicacionTransformacion * transformacion){
 		{
 			pthread_mutex_unlock(&mutexErrorTransformacion);
 			log_info (logMaster, "una transformacion terminada");
-			enviarTareaCompletada(conexionYama, TAREA_COMPLETADA);
+			transformacion->estado = FINALIZADO_OK;
 			enviarIndicacionTransformacion(conexionYama, transformacion);
 		}
 
@@ -307,15 +307,14 @@ void mandarDatosReduccionLocal(t_indicacionReduccionLocal * reduccion)
 		{
 			tablaMetricas.cantidadFallosReduccionLocal ++;
 			pthread_mutex_unlock(&mutexErrorReduccionLocal);
-			log_error(logMaster, "error en la reduccion local para el nodo de conexion %s : %s", reduccion->ip, reduccion->puerto);
 			enviarError(conexionYama,ERROR_REDUCCION_LOCAL);
-			enviarIndicacionReduccionLocal(conexionYama,reduccion);
+			log_error(logMaster, "error en la reduccion local para el nodo de conexion %s : %s", reduccion->ip, reduccion->puerto);
+
 		} else
 		{
 			pthread_mutex_unlock(&mutexErrorReduccionLocal);
 			log_info(logMaster, "reduccion local completada");
-			enviarTareaCompletada(conexionYama,TAREA_COMPLETADA);
-			enviarIndicacionReduccionLocal(conexionYama,reduccion);
+			enviarIndicacionReduccionLocal(conexionYama, reduccion);
 		}
 
 
@@ -434,7 +433,7 @@ void gestionarReduccionGlobal()
 
 		} else
 		{
-		enviarTareaCompletada(conexionYama, TAREA_COMPLETADA);
+		enviarTareaCompletada(conexionYama, REDUCCION_COMPLETADA);
 		}
 
 		gettimeofday(t1,NULL);
@@ -487,7 +486,7 @@ void gestionarAlmacenadoFinal(t_indicacionAlmacenadoFinal * indicacion)
 	}
 	else
 	{
-		enviarTareaCompletada(conexionYama, TAREA_COMPLETADA);
+		enviarTareaCompletada(conexionYama, ALMACENAMIENTO_COMPLETADO);
 		enviarIndicacionAlmacenadoFinal(conexionYama,indicacion);
 	}
 
