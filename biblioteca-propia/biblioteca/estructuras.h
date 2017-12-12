@@ -49,6 +49,7 @@ enum cod_op{
 
 	ENVIAR_SOLICITUD_NOMBRE,
 	ENVIAR_NOMBRE,
+	ENVIAR_PALABRA,
 
 	ENVIAR_MENSAJE,
 	ENVIAR_RUTA_ARCHIVO,
@@ -103,6 +104,10 @@ enum cod_op{
 
 };
 
+enum resultadoPositivo{
+	REDUCCION_COMPLETADA,
+	ALMACENAMIENTO_COMPLETADO,
+};
 enum continuaMensaje{
 	CONTINUA=0,
 	NO_CONTINUA=1,
@@ -114,11 +119,10 @@ enum tipoArchivo{
 };
 
 enum error{
-	ERROR_TRANSFORMACION =-1,
-	ERROR_REDUCCION_LOCAL = -2,
-	ERROR_REDUCCION_GLOBAL = -3,
-	ERROR_ALMACENAMIENTO_FINAL = -4,
-	ERROR_MASTER = -5
+	ERROR_REDUCCION_LOCAL,
+	ERROR_REDUCCION_GLOBAL,
+	ERROR_ALMACENAMIENTO_FINAL,
+	ERROR_MASTER,
 };
 
 /*------------------------------Estructuras de comunicacion FS DataNode------------------------------*/
@@ -209,6 +213,7 @@ typedef struct {
 } t_indicacionTransformacion;
 
 typedef struct {
+
 	char* nodo;
 	char* ip;
 	char* puerto;
