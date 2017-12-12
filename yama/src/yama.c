@@ -85,7 +85,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_LISTA_NODO_BLOQUES: //RECIBO LISTA DE ARCHIVOS DE FS CON UBICACIONES Y BLOQUES
 		procesarEnviarListaNodoBloques(unPaquete); //
 		break;
-	case TAREA_COMPLETADA:
+	case RESULTADO_TRANSFORMACION:
 		procesarResultadoTranformacion(unPaquete, client_socket);
 		break;
 	default:
@@ -232,7 +232,7 @@ void procesarResultadoTranformacion(t_paquete * unPaquete, int client_socket){
 	if(terminoUnNodoLaTransformacion(resultado->indicacionTransformacion->nodo, TRANSFORMACION, PROCESANDO)){
 
 		//SI -> MANDAR A HACER TODAS LAS REDUCCIONES LOCALES DE ESE NODO
-		t_indicacionReduccionLocal* indReducLocal = IndicReducLocal_create();
+		t_indicacionReduccionLocal* indReducLocal;
 
 		indReducLocal->nodo = string_duplicate(resultado->indicacionTransformacion->nodo);
 		indReducLocal->ip = string_duplicate(resultado->indicacionTransformacion->ip);
@@ -247,6 +247,9 @@ void procesarResultadoTranformacion(t_paquete * unPaquete, int client_socket){
 		agregarRegistro(idJob, client_socket, indReducLocal->nodo,
 				resultado->indicacionTransformacion->bloque, REDUCCION_LOCAL,
 				indReducLocal->archivoTemporalReduccionLocal, PROCESANDO);
+
+
+
 
 
 		IndicReducLocal_destroy(indReducLocal);
@@ -362,20 +365,8 @@ char* obtenerNombreNodoDesdeId(int idNodo){
 	return prefijoNodo;
 }
 
-t_indicacionReduccionLocal* IndicReducLocal_create(){
 
-	t_indicacionReduccionLocal* indReducLocal = malloc(sizeof(t_indicacionReduccionLocal));
-	indReducLocal->puerto = malloc(sizeof(char) * 5);
-	indReducLocal->nodo = malloc(sizeof(char) * 5);
-	indReducLocal->ip = malloc(sizeof(char) * 16);
-	indReducLocal->archivoTemporalTransformacion = malloc(sizeof(char) * 60);
-	indReducLocal->archivoTemporalReduccionLocal = malloc(sizeof(char) * 60);
-
-	return indReducLocal;
-
-}
-
-IndicReducLocal_destroy(t_indicacionReduccionLocal* indReducLocal){
+void IndicReducLocal_destroy(t_indicacionReduccionLocal* indReducLocal){
 
 	free(indReducLocal->archivoTemporalReduccionLocal);
 	free(indReducLocal->archivoTemporalTransformacion);
