@@ -17,11 +17,6 @@ enum etapa{
 	REDUCCION_GLOBAL
 };
 
-enum estado{
-	PROCESANDO,
-	ERROR,
-	FINALIZADO_OK
-};
 
 typedef struct {
 	int job;
