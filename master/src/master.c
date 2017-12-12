@@ -23,6 +23,8 @@ int main(int argc, char **argv) {
 	// Arranca logica del proceso
 
 	signal(SIGFPE,signal_capturer);
+	signal(SIGPIPE,signal_capturer);
+	signal(SIGSEGV,signal_capturer);
 
 	enviarRutaParaArrancarTransformacion(conexionYama,rutaArchivoParaArrancar);
 
@@ -510,14 +512,14 @@ void signal_capturer(int numeroSenial){
 			log_error(logMaster, "PROCESO MASTER CIERRA POR ERROR DE COMA FLOTANTE");
 			exit(EXIT_FAILURE);
 			break;
-		case 11:
+		case SIGSEGV:
 			enviarError(conexionYama,ERROR_MASTER);
 			log_error(logMaster, "PROCESO MASTER CIERRA POR SEGMENTATION FAULT");
 			exit(EXIT_FAILURE);
 			break;
-		case 16:
+		case SIGPIPE:
 			enviarError(conexionYama,ERROR_MASTER);
-			log_error(logMaster, "PROCESO MASTER CIERRA POR STACK OVERFLOW");
+			log_error(logMaster, "PROCESO MASTER CIERRA POR PIPE ROTA");
 			exit(EXIT_FAILURE);
 			break;
 		default:
@@ -595,7 +597,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) { // contesto a
 
 		 break;
 
-	case ENVIAR_ERROR_JOB:
+	case ENVIAR_ERROR:
 		  ;
 		 int error= recibirError(unPaquete);
 		 switch (error){
