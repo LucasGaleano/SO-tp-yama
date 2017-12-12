@@ -101,7 +101,7 @@ void procesarHandshake(t_paquete * unPaquete, int * client_socket) {
 void procesarInfoNodo(t_paquete * unPaquete, int client_socket) {
 	//Recibo info
 	t_nodo_info * info = recibirInfoDataNode(unPaquete);
-	info->disponible=true;
+	info->disponible = true;
 
 	//Agrego elemento a la tabla de nodos
 	agregarNodoTablaNodos(info);
@@ -115,14 +115,15 @@ void procesarError(t_paquete * unPaquete, int * client_socket) {
 	//Elimino de la tabla de sockets
 	char * nomNodo = eliminarNodoTablaSockets(*client_socket);
 
-	if(nomNodo == NULL)return;
+	if (nomNodo == NULL)
+		return;
 
 	//Marco como no disponible en tabla de sockets
-	bool esNodo(t_nodo_info * infoNodo){
-		return string_equals_ignore_case(infoNodo->nombre,nomNodo);
+	bool esNodo(t_nodo_info * infoNodo) {
+		return string_equals_ignore_case(infoNodo->nombre, nomNodo);
 	}
 
-	t_nodo_info * nodo = list_find(tablaNodos->infoDeNodo,(void*)esNodo);
+	t_nodo_info * nodo = list_find(tablaNodos->infoDeNodo, (void*) esNodo);
 	nodo->disponible = false;
 
 	//Libero memoria
@@ -317,7 +318,8 @@ void procesarEnviarRutaArchivo(t_paquete * unPaquete, int client_socket) {
 			numeroTotal++;
 			numeroCopia++;
 			destruirSubstring(bloque);
-			bloque = buscarBloqueCopia(configArchivo, numeroBloque, numeroCopia);
+			bloque = buscarBloqueCopia(configArchivo, numeroBloque,
+					numeroCopia);
 		}
 		numeroBloque++;
 	}
@@ -350,19 +352,21 @@ void procesarEnviarRutaArchivo(t_paquete * unPaquete, int client_socket) {
 	//Armo con los disponibles los puerto y ip
 	nodosBloques->puertoIP = list_create();
 
-	void agregoAListaIpPuerto(t_nodo_info * nodoDisponble){
-		t_tabla_sockets_ip_puerto * ipPuerto = buscarIpPuertoPorNombre(nodoDisponble->nombre);
+	void agregoAListaIpPuerto(t_nodo_info * nodoDisponble) {
+		t_tabla_sockets_ip_puerto * ipPuerto = buscarIpPuertoPorNombre(
+				nodoDisponble->nombre);
 		t_puerto_ip * puertoIpFinal = malloc(sizeof(t_puerto_ip));
 		puertoIpFinal->ip = strdup(ipPuerto->ip);
 		puertoIpFinal->puerto = strdup(ipPuerto->puerto);
 		puertoIpFinal->nomNodo = strdup(nodoDisponble->nombre);
 
-		list_add(nodosBloques->puertoIP,puertoIpFinal);
+		list_add(nodosBloques->puertoIP, puertoIpFinal);
 	}
 
-	list_iterate(nodosDisponibles,(void*)agregoAListaIpPuerto);
+	list_iterate(nodosDisponibles, (void*) agregoAListaIpPuerto);
 
-	enviarListaNodoBloques(client_socket, nodosBloques, archivoPedido->masterSolicitante);
+	enviarListaNodoBloques(client_socket, nodosBloques,
+			archivoPedido->masterSolicitante);
 
 	free(archivoPedido);
 	destruirSubstring(separado);
@@ -375,7 +379,8 @@ void procesarNombre(t_paquete * unPaquete, int * client_socket) {
 	t_nodo_nombre * nodo = recibirNombre(unPaquete);
 
 	//Agrego elemento a la lista de nodos por sockets
-	agregarNodoTablaSockets(nodo->nombre, *client_socket, nodo->ip, nodo->puerto);
+	agregarNodoTablaSockets(nodo->nombre, *client_socket, nodo->ip,
+			nodo->puerto);
 
 	if (estadoAnterior) {
 		bool soyNodoBuscado(t_nodo_info * nodoTabla) {
@@ -385,7 +390,7 @@ void procesarNombre(t_paquete * unPaquete, int * client_socket) {
 		t_nodo_info * nodo = list_find(tablaNodos->infoDeNodo,
 				(void*) soyNodoBuscado);
 
-		if(nodo == NULL){
+		if (nodo == NULL) {
 			eliminarNodoTablaSockets(*client_socket);
 			*client_socket = -1;
 			return;
@@ -398,6 +403,10 @@ void procesarNombre(t_paquete * unPaquete, int * client_socket) {
 
 		persistirTablaNodos();
 	}
+
+	if (verificarEstadoEstable())
+		estadoEstable = true;
+
 	free(nodo->ip);
 	free(nodo->nombre);
 	free(nodo->puerto);
@@ -466,7 +475,80 @@ void consideroEstadoAnterior() {
 
 	free(ruta);
 }
+
+/*-------------------------Estado estable/no estable-------------------------*/
+bool verificarEstadoEstable() {
+	t_list * listaArchivos = buscarTodosArchivos();
+
+	list_destroy_and_destroy_elements(listaArchivos, free);
+
+	return false;
+}
+
+t_list * buscarTodosArchivos() {
+	t_list * listaCarpetas = list_create();
+
+	char * ruta = string_new();
+	string_append(&ruta,RUTA_METADATA);
+	string_append(&ruta,"metadata/archivos");
+
+	listarCarpetasDeArchivos(ruta,listaCarpetas);
+
+	t_list *listaArchivos = list_create();
+
+	void listarArchivos(char * ruta){
+		listarArchivosDeMismaCarpeta(ruta,listaArchivos);
+	}
+
+	list_iterate(listaCarpetas, (void*)listarArchivos);
+
+	list_destroy_and_destroy_elements(listaCarpetas,free);
+
+	free(ruta);
+
+	return listaArchivos;
+}
+
 /*-------------------------Funciones auxiliares-------------------------*/
 void iniciarServidor(char* unPuerto) {
 	iniciarServer(unPuerto, (void *) procesarPaquete);
+}
+
+void listarArchivosDeMismaCarpeta(char * ruta, t_list * listaArchivos) {
+	DIR *dir;
+	struct dirent *ent;
+
+	dir = opendir(ruta);
+
+	while ((ent = readdir(dir)) != NULL) {
+		if (ent->d_name[0] != '.') {
+			char * archivo = string_new();
+			string_append(&archivo, ruta);
+			string_append(&archivo, "/");
+			string_append(&archivo, (char*) ent->d_name);
+			list_add(listaArchivos, archivo);
+		}
+	}
+
+	closedir(dir);
+}
+
+void listarCarpetasDeArchivos(char * ruta, t_list * lista) {
+	DIR *dir;
+	struct dirent *ent;
+
+	dir = opendir(ruta);
+
+	while ((ent = readdir(dir)) != NULL) {
+		if (ent->d_name[0] != '.') {
+			char * carpeta = string_new();
+			string_append(&carpeta, ruta);
+			string_append(&carpeta, "/");
+			string_append(&carpeta, (char*) ent->d_name);
+			list_add(lista, carpeta);
+		}
+	}
+
+	closedir(dir);
+
 }

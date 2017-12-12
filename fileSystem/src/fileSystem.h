@@ -36,7 +36,13 @@ void 				manejoDeEstado						(char *);
 void 				ignoroEstadoAnterior				(void);
 void 				consideroEstadoAnterior				(void);
 
+/*-------------------------Estado estable/no estable-------------------------*/
+bool 				verificarEstadoEstable				(void);
+t_list * 			buscarTodosArchivos					(void);
+
 /*-------------------------Funciones auxiliares-------------------------*/
 void 				iniciarServidor						(char*);
+void 				listarArchivosDeMismaCarpeta		(char *, t_list *);
+void 				listarCarpetasDeArchivos			(char *, t_list *);
 
 #endif /* FILESYSTEM_H_ */
