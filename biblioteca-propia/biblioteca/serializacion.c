@@ -1121,9 +1121,9 @@ t_solicitudArchivo * deserializarRutaArchivo(t_stream * buffer) {
 
 	return solicitud;
 
-t_resultado_transformacion* deserializarResultadoTransformacion(unPaquete->buffer){
+//t_resultado_transformacion* deserializarResultadoTransformacion(unPaquete->buffer){
 	//TODO HACER SEREALIZACION DE RECEPCION DE RESULTADO DE TRANSFORMACION
- master
+ //master
 }
 
 /*-------------------------Funciones auxiliares-------------------------*/
