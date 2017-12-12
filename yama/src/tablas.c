@@ -62,7 +62,25 @@ t_elemento_tabla_estado* buscarRegistro(int job, int master, char* nombreNodo, i
 			return esJobIgual && esMasterIgual && esBloqueIgual && esNombreNodoIgual && esEtapaIgual;
 		}
 
-		return list_find(tabla_de_estados, esRegistroBuscado);
+		return list_find(tabla_de_estados, (void*)esRegistroBuscado);
+}
+
+t_elemento_tabla_estado* buscarRegistroPorNodoYBloque(int master, char* nombreNodo, int bloque, int etapa){ //lo mismo sin el job
+	bool esRegistroBuscado(t_elemento_tabla_estado* elemento){
+			bool esMasterIgual = elemento->master == master;
+			bool esBloqueIgual = elemento->bloque == bloque;
+			bool esEtapaIgual = elemento->etapa == etapa;
+			bool esNombreNodoIgual = string_equals_ignore_case(elemento->nodo, nombreNodo);
+
+			return esMasterIgual && esBloqueIgual && esNombreNodoIgual && esEtapaIgual;
+		}
+
+		return list_find(tabla_de_estados, (void*)esRegistroBuscado);
+}
+
+void modificarEstadoDeRegistroPorNodoYBloque(int master, char* nombreNodo, int bloque, int etapa, int nuevoEstado){
+	t_elemento_tabla_estado* elemento = buscarRegistroPorNodoYBloque(master, nombreNodo, bloque, etapa);
+	elemento->estado = nuevoEstado;
 }
 
 t_elemento_tabla_estado* TerminoElNodo(char* nombreNodo,int etapa,int estado){
@@ -75,7 +93,26 @@ t_elemento_tabla_estado* TerminoElNodo(char* nombreNodo,int etapa,int estado){
 				return  esNombreNodoIgual && esEtapaIgual && esEstadoIgual;
 			}
 
-	return list_find(tabla_de_estados, esRegistroBuscado);
+	return list_find(tabla_de_estados, (void*)esRegistroBuscado);
+
+}
+
+bool terminoUnNodoLaTransformacion(char* nomNodo,int etapa, int estado){
+
+	bool esRegistroBuscado(t_elemento_tabla_estado* elemento) {
+		bool esEtapaIgual = elemento->etapa == etapa;
+		bool esNombreNodoIgual = string_equals_ignore_case(elemento->nodo, nomNodo);
+		bool esEstadoIgual = elemento->estado == estado;
+
+		return esNombreNodoIgual && esEtapaIgual && esEstadoIgual;
+	}
+
+	int cantElementos = list_count_satisfying(tabla_de_estados, (void*)esRegistroBuscado);
+
+	if(cantElementos == 0){
+		return true;
+	}
+	return false;
 
 }
 

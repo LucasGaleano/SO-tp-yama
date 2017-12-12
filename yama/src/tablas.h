@@ -46,6 +46,12 @@ void modificarEstadoDeRegistro(int job, int master, char* nombreNodo, int bloque
 
 void eliminarRegistro(int job, int master, char* nombreNodo, int bloque, int etapa);
 
+t_elemento_tabla_estado* buscarRegistroPorNodoYBloque(int master, char* nombreNodo, int bloque, int etapa);
+
+void modificarEstadoDeRegistroPorNodoYBloque(int master, char* nombreNodo, int bloque, int etapa, int nuevoEstado);
+
+bool terminoUnNodoLaTransformacion(char* nomNodo,int etapa, int estado);
+
 /*------------------------Auxiliares-------------------------*/
 
 char* 				nombreArchivoTemp			(char* prefijo);
