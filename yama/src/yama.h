@@ -15,6 +15,7 @@
 #include "tablas.h"
 #include <biblioteca/paquetes.h>
 #include "balanceador.h"
+#include "mapas.h"
 
 
 /*----------------------------------Estructuras----------------------------------*/
@@ -39,7 +40,7 @@ t_queue* cola_master;
 long idJob;
 
 //prefijo archivos temporales
-char* prefijo = "temp";
+char* prefijoArchivosTemporales = "/temp/";
 
 t_list* masterConectados;
 
@@ -76,5 +77,6 @@ t_list* 						extraerNodosSinRepetidos				(t_list*);
 /*----------------------------------Funciones auxiliares----------------------------------*/
 long 							generarJob								(void);
 void 							destruirConfiguracion					(t_configuracion * configuracion);
+char* 							obtenerNombreNodoDesdeId				(int idNodo);
 
 #endif /* YAMA_H_ */
