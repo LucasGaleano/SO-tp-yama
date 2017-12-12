@@ -85,7 +85,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_LISTA_NODO_BLOQUES: //RECIBO LISTA DE ARCHIVOS DE FS CON UBICACIONES Y BLOQUES
 		procesarEnviarListaNodoBloques(unPaquete); //
 		break;
-	case RESULTADO_TRANSFORMACION:
+	case ENVIAR_INDICACION_TRANSFORMACION:
 		procesarResultadoTranformacion(unPaquete, client_socket);
 		break;
 	default:
@@ -182,6 +182,7 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete){
 		int tamanioArchivo = buscarTamanioArchivoConNombreNodo(nombreNodo, listaNodoBloque);
 
 		void armarIndicacionDeTransformacionPorBloque(int numeroBloque){
+			indicacionTransformacion->estado = PROCESANDO;
 			indicacionTransformacion->ip = direccionNodo->ip;
 			indicacionTransformacion->puerto = direccionNodo->puerto;
 			indicacionTransformacion->nodo = nombreNodo;				//TODO REVISAR SI HAY QUE RESERVAR MEMORIA
@@ -211,53 +212,59 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete){
 	list_iterate(indicacionesDeTransformacionParaMaster, (void*) registrarYEnviarAMaster);
 }
 
-void procesarResultadoTranformacion(t_paquete * unPaquete, int client_socket){
+void procesarResultadoTranformacion(t_paquete * unPaquete, int client_socket) {
 	t_resultado_transformacion* resultado = recibirResultadoTransformacion(unPaquete);
 
 	//ACTUALIZAR REGISTRO Y CONTINUAR O REPLANIFICAR ALGUN BLOQUE (VER REPLANIFICACION)
 	//todo FIJARSE QUE PASA CON LA TABLA DE ESTADO EN EL CASO DE QUE FALLE ALGUNA ETAPA
 
-	if(resultado->estadoOperacion == FINALIZADO_OK){
+	if (resultado->estadoOperacion == FINALIZADO_OK) {
+
+		planificador_sumarWLWorker(tablaPlanificador, extraerIddelNodo(resultado->indicacionTransformacion->nodo), -1); //le saco carga de trabaja al nodo
 
 		modificarEstadoDeRegistroPorNodoYBloque(client_socket,
 				resultado->indicacionTransformacion->nodo,
 				resultado->indicacionTransformacion->bloque, TRANSFORMACION,
 				FINALIZADO_OK);
 
-	};
+		//MIRAR SI PARA UN MISMO NODO, TERMINARON TODAS LAS TRANSFORMACIONES
 
+		if (terminoUnNodoLaTransformacion(
+				resultado->indicacionTransformacion->nodo, TRANSFORMACION,
+				PROCESANDO)) {
 
-	//MIRAR SI PARA UN MISMO NODO, TERMINARON TODAS LAS TRANSFORMACIONES
+			//SI -> MANDAR A HACER TODAS LAS REDUCCIONES LOCALES DE ESE NODO
+			t_indicacionReduccionLocal* indReducLocal;
 
-	if(terminoUnNodoLaTransformacion(resultado->indicacionTransformacion->nodo, TRANSFORMACION, PROCESANDO)){
+			indReducLocal->nodo = string_duplicate(
+					resultado->indicacionTransformacion->nodo);
+			indReducLocal->ip = string_duplicate(
+					resultado->indicacionTransformacion->ip);
+			indReducLocal->puerto = string_duplicate(
+					resultado->indicacionTransformacion->puerto);
+			indReducLocal->archivoTemporalTransformacion = string_duplicate(
+					resultado->indicacionTransformacion->rutaArchivoTemporal);
+			indReducLocal->archivoTemporalReduccionLocal = nombreArchivoTemp(
+					prefijoArchivosTemporalesReduLocal);
 
-		//SI -> MANDAR A HACER TODAS LAS REDUCCIONES LOCALES DE ESE NODO
-		t_indicacionReduccionLocal* indReducLocal;
+			int idJob = generarJob();
 
-		indReducLocal->nodo = string_duplicate(resultado->indicacionTransformacion->nodo);
-		indReducLocal->ip = string_duplicate(resultado->indicacionTransformacion->ip);
-		indReducLocal->puerto = string_duplicate(resultado->indicacionTransformacion->puerto);
-		indReducLocal->archivoTemporalTransformacion = string_duplicate(resultado->indicacionTransformacion->rutaArchivoTemporal);
-		indReducLocal->archivoTemporalReduccionLocal = nombreArchivoTemp(prefijoArchivosTemporalesReduLocal);
+			//ACTUALIZAR TABLA DE ESTADO AVANZANDO LA ETAPA
 
-		int idJob = generarJob();
+			agregarRegistro(idJob, client_socket, indReducLocal->nodo,
+					resultado->indicacionTransformacion->bloque,
+					REDUCCION_LOCAL,
+					indReducLocal->archivoTemporalReduccionLocal, PROCESANDO);
 
-		//ACTUALIZAR TABLA DE ESTADO AVANZANDO LA ETAPA
+			enviarIndicacionReduccionLocal(client_socket,indReducLocal);
 
-		agregarRegistro(idJob, client_socket, indReducLocal->nodo,
-				resultado->indicacionTransformacion->bloque, REDUCCION_LOCAL,
-				indReducLocal->archivoTemporalReduccionLocal, PROCESANDO);
+			IndicReducLocal_destroy(indReducLocal);
 
+		}
 
-
-
-
-		IndicReducLocal_destroy(indReducLocal);
 
 
 	}
-
-
 
 }
 

@@ -31,5 +31,6 @@ void planificador_agregarWorker(t_list* tablaPlanificador, char* numWorkerId); /
 void planificador_sacarWorker(t_list* tablaPlanificador, char* numWorkerId);
 void planificador(char* algoritmo, t_list * listaDeBloques, t_list* tablaPlanificador, int DispBase);
 void planificador_sumarWLWorker(t_list* tablaPlanificador, int numWorkerId, int WL);
+int extraerIddelNodo(char* nodo);
 
 #endif /* BALANCEADOR_H_ */
