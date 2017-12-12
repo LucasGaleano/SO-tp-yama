@@ -114,6 +114,8 @@ void procesarError(t_paquete * unPaquete, int * client_socket) {
 	//Elimino de la tabla de sockets
 	char * nomNodo = eliminarNodoTablaSockets(*client_socket);
 
+	if(nomNodo == NULL)return;
+
 	//Marco como no disponible en tabla de sockets
 	bool esNodo(t_nodo_info * infoNodo){
 		return string_equals_ignore_case(infoNodo->nombre,nomNodo);
