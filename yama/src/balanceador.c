@@ -8,7 +8,7 @@ static void SumarDisponibilidad(t_registro_Tabla_Planificador* registroWorker, i
 static void SumarDisponibilidadTodos(t_list* tablaPlanificador, int n);
 static bool estaBloqueEnWorker(t_nodos_por_bloque* bloque, int worker);  //check
 static void insertarBloqueEnRegistroWorker(t_list* tablaPlanificador,int Worker,int numBloque);
-static int extraerIddelNodo(char* nodo);
+
 
 
 void planificador(char* algoritmo, t_list * listaDeBloques,
@@ -159,7 +159,7 @@ static bool estaBloqueEnWorker(t_nodos_por_bloque* bloque, int worker) {
 	return EstaEnUnNodo;
 }
 
-static int extraerIddelNodo(char* nodo){
+int extraerIddelNodo(char* nodo){
 
 	char* numUbic = string_substring(nodo, 4, 1); //ejemplo "Nodo1" devuelve "1"
 	int n = atoi(numUbic);
