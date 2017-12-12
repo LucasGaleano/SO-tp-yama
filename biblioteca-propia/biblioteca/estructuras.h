@@ -199,6 +199,7 @@ typedef struct {
 } t_pedidoAlmacenadoFinal;
 
 typedef struct {
+	int estado;
 	char* nodo;
 	char* ip;
 	char* puerto;
@@ -230,11 +231,6 @@ typedef struct {
 	char* puerto;
 	char* rutaArchivoReduccionGlobal;
 } t_indicacionAlmacenadoFinal;
-
-typedef struct{
-	int estadoOperacion;
-	t_indicacionTransformacion* indicacionTransformacion;
-} t_resultado_transformacion;
 
 
 

@@ -357,6 +357,7 @@ void serializarSolicitudAlmacenadoFinal(t_paquete * unPaquete,
 
 void serializarIndicacionTransformacion(t_paquete * unPaquete,
 		t_indicacionTransformacion * indicacion) {
+	int tamEstado = sizeof(int);
 	int tamNodo = string_length(indicacion->nodo) + 1;
 	int tamDireccion = string_length(indicacion->ip) + 1;
 	int tamPuerto = string_length(indicacion->puerto) + 1;
@@ -365,7 +366,7 @@ void serializarIndicacionTransformacion(t_paquete * unPaquete,
 	int tamRutaArchivoTemporal = string_length(indicacion->rutaArchivoTemporal)
 			+ 1;
 
-	int tamTotal = tamNodo + tamDireccion + tamPuerto + tamBloque + tamBytes
+	int tamTotal = tamEstado + tamNodo + tamDireccion + tamPuerto + tamBloque + tamBytes
 			+ tamRutaArchivoTemporal;
 
 	unPaquete->buffer = malloc(sizeof(t_stream));
@@ -374,6 +375,10 @@ void serializarIndicacionTransformacion(t_paquete * unPaquete,
 	unPaquete->buffer->data = malloc(tamTotal);
 
 	int desplazamiento = 0;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, &indicacion->estado,
+			tamEstado);
+	desplazamiento += tamEstado;
 
 	memcpy(unPaquete->buffer->data + desplazamiento, indicacion->nodo, tamNodo);
 	desplazamiento += tamNodo;
@@ -670,40 +675,6 @@ void serializarRutaArchivo(t_paquete * unPaquete, char * rutaArchivo,
 			tamMasterSolicitante);
 }
 
-
-void serializarResultadoTransformacion(t_paquete* unPaquete, t_indicacionReduccionLocal* indReducLocal){
-
-	int tamNodo = strlen(indReducLocal->nodo) + 1;
-	int tamIp = strlen(indReducLocal->ip) + 1;
-	int tamPuerto = strlen(indReducLocal->puerto) + 1;
-	int tamRutaArchivotrans = strlen(indReducLocal->archivoTemporalTransformacion) + 1;
-	int tamRutaArchivoreducc = strlen(indReducLocal->archivoTemporalReduccionLocal) + 1;
-
-	int tamTotal = tamNodo + tamIp + tamPuerto + tamRutaArchivotrans + tamRutaArchivoreducc;
-
-	unPaquete->buffer = malloc(sizeof(t_stream));
-	unPaquete->buffer->size = tamTotal;
-	unPaquete->buffer->data = malloc(tamTotal);
-
-	int desplazamiento = 0;
-
-	memcpy(unPaquete->buffer->data + desplazamiento, indReducLocal->nodo, tamNodo);
-	desplazamiento += tamNodo;
-
-	memcpy(unPaquete->buffer->data + desplazamiento, indReducLocal->ip, tamIp);
-	desplazamiento += tamIp;
-
-	memcpy(unPaquete->buffer->data + desplazamiento, indReducLocal->puerto, tamPuerto);
-	desplazamiento += tamPuerto;
-
-	memcpy(unPaquete->buffer->data + desplazamiento, indReducLocal->archivoTemporalTransformacion, tamRutaArchivotrans);
-	desplazamiento += tamRutaArchivotrans;
-
-	memcpy(unPaquete->buffer->data + desplazamiento, indReducLocal->archivoTemporalReduccionLocal, tamRutaArchivoreducc);
-
-
-}
-
 /*-------------------------Deserializacion-------------------------*/
 int deserializarNumero(t_stream* buffer) {
 	return *(int*) (buffer->data);
@@ -961,6 +932,9 @@ t_indicacionTransformacion * deserializarIndicacionTransformacion(
 
 	int desplazamiento = 0;
 
+	memcpy(&indicacion->estado, buffer->data + desplazamiento, sizeof(int));
+	desplazamiento += sizeof(int);
+
 	indicacion->nodo = strdup(buffer->data + desplazamiento);
 	desplazamiento += strlen(indicacion->nodo) + 1;
 
@@ -1156,38 +1130,6 @@ t_solicitudArchivo * deserializarRutaArchivo(t_stream * buffer) {
 	return solicitud;
 }
 
-t_indicacionReduccionLocal* deserializarResultadoTransformacion(t_stream * buffer){
-
-	t_indicacionReduccionLocal* indReducLocal = malloc(sizeof(t_indicacionReduccionLocal));
-
-	/*
-	int tamNodo = strlen(indReducLocal->nodo) + 1;
-	int tamIp = strlen(indReducLocal->ip) + 1;
-	int tamPuerto = strlen(indReducLocal->puerto) + 1;
-	int tamRutaArchivotrans = strlen(indReducLocal->archivoTemporalTransformacion) + 1;
-	int tamRutaArchivoreducc = strlen(indReducLocal->archivoTemporalReduccionLocal) + 1;
-	*/
-
-	int desplazamiento = 0;
-
-	indReducLocal->nodo = strdup(buffer->data + desplazamiento);
-	desplazamiento += strlen(indReducLocal->nodo) + 1;
-
-	indReducLocal->ip = strdup(buffer->data + desplazamiento);
-	desplazamiento += strlen(indReducLocal->ip) + 1;
-
-	indReducLocal->puerto = strdup(buffer->data + desplazamiento);
-	desplazamiento += strlen(indReducLocal->puerto) + 1;
-
-	indReducLocal->archivoTemporalTransformacion = strdup(buffer->data + desplazamiento);
-	desplazamiento += strlen(indReducLocal->archivoTemporalTransformacion) + 1;
-
-	indReducLocal->archivoTemporalReduccionLocal = strdup(buffer->data + desplazamiento);
-	desplazamiento += strlen(indReducLocal->archivoTemporalReduccionLocal) + 1;
-
-	return indReducLocal;
-
-}
 
 /*-------------------------Funciones auxiliares-------------------------*/
 void * abrirArchivo(char * rutaArchivo, size_t * tamArc, FILE ** archivo) {
