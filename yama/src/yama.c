@@ -232,11 +232,6 @@ void procesarResultadoTranformacion(t_paquete * unPaquete, int client_socket){
 	if(terminoUnNodoLaTransformacion(resultado->indicacionTransformacion->nodo, TRANSFORMACION, PROCESANDO)){
 
 		//SI -> MANDAR A HACER TODAS LAS REDUCCIONES LOCALES DE ESE NODO
-		char* nodo;
-		char* ip;
-		char* puerto;
-		char* archivoTemporalTransformacion; // Existe
-		char* archivoTemporalReduccionLocal;
 		t_indicacionReduccionLocal* indReducLocal = IndicReducLocal_create();
 
 		indReducLocal->nodo = string_duplicate(resultado->indicacionTransformacion->nodo);
@@ -250,7 +245,7 @@ void procesarResultadoTranformacion(t_paquete * unPaquete, int client_socket){
 		//ACTUALIZAR TABLA DE ESTADO AVANZANDO LA ETAPA
 
 		agregarRegistro(idJob, client_socket, indReducLocal->nodo,
-				indReducLocal->puerto, REDUCCION_LOCAL,
+				resultado->indicacionTransformacion->bloque, REDUCCION_LOCAL,
 				indReducLocal->archivoTemporalReduccionLocal, PROCESANDO);
 
 
