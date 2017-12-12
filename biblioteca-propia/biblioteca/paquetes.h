@@ -19,6 +19,8 @@ void 							enviarHandshake								(int, int);
 void 							enviarSolicitudNombre						(int);
 void 							enviarNombre								(int, char *, char *, char *);
 
+void 							enviarRutaArchivo							(int, char *, int);
+
 void 							enviarMensaje								(int, char *);
 
 void 							enviarArchivo								(int, char *);
@@ -63,7 +65,7 @@ t_nodo_nombre *					recibirNombre								(t_paquete *);
 
 char * 							recibirMensaje								(t_paquete *);
 
-char * 							recibirRutaArchivo							(t_paquete *);
+t_solicitudArchivo *			recibirRutaArchivo							(t_paquete *);
 
 void * 							recibirArchivo								(t_paquete *);
 
