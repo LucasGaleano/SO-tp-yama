@@ -46,6 +46,9 @@ void modificarEstadoDeRegistro(int job, int master, char* nombreNodo, int bloque
 
 void eliminarRegistro(int job, int master, char* nombreNodo, int bloque, int etapa);
 
+/*------------------------Auxiliares-------------------------*/
+
+char* 				nombreArchivoTemp			(char* prefijo);
 
 
 #endif /* TABLAS_H_ */

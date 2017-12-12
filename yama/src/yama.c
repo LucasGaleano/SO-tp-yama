@@ -3,8 +3,7 @@
 int main(void) {
 
 	//Levanto el archivo de configuracion
-	char* path_config_yama =
-			"/home/utnso/workspace/tp-2017-2c-NULL/configuraciones/yama.cfg";
+	char* path_config_yama ="/home/kevinvarela/workspace/tp-2017-2c-NULL/configuraciones/yama.cfg";
 
 	configuracion = leerArchivoDeConfiguracionYAMA(path_config_yama);
 
@@ -40,16 +39,6 @@ int main(void) {
 t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 
 	t_config * config = config_create(path);
-
-//Valido que el archivo de configuracion este con los datos correspondientes
-	if (!config_has_property(config, "FS_IP")
-			|| !config_has_property(config, "FS_PUERTO")
-			|| !config_has_property(config, "RETARDO_PLANIFICACION")
-			|| !config_has_property(config, "ALGORITMO_BALANCEO")) {
-		printf(
-				"ERROR: Alguna de las propiedades definidas en el archivo de configuracion es invalida o vacia \n");
-		exit(1);
-	}
 
 	configuracion = malloc(sizeof(t_configuracion));
 
@@ -91,17 +80,14 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_ERROR:
 		procesarRecibirError(unPaquete);
 		break;
-	case ENVIAR_SOLICITUD_TRANSFORMACION: //RECIBO SOLICITUD DE TRANSFORMACION CON PATH DE ARCHIVO
+	case ENVIAR_RUTA_PARA_ARRANCAR_TRANSFORMACION: //RECIBO SOLICITUD DE TRANSFORMACION CON PATH DE ARCHIVO
 		procesarEnviarSolicitudTransformacion(unPaquete, client_socket); //ENVIO A FS PATH DE ARCHIVO
 		break;
 	case ENVIAR_LISTA_NODO_BLOQUES: //RECIBO LISTA DE ARCHIVOS DE FS CON UBICACIONES Y BLOQUES
 		procesarEnviarListaNodoBloques(unPaquete); //
 		break;
-	case ENVIAR_INDICACION_TRANSFORMACION:
-		procesarEnviarSolicitudTransformacion(unPaquete, client_socket);
-		break;
-	case TAREA_COMPLETADA:
-		procesarTareaCompleta(unPaquete, client_socket);
+	case RESULTADO_TRANSFORMACION:
+		procesarResultadoTranformacion(unPaquete, client_socket);
 		break;
 	default:
 		break;
@@ -161,19 +147,21 @@ void procesarRecibirError(t_paquete * unPaquete) {
 }
 
 void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete, int *client_socket) {
-	queue_push(cola_master, client_socket);	// todo-->Verificar que esto haga lo que realmente quiero
 	char * nomArchivo = recibirMensaje(unPaquete);
-	enviarRutaArchivo(socketFS, nomArchivo);
+	enviarRutaParaArrancarTransformacion(socketFS, nomArchivo);
 }
 
 void procesarEnviarListaNodoBloques(t_paquete * unPaquete){
 
-	t_nodos_bloques * nodosBloques = recibirListaNodoBloques(unPaquete);
+	int idJob = generarJob();
 
-	t_list* listNodoBloque = nodosBloques->nodoBloque;
+	t_nodos_bloques * nodosBloques = recibirListaNodoBloques(unPaquete); //RECIBO UN STRUCT CON 2 LISTAS ANIDADAS
 
-	t_list* listaBloquesConNodos = agruparNodosPorBloque(listNodoBloque);
-	t_list* nodosSinRepetidos = extraerNodosSinRepetidos(listNodoBloque);
+	t_list* listaNodoBloque = nodosBloques->nodoBloque;
+	t_list* listaDireccionesNodos = nodosBloques->puertoIP;
+
+	t_list* listaBloquesConNodos = agruparNodosPorBloque(listaNodoBloque); // LISTA DE BLOQUES CON LOS NODOS DONDE ESTA
+	t_list* nodosSinRepetidos = extraerNodosSinRepetidos(listaNodoBloque); //SOLO LOS NOMBRE NODOS SIN REPETIDOS
 
 	void agregarATablaPlanificador(char* nombreNodo){
 		planificador_agregarWorker(tablaPlanificador, nombreNodo);
@@ -183,10 +171,61 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete){
 
 	planificador(configuracion->algoritmo, listaBloquesConNodos, tablaPlanificador, configuracion->disponibilidad_base);
 
+	t_list* indicacionesDeTransformacionParaMaster = list_create();
+
+	void armarIndicacionDeTransformacionPorRegistro(t_registro_Tabla_Planificador* registroTabla){
+		t_indicacionTransformacion* indicacionTransformacion = malloc(sizeof(t_indicacionTransformacion));//TODO LIBERAR
+
+		int idNodo = registroTabla->id;
+		char* nombreNodo = obtenerNombreNodoDesdeId(idNodo);
+
+		t_puerto_ip* direccionNodo = buscarIpYPuertoConNombreNodo(nombreNodo, listaDireccionesNodos);
+		int tamanioArchivo = buscarTamanioArchivoConNombreNodo(nombreNodo, listaNodoBloque);
+
+		void armarIndicacionDeTransformacionPorBloque(int numeroBloque){
+			indicacionTransformacion->ip = direccionNodo->ip;
+			indicacionTransformacion->puerto = direccionNodo->puerto;
+			indicacionTransformacion->nodo = nombreNodo;				//TODO REVISAR SI HAY QUE RESERVAR MEMORIA
+			indicacionTransformacion->bytes = tamanioArchivo;
+
+			int bloqueNodo = mapearBloqueArchivoABloqueNodo(listaNodoBloque, nombreNodo, numeroBloque);
+			indicacionTransformacion->bloque = bloqueNodo;
+			indicacionTransformacion->rutaArchivoTemporal = nombreArchivoTemp(prefijoArchivosTemporales);
+
+			list_add(indicacionesDeTransformacionParaMaster, indicacionTransformacion);
+		}
+		list_iterate(registroTabla->listaBloques, (void*) armarIndicacionDeTransformacionPorBloque);
+	}
+	list_iterate(tablaPlanificador, (void*) armarIndicacionDeTransformacionPorRegistro);
+
+	void registrarYEnviarAMaster(t_indicacionTransformacion* indicacionDeTransformacion){
+
+		//REGISTRAR EN TABLA DE ESTADO EL JOB
+		agregarRegistro(idJob, nodosBloques->masterSolicitante, indicacionDeTransformacion->nodo,
+				indicacionDeTransformacion->bloque, TRANSFORMACION, indicacionDeTransformacion->rutaArchivoTemporal,
+				PROCESANDO);
+
+		//ENVIAR A MASTER LA INDICACION
+		enviarIndicacionTransformacion(nodosBloques->masterSolicitante, indicacionDeTransformacion);
+	}
+
+	list_iterate(indicacionesDeTransformacionParaMaster, (void*) registrarYEnviarAMaster);
 }
 
-void procesarTareaCompleta(t_paquete * unPaquete, int client_socket){
+void procesarResultadoTranformacion(t_paquete * unPaquete, int client_socket){
+	t_resultado_transformacion* resultado = recibirResultadoTransformacion(unPaquete);
 
+	if(resultado->estadoOperacion == ????????){
+
+	};
+
+	//ACTUALIZAR REGISTRO Y CONTINUAR O REPLANIFICAR ALGUN BLOQUE (VER REPLANIFICACION)
+	//FIJARSE QUE PASA CON LA TABLA DE ESTADO EN EL CASO DE QUE FALLE ALGUNA ETAPA
+
+	//MIRAR SI PARA UN MISMO NODO, TERMINARON TODAS LAS TRANSFORMACIONES
+	//SI -> MANDAR A HACER TODAS LAS REDUCCIONES LOCALES DE ESE NODO
+
+	//ACTUALIZAR TABLA DE ESTADO AVANZANDO LA ETAPA
 }
 
 /*-------------------------Funciones auxiliares-------------------------*/
@@ -224,7 +263,7 @@ t_list* agruparNodosPorBloque(t_list* listaDeNodoBloque) {
 
 	void tomarBloquesSinRepetidos(t_nodo_bloque* t_nodo_bloque) {
 		if (!existeNodoEnLaLista(t_nodo_bloque->bloqueArchivo)) {
-			list_add(bloquesSinRepetidos, t_nodo_bloque->bloqueArchivo);
+			list_add(bloquesSinRepetidos, &t_nodo_bloque->bloqueArchivo);
 		}
 	}
 
@@ -280,5 +319,13 @@ void destruirConfiguracion(t_configuracion * configuracion) {
 	free(configuracion->puerto);
 	free(configuracion->puerto_yama);
 	free(configuracion);
+}
+
+char* obtenerNombreNodoDesdeId(int idNodo){
+	char* prefijoNodo = string_new();
+	char* numeroNodo = string_itoa(idNodo);
+	string_append(&prefijoNodo, numeroNodo);
+	free(numeroNodo);
+	return prefijoNodo;
 }
 
