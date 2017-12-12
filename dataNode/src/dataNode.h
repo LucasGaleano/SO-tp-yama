@@ -13,15 +13,21 @@
 //#include <stdbool.h>
 #include <biblioteca/estructuras.h>
 #include <biblioteca/paquetes.h>
+
 #define PATHCONFIG "/home/utnso/workspace/tp-2017-2c-NULL/configuraciones/nodo.cfg"
-#define recibirPaquetes true
 
 //---------globales---------
-char* rutaDatabin;
 t_log* logger;
+
+char* nombreNodo;
+char * rutaDatabin;
+char * ipNodo;
+char * puertoNodo;
+
+int socketFileSystem;
 bool recibirSolicitudes;
 int cantidadBloques;
-char * nomNodo;
+
 
 /**
  * @NAME: getBloque

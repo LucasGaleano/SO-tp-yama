@@ -731,6 +731,8 @@ char * eliminarNodoTablaSockets(int cliente_desconectado) {
 	t_tabla_sockets * registroSocket = list_remove_by_condition(tablaSockets,
 			(void*) esSocketBuscado);
 
+	if(registroSocket == NULL)return NULL;
+
 	char * nom = malloc(string_length(registroSocket->nombre) + 1);
 	memcpy(nom, registroSocket->nombre,
 			string_length(registroSocket->nombre) + 1);
