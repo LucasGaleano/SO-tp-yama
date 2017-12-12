@@ -16,10 +16,9 @@
 #include <sys/stat.h> //fstat()
 #include <sys/mman.h>  //mmap()
 #include <unistd.h>  //PROT_READ del mmap()
-#include "worker.h"
 
-#define PATHLOG "..//nodo.cfg"
-#define PATHCONFIG "../configuraciones/nodo.cfg"
+#define PATHLOG "worker.log"
+#define PATHCONFIG "configuraciones/nodo.cfg"
 #define TAM_MAX 100
 #define TAM_BLOQUE 1048576 //1024 * 1024, un mega
 #define PUERTO_REDUCCION_GLOBAL "9999"
@@ -27,20 +26,20 @@
 typedef struct
 {
 	int socket_cliente;
-	char palabra[TAM_MAX];
+	char* palabra;
 }paquete_esclavo;
 
-void recibirHandshake(t_paquete*, int*);
+void recibirHandshakeLocal(t_paquete*, int*);
 
 void procesarPaquete(t_paquete*, int*);
 
 void recibirSolicitud(t_paquete*, int*);
 
-void transformacion (unsigned int, char*);
+void transformacion (unsigned int, unsigned int, char*, char*);
 
 inline int sonTodosVerdaderos(int *, int);
 
-void reduccionLocal(char**, int, char*);
+void reduccionLocal(char**, int, char*, char*);
 
 FILE* aparear(FILE *[], int);
 
