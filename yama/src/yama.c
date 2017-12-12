@@ -3,7 +3,7 @@
 int main(void) {
 
 	//Levanto el archivo de configuracion
-	char* path_config_yama ="/home/kevinvarela/workspace/tp-2017-2c-NULL/configuraciones/yama.cfg";
+	char* path_config_yama ="/home/utnso/workspace/tp-2017-2c-NULL/configuraciones/yama.cfg";
 
 	configuracion = leerArchivoDeConfiguracionYAMA(path_config_yama);
 
@@ -27,7 +27,6 @@ int main(void) {
 		exit(EXIT_FAILURE);
 	}
 
-	//iniciarPlanificador(config->algoritmo); todo
 
 	destruirConfiguracion(configuracion);
 //	list_destroy_and_destroy_elements(tabla_de_estados, (void*) eliminarElemento() ); //TODO PREGUNTAR SI ESTA BIEN LIBERAR DESPUES DE USAR
@@ -86,7 +85,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_LISTA_NODO_BLOQUES: //RECIBO LISTA DE ARCHIVOS DE FS CON UBICACIONES Y BLOQUES
 		procesarEnviarListaNodoBloques(unPaquete); //
 		break;
-	case RESULTADO_TRANSFORMACION:
+	case TAREA_COMPLETADA:
 		procesarResultadoTranformacion(unPaquete, client_socket);
 		break;
 	default:
@@ -190,7 +189,7 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete){
 
 			int bloqueNodo = mapearBloqueArchivoABloqueNodo(listaNodoBloque, nombreNodo, numeroBloque);
 			indicacionTransformacion->bloque = bloqueNodo;
-			indicacionTransformacion->rutaArchivoTemporal = nombreArchivoTemp(prefijoArchivosTemporales);
+			indicacionTransformacion->rutaArchivoTemporal = nombreArchivoTemp(prefijoArchivosTemporalesTranformacion);
 
 			list_add(indicacionesDeTransformacionParaMaster, indicacionTransformacion);
 		}
@@ -215,17 +214,53 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete){
 void procesarResultadoTranformacion(t_paquete * unPaquete, int client_socket){
 	t_resultado_transformacion* resultado = recibirResultadoTransformacion(unPaquete);
 
-	if(resultado->estadoOperacion == ????????){
+	//ACTUALIZAR REGISTRO Y CONTINUAR O REPLANIFICAR ALGUN BLOQUE (VER REPLANIFICACION)
+	//todo FIJARSE QUE PASA CON LA TABLA DE ESTADO EN EL CASO DE QUE FALLE ALGUNA ETAPA
+
+	if(resultado->estadoOperacion == FINALIZADO_OK){
+
+		modificarEstadoDeRegistroPorNodoYBloque(client_socket,
+				resultado->indicacionTransformacion->nodo,
+				resultado->indicacionTransformacion->bloque, TRANSFORMACION,
+				FINALIZADO_OK);
 
 	};
 
-	//ACTUALIZAR REGISTRO Y CONTINUAR O REPLANIFICAR ALGUN BLOQUE (VER REPLANIFICACION)
-	//FIJARSE QUE PASA CON LA TABLA DE ESTADO EN EL CASO DE QUE FALLE ALGUNA ETAPA
 
 	//MIRAR SI PARA UN MISMO NODO, TERMINARON TODAS LAS TRANSFORMACIONES
-	//SI -> MANDAR A HACER TODAS LAS REDUCCIONES LOCALES DE ESE NODO
 
-	//ACTUALIZAR TABLA DE ESTADO AVANZANDO LA ETAPA
+	if(terminoUnNodoLaTransformacion(resultado->indicacionTransformacion->nodo, TRANSFORMACION, PROCESANDO)){
+
+		//SI -> MANDAR A HACER TODAS LAS REDUCCIONES LOCALES DE ESE NODO
+		char* nodo;
+		char* ip;
+		char* puerto;
+		char* archivoTemporalTransformacion; // Existe
+		char* archivoTemporalReduccionLocal;
+		t_indicacionReduccionLocal* indReducLocal = IndicReducLocal_create();
+
+		indReducLocal->nodo = string_duplicate(resultado->indicacionTransformacion->nodo);
+		indReducLocal->ip = string_duplicate(resultado->indicacionTransformacion->ip);
+		indReducLocal->puerto = string_duplicate(resultado->indicacionTransformacion->puerto);
+		indReducLocal->archivoTemporalTransformacion = string_duplicate(resultado->indicacionTransformacion->rutaArchivoTemporal);
+		indReducLocal->archivoTemporalReduccionLocal = nombreArchivoTemp(prefijoArchivosTemporalesReduLocal);
+
+		int idJob = generarJob();
+
+		//ACTUALIZAR TABLA DE ESTADO AVANZANDO LA ETAPA
+
+		agregarRegistro(idJob, client_socket, indReducLocal->nodo,
+				indReducLocal->puerto, REDUCCION_LOCAL,
+				indReducLocal->archivoTemporalReduccionLocal, PROCESANDO);
+
+
+		IndicReducLocal_destroy(indReducLocal);
+
+
+	}
+
+
+
 }
 
 /*-------------------------Funciones auxiliares-------------------------*/
@@ -252,7 +287,8 @@ t_list* agruparNodosPorBloque(t_list* listaDeNodoBloque) {
 
 	bool existeNodoEnLaLista(int numeroBloque) {
 		bool booleano = false;
-		for (int x = 0; x < bloquesSinRepetidos->elements_count; x++) {
+		int x = 0;
+		for (; x < bloquesSinRepetidos->elements_count; x++) {
 			if (list_get(bloquesSinRepetidos, x), numeroBloque) {
 				booleano = true;
 				break;
@@ -273,7 +309,8 @@ t_list* agruparNodosPorBloque(t_list* listaDeNodoBloque) {
 
 	void obtenerNodosDeBloque(int numeroBloque) {
 		t_nodos_por_bloque* bloqueConListaNodos = malloc(sizeof(t_nodos_por_bloque)); //TODO LIBERAR MEMORIA
-		for (int y = 0; y < listaDeNodoBloque->elements_count; y++) {
+		int y = 0;
+		for (; y < listaDeNodoBloque->elements_count; y++) {
 			t_nodo_bloque* nodoBloque = list_get(listaDeNodoBloque, y);
 			if (numeroBloque == nodoBloque->bloqueArchivo) {
 				list_add(bloqueConListaNodos->nodosEnLosQueEsta, nodoBloque->nomNodo);
@@ -293,7 +330,8 @@ t_list* extraerNodosSinRepetidos(t_list* listaDeNodoBloque){
 
 	bool existeNodoEnLaLista(char* nombreNodo) {
 		bool booleano = false;
-		for (int x = 0; x < nodosSinRepetidos->elements_count; x++) {
+		int x = 0;
+		for (; x < nodosSinRepetidos->elements_count; x++) {
 			if (string_equals_ignore_case(list_get(nodosSinRepetidos, x), nombreNodo)) {
 				booleano = true;
 				break;
@@ -327,5 +365,28 @@ char* obtenerNombreNodoDesdeId(int idNodo){
 	string_append(&prefijoNodo, numeroNodo);
 	free(numeroNodo);
 	return prefijoNodo;
+}
+
+t_indicacionReduccionLocal* IndicReducLocal_create(){
+
+	t_indicacionReduccionLocal* indReducLocal = malloc(sizeof(t_indicacionReduccionLocal));
+	indReducLocal->puerto = malloc(sizeof(char) * 5);
+	indReducLocal->nodo = malloc(sizeof(char) * 5);
+	indReducLocal->ip = malloc(sizeof(char) * 16);
+	indReducLocal->archivoTemporalTransformacion = malloc(sizeof(char) * 60);
+	indReducLocal->archivoTemporalReduccionLocal = malloc(sizeof(char) * 60);
+
+	return indReducLocal;
+
+}
+
+IndicReducLocal_destroy(t_indicacionReduccionLocal* indReducLocal){
+
+	free(indReducLocal->archivoTemporalReduccionLocal);
+	free(indReducLocal->archivoTemporalTransformacion);
+	free(indReducLocal->ip);
+	free(indReducLocal->nodo);
+	free(indReducLocal->puerto);
+	free(indReducLocal);
 }
 

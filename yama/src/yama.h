@@ -8,7 +8,7 @@
 #include <commons/collections/list.h>
 #include <commons/collections/queue.h>
 #include <biblioteca/sockets.h>
-#include <biblioteca/estructurasWorkerMaster.h>
+//#include <biblioteca/estructurasWorkerMaster.h>
 #include <commons/string.h>
 #include <pthread.h>
 
@@ -40,7 +40,9 @@ t_queue* cola_master;
 long idJob;
 
 //prefijo archivos temporales
-char* prefijoArchivosTemporales = "/temp/";
+char* prefijoArchivosTemporalesTranformacion = "/temp/transf:";
+char* prefijoArchivosTemporalesReduLocal= "/temp/local:";
+char* prefijoArchivosTemporalesReduGlobal= "/temp/global:";
 
 t_list* masterConectados;
 
@@ -78,5 +80,8 @@ t_list* 						extraerNodosSinRepetidos				(t_list*);
 long 							generarJob								(void);
 void 							destruirConfiguracion					(t_configuracion * configuracion);
 char* 							obtenerNombreNodoDesdeId				(int idNodo);
+
+t_indicacionReduccionLocal* 	IndicReducLocal_create					(void);
+void 							IndicReducLocal_destroy					(t_indicacionReduccionLocal* indReducLocal);
 
 #endif /* YAMA_H_ */
