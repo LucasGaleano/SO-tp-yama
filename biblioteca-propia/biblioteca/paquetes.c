@@ -465,6 +465,17 @@ void enviarListaNodoBloques(int server_socket, t_nodos_bloques * listaNodoBloque
 	enviarPaquetes(server_socket, unPaquete);
 }
 
+void EnviarResultadoTransformacion(int server_socket, t_indicacionReduccionLocal* indReducLocal ) {
+	t_paquete* unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = RESULTADO_TRANSFORMACION;
+
+	serializarResultadoTransformacion(unPaquete, indReducLocal);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
+
+
 /*-------------------------Recibir-------------------------*/
 
 int recibirHandshake(t_paquete * unPaquete) {
@@ -581,6 +592,6 @@ t_nodos_bloques * recibirListaNodoBloques(t_paquete * unPaquete){
 	 return deserializarListaNodoBloques(unPaquete->buffer); //TODO HACER CLICK EN LA FN() Y TERMINAR LA DESERIALIZACION
 }
 
-//t_resultado_transformacion* recibirResultadoTransformacion(t_paquete* unPaquete){
-//	return deserializarResultadoTransformacion(unPaquete->buffer);
-//}
+t_resultado_transformacion* recibirResultadoTransformacion(t_paquete* unPaquete){
+	return deserializarResultadoTransformacion(unPaquete->buffer);
+}
