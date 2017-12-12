@@ -385,6 +385,12 @@ void procesarNombre(t_paquete * unPaquete, int * client_socket) {
 		t_nodo_info * nodo = list_find(tablaNodos->infoDeNodo,
 				(void*) soyNodoBuscado);
 
+		if(nodo == NULL){
+			eliminarNodoTablaSockets(*client_socket);
+			*client_socket = -1;
+			return;
+		}
+
 		nodo->disponible = true;
 
 		tablaNodos->tamanio += nodo->total;
