@@ -65,6 +65,14 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 		//Bytes guardados en un bloque
 		guardoBytesPorBloque(numeroBloque, tamBuffer, configTablaArchivo);
 
+		//Lo agrego a la cantidad de bloques totales
+		int totalesAnterior = config_get_int_value(configTablaArchivo,
+				"CANTIDAD_BLOQUES");
+		totalesAnterior++;
+		char * totalesActualesChar = string_itoa(totalesAnterior);
+		config_set_value(configTablaArchivo, "CANTIDAD_BLOQUES",
+				totalesActualesChar);
+
 		//Actualizo el numero de bloques
 		numeroBloque++;
 
@@ -72,6 +80,7 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 		free(buffer);
 		free(nodoElegido);
 		free(nodoElegidoCopia);
+		free(totalesActualesChar);
 	}
 
 	config_destroy(configTablaArchivo);

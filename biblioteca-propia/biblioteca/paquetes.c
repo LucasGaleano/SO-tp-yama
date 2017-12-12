@@ -581,6 +581,6 @@ t_nodos_bloques * recibirListaNodoBloques(t_paquete * unPaquete){
 	 return deserializarListaNodoBloques(unPaquete->buffer); //TODO HACER CLICK EN LA FN() Y TERMINAR LA DESERIALIZACION
 }
 
-t_resultado_transformacion* recibirResultadoTransformacion(t_paquete* unPaquete){
-	return deserializarResultadoTransformacion(unPaquete->buffer);
-}
+//t_resultado_transformacion* recibirResultadoTransformacion(t_paquete* unPaquete){
+//	return deserializarResultadoTransformacion(unPaquete->buffer);
+//}

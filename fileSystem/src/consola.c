@@ -199,6 +199,7 @@ void ejecutarExit(bool * ejecutar) {
 
 void formatearFilesystem() {
 	formateado = true;
+	estadoEstable = true;
 
 	destruirTablaNodos();
 	destruirTablaDirectorios();
