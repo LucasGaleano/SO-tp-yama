@@ -402,10 +402,16 @@ void procesarNombre(t_paquete * unPaquete, int * client_socket) {
 		tablaNodos->libres += nodo->libre;
 
 		persistirTablaNodos();
+
+		if (verificarEstadoEstable()){
+			estadoEstable = true;
+			printf("Estoy en estado estable \n");
+		} else {
+			printf("No estoy en estado estable \n");
+		}
+
 	}
 
-	if (verificarEstadoEstable())
-		estadoEstable = true;
 
 	free(nodo->ip);
 	free(nodo->nombre);
@@ -480,9 +486,15 @@ void consideroEstadoAnterior() {
 bool verificarEstadoEstable() {
 	t_list * listaArchivos = buscarTodosArchivos();
 
+	bool estoyEnEstadoEstable(char * rutaArchivo){
+		return soyEstable(rutaArchivo);
+	}
+
+	bool todosEstanEstables = list_all_satisfy(listaArchivos,(void*)estoyEnEstadoEstable);
+
 	list_destroy_and_destroy_elements(listaArchivos, free);
 
-	return false;
+	return todosEstanEstables;
 }
 
 t_list * buscarTodosArchivos() {

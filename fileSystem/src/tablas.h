@@ -76,6 +76,7 @@ void 						guardoBytesPorBloque			(int, int, t_config *);
 t_list *					buscarBloque					(t_config *, int);
 char **						buscarBloqueCopia				(t_config *, int, int);
 int 						buscarTamBloque					(t_config *, int);
+bool						soyEstable						(char *);
 
 /*-------------------------Tabla de nodos-------------------------*/
 void	 					crearTablaNodos					(char *);
@@ -94,7 +95,7 @@ char * 						eliminarNodoTablaSockets		(int);
 int 						buscarSocketPorNombre			(char *);
 char * 						buscarNombrePorSocket			(int);
 void 						modificarNodoTablaSockets		(char *, int);
-t_tabla_sockets_ip_puerto * buscarIpPuertoPorNombre	(char *);
+t_tabla_sockets_ip_puerto * buscarIpPuertoPorNombre			(char *);
 
 /*-------------------------Tabla de Bitmap-------------------------*/
 void 						crearArchivoTablaBitmap			(t_nodo_info *);
