@@ -206,12 +206,12 @@ void formatearFilesystem() {
 	destruirTablaTareas();
 
 	char * archivoDirectorio = string_new();
-	string_append(&archivoDirectorio,RUTA_METADATA);
+	string_append(&archivoDirectorio, RUTA_METADATA);
 	borrarArchivosDirectorios("metadata/bitmaps");
 
 	char * ruta = string_new();
-	string_append(&ruta,RUTA_METADATA);
-	string_append(&ruta,"metadata");
+	string_append(&ruta, RUTA_METADATA);
+	string_append(&ruta, "metadata");
 	crearTablaNodos(ruta);
 	crearTablaDirectorios(ruta);
 
@@ -227,6 +227,12 @@ void formatearFilesystem() {
 }
 
 void eliminarArchivo(char * linea) {
+	if (!estadoEstable) {
+		printf(
+				"El proceso FileSystem está en un estado no estable y por lo tanto no puede borrar archivos \n");
+		return;
+	}
+
 	char * path_archivo = obtenerParametro(linea, 1);
 
 	if (path_archivo == NULL)
@@ -277,26 +283,26 @@ void eliminarArchivo(char * linea) {
 	}
 
 	//Marco como libre los bloques en el bitmap de cada nodo
-	int cantBloques = config_get_int_value(configArchivo,"CANTIDAD_BLOQUES");
+	int cantBloques = config_get_int_value(configArchivo, "CANTIDAD_BLOQUES");
 
 	int i;
 
 	for (i = 0; i < cantBloques; i++) {
 
-		t_list * listaBloques = buscarBloque(configArchivo,i);
+		t_list * listaBloques = buscarBloque(configArchivo, i);
 
-		void liberar(t_nodoBloque * nodoBloque){
+		void liberar(t_nodoBloque * nodoBloque) {
 			liberarBloqueTablaNodos(nodoBloque->nomNodo, nodoBloque->bloque);
 		}
 
-		list_iterate(listaBloques,(void*)liberar);
+		list_iterate(listaBloques, (void*) liberar);
 
-		void eliminar(t_nodoBloque * nodoBloque){
+		void eliminar(t_nodoBloque * nodoBloque) {
 			free(nodoBloque->nomNodo);
 			free(nodoBloque);
 		}
 
-		list_destroy_and_destroy_elements(listaBloques,(void*)eliminar);
+		list_destroy_and_destroy_elements(listaBloques, (void*) eliminar);
 
 	}
 
@@ -388,6 +394,12 @@ void eliminarDirectorio(char * linea) {
 }
 
 void eliminarBloque(char * linea) {
+	if (!estadoEstable) {
+		printf(
+				"El proceso FileSystem está en un estado no estable y por lo tanto no puede eliminar bloque \n");
+		return;
+	}
+
 	char * path_archivo = obtenerParametro(linea, 2);
 
 	if (path_archivo == NULL)
@@ -561,11 +573,11 @@ void eliminarBloque(char * linea) {
 	config_save(configArchivo);
 
 	//Actualizo el valor total de bloques
-	int totalesAnterior = config_get_int_value(configArchivo, "CANTIDAD_BLOQUES");
-	totalesAnterior --;
+	int totalesAnterior = config_get_int_value(configArchivo,
+			"CANTIDAD_BLOQUES");
+	totalesAnterior--;
 	char * totalesActualesChar = string_itoa(totalesAnterior);
 	config_set_value(configArchivo, "CANTIDAD_BLOQUES", totalesActualesChar);
-
 
 	//Libero memoria
 	free(path_archivo);
@@ -583,6 +595,12 @@ void eliminarBloque(char * linea) {
 }
 
 void modificar(char * linea) {
+	if (!estadoEstable) {
+		printf(
+				"El proceso FileSystem está en un estado no estable y por lo tanto no puede modificar archivos \n");
+		return;
+	}
+
 	char * path_original = obtenerParametro(linea, 1);
 
 	if (path_original == NULL)
@@ -686,6 +704,12 @@ void modificar(char * linea) {
 }
 
 void mostrarContenidoArchivo(char * linea) {
+	if (!estadoEstable) {
+		printf(
+				"El proceso FileSystem está en un estado no estable y por lo tanto no puede mostrar el contenido de archivos \n");
+		return;
+	}
+
 	char * path_archivo = obtenerParametro(linea, 1);
 
 	if (path_archivo == NULL)
@@ -764,6 +788,12 @@ void crearDirectorio(char * linea) {
 }
 
 void copiarArchivoLocalAlYamafsInterfaz(char * linea) {
+	if (!estadoEstable) {
+		printf(
+				"El proceso FileSystem está en un estado no estable y por lo tanto no puede almacenar archivos en FS distribuido\n");
+		return;
+	}
+
 	char * path_archivo_origen = obtenerParametro(linea, 1);
 
 	if (path_archivo_origen == NULL)
@@ -811,6 +841,12 @@ void copiarArchivoLocalAlYamafsInterfaz(char * linea) {
 }
 
 void copiarArchivoYamafsALocal(char * linea) {
+	if (!estadoEstable) {
+		printf(
+				"El proceso FileSystem está en un estado no estable y por lo tanto no puede almacenar archivos en FS local \n");
+		return;
+	}
+
 	char * path_archivo_origen = obtenerParametro(linea, 1);
 
 	if (path_archivo_origen == NULL)
@@ -859,6 +895,12 @@ void copiarArchivoYamafsALocal(char * linea) {
 }
 
 void crearCopiaBloqueEnNodo(char * linea) {
+	if (!estadoEstable) {
+		printf(
+				"El proceso FileSystem está en un estado no estable y por lo tanto no puede crear copia de bloque \n");
+		return;
+	}
+
 	char * rutaArchivo = obtenerParametro(linea, 1);
 
 	if (rutaArchivo == NULL)
@@ -916,8 +958,8 @@ void crearCopiaBloqueEnNodo(char * linea) {
 	while (string_equals_ignore_case(bloqueBuscado[0], "#")) {
 		i++;
 		destruirSubstring(bloqueBuscado);
-		bloqueBuscado = buscarBloqueCopia(configArchivo, atoi(numeroBloqueArchivo),
-				i);
+		bloqueBuscado = buscarBloqueCopia(configArchivo,
+				atoi(numeroBloqueArchivo), i);
 	}
 
 	//Pido la info del bloque buscado
@@ -937,6 +979,12 @@ void crearCopiaBloqueEnNodo(char * linea) {
 }
 
 void solicitarHash(char * linea) {
+	if (!estadoEstable) {
+		printf(
+				"El proceso FileSystem está en un estado no estable y por lo tanto no puede solicitar el hash \n");
+		return;
+	}
+
 	char * path_archivo_yamafs = obtenerParametro(linea, 1);
 
 	if (path_archivo_yamafs == NULL)

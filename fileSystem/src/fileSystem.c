@@ -129,6 +129,16 @@ void procesarError(t_paquete * unPaquete, int * client_socket) {
 	t_nodo_info * nodo = list_find(tablaNodos->infoDeNodo, (void*) esNodo);
 	nodo->disponible = false;
 
+	//Verifico si el FS queda en estado estable
+	if (verificarEstadoEstable()) {
+		log_warning(logFileSystem,
+				"Se desconecto un Nodo pero el FS queda en estado estable");
+	} else {
+		log_warning(logFileSystem,
+				"Se desconecto un Nodo y el FS paso a estar en estado no estable");
+		estadoEstable = false;
+	}
+
 	//Libero memoria
 	free(nomNodo);
 }
@@ -455,7 +465,8 @@ void procesarEnviarRutaArchivoRutaDestino(t_paquete * unPaquete,
 	posicion -= 1;
 
 	//Almaceno el archivo en el FS
-	almacenarArchivo(rutaFS,archRuta->rutaDestino,separado[posicion],BINARIO);
+	almacenarArchivo(rutaFS, archRuta->rutaDestino, separado[posicion],
+			BINARIO);
 
 	//Borro el archivo temporal
 	remove(rutaFS);
