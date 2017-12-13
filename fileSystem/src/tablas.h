@@ -63,6 +63,7 @@ t_list * tablaTareas;
 bool bitMapDirectorio[100];
 
 t_log* logFileSystem;
+bool estadoEstable;
 
 /*-------------------------Tabla de directorios-------------------------*/
 void 						crearTablaDirectorios			(char *);

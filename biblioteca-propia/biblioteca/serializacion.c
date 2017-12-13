@@ -286,12 +286,12 @@ void serializarSolicitudReduccionLocal(t_paquete * unPaquete,
 void serializarSolicitudReduccionGlobal(t_paquete * unPaquete,
 		t_pedidoReduccionGlobal * solicitud) {
 
-	int tamDireccion = string_length(solicitud->ip) + 1;
-	int tamPuerto = string_length(solicitud->puerto) + 1;
-	int tamArchivoReduccionPorWorker = string_length(
+	int tamDireccion = strlen(solicitud->ip) + 1;
+	int tamPuerto = strlen(solicitud->puerto) + 1;
+	int tamArchivoReduccionPorWorker = strlen(
 			solicitud->archivoReduccionPorWorker) + 1;
 	int tamWorkerEncargdo = sizeof(int);
-	int tamArchivoResultadoReduccionGlobal = string_length(
+	int tamArchivoResultadoReduccionGlobal = strlen(
 			solicitud->ArchivoResultadoReduccionGlobal) + 1;
 	int cantidadWorker = sizeof(int);
 
@@ -305,10 +305,6 @@ void serializarSolicitudReduccionGlobal(t_paquete * unPaquete,
 	unPaquete->buffer->data = malloc(tamTotal);
 
 	int desplazamiento = 0;
-
-	memcpy(unPaquete->buffer->data + desplazamiento,
-			&solicitud->cantWorkerInvolucradros, cantidadWorker);
-	desplazamiento += cantidadWorker;
 
 	memcpy(unPaquete->buffer->data + desplazamiento, solicitud->ip,
 			tamDireccion);
@@ -329,6 +325,11 @@ void serializarSolicitudReduccionGlobal(t_paquete * unPaquete,
 	memcpy(unPaquete->buffer->data + desplazamiento,
 			solicitud->ArchivoResultadoReduccionGlobal,
 			tamArchivoResultadoReduccionGlobal);
+	desplazamiento += tamArchivoResultadoReduccionGlobal;
+
+	memcpy(unPaquete->buffer->data + desplazamiento,
+				&solicitud->cantWorkerInvolucradros, cantidadWorker);
+		desplazamiento += cantidadWorker;
 }
 
 void serializarSolicitudAlmacenadoFinal(t_paquete * unPaquete,
@@ -686,8 +687,8 @@ void serializarRutaArchivoRutaDestino(t_paquete * unPaquete, void * rutaArchivo,
 	int tamRuta = strlen(rutaAGuardar) + 1;
 
 	unPaquete->buffer = malloc(sizeof(t_stream));
-	unPaquete->buffer->data = malloc(tamArch + tamRuta);
-	unPaquete->buffer->size = tamArch + tamRuta;
+	unPaquete->buffer->data = malloc(tamArch + tamRuta + sizeof(int));
+	unPaquete->buffer->size = tamArch + tamRuta + sizeof(int);
 
 	int desplazamiento = 0;
 
@@ -925,14 +926,14 @@ t_pedidoReduccionGlobal * deserializarSolicitudReduccionGlobal(
 			buffer->data + desplazamiento);
 	desplazamiento += strlen(solicitud->archivoReduccionPorWorker) + 1;
 
-	memcpy(&solicitud->workerEncargado, buffer->data, sizeof(int));
+	memcpy(&solicitud->workerEncargado, buffer->data + desplazamiento, sizeof(int));
 	desplazamiento += sizeof(int);
 
 	solicitud->ArchivoResultadoReduccionGlobal = strdup(
 			buffer->data + desplazamiento);
 	desplazamiento += strlen(solicitud->ArchivoResultadoReduccionGlobal) + 1;
 
-	memcpy(&solicitud->cantWorkerInvolucradros, buffer->data, sizeof(int));
+	memcpy(&solicitud->cantWorkerInvolucradros, buffer->data + desplazamiento, sizeof(int));
 	desplazamiento += sizeof(int);
 
 	return solicitud;

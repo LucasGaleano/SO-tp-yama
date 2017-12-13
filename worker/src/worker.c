@@ -175,22 +175,22 @@ void signal_capturer(int numeroSenial){
 	{
 
 		case 8:
-			enviarError(socketMaster,ENVIAR_ERROR_JOB);
+			enviarError(socketMaster,ERROR_MASTER);
 			log_error(logger, "Error de coma flotante");
 			_Exit(EXIT_FAILURE);
 			break;
 		case 11:
-			enviarError(socketMaster,ENVIAR_ERROR_JOB);
+			enviarError(socketMaster,ERROR_MASTER);
 			log_error(logger, "Se cierra por violacion al segmento");
 			_Exit(EXIT_FAILURE);
 			break;
 		case 16:
-			enviarError(socketMaster,ENVIAR_ERROR_JOB);
+			enviarError(socketMaster,ERROR_MASTER);
 			log_error(logger, "Se cierra por desbordamiento de pila");
 			_Exit(EXIT_FAILURE);
 			break;
 		default:
-			enviarError(socketMaster,ENVIAR_ERROR_JOB);
+			enviarError(socketMaster,ERROR_MASTER);
 			log_error(logger, "PROCESO WORKER CIERRA POR NUMERO DE SEÑAL %d", numeroSenial);
 			_Exit(EXIT_FAILURE);
 			break;
@@ -390,7 +390,11 @@ void recibirDatos(t_paquete * unPaquete, int * client_socket) {
 		p->palabra = recibirMensaje(unPaquete);
 		list_add(paquetesEsclavos, p);
 		if (paquetesEsclavos->elements_count == cantidadWorker)
+		{
 			reduccionGlobal();
+			enviarTareaCompletada(socketMaster, 1);
+			_Exit(EXIT_SUCCESS);
+		}
 		break;
 	case ENVIAR_PALABRA:
 		aux->palabra = recibirMensaje(unPaquete);
