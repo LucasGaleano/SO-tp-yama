@@ -283,6 +283,8 @@ char * leerArchivo(char * rutaArchivo) {
 	//Busco los bloques en los nodos
 	int bloque = 0;
 
+	if(!estadoEstable){return NULL;}
+
 	t_list * listaNodoBloque = buscarBloque(configArchivo, bloque);
 
 	while (!list_is_empty(listaNodoBloque)) {
@@ -292,8 +294,10 @@ char * leerArchivo(char * rutaArchivo) {
 		tarea->nomNodo = strdup(nodoBloque->nomNodo);
 		tarea->bloque = nodoBloque->bloque;
 
+		if(!estadoEstable){return NULL;}
 		list_add(tablaTareas, tarea);
 
+		if(!estadoEstable){return NULL;}
 		enviarSolicitudLecturaArchTemp(
 				buscarSocketPorNombre(nodoBloque->nomNodo), nodoBloque->bloque,
 				bloque);
@@ -308,14 +312,14 @@ char * leerArchivo(char * rutaArchivo) {
 
 		bloque++;
 
+		if(!estadoEstable){return NULL;}
 		listaNodoBloque = buscarBloque(configArchivo, bloque);
 	}
 
 	list_destroy(listaNodoBloque);
 
 	//Espero que lleguen todos los bloques
-	while (list_size(listaTemporal) < bloque)
-		;
+	while (list_size(listaTemporal) < bloque){if(!estadoEstable){return NULL;}}
 
 	//Creo el archivo temporal en base a la lista
 	bool odenarArchivo(t_respuestaLecturaArchTemp *primero,

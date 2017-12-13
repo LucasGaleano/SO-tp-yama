@@ -16,7 +16,7 @@
 
 /*------------------------Variables globales-------------------------*/
 bool formateado;
-bool estadoEstable;
+
 t_list* nodoSinFormatear;
 
 /*------------------------------Consola------------------------------*/

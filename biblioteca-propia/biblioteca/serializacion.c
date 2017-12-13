@@ -686,8 +686,8 @@ void serializarRutaArchivoRutaDestino(t_paquete * unPaquete, void * rutaArchivo,
 	int tamRuta = strlen(rutaAGuardar) + 1;
 
 	unPaquete->buffer = malloc(sizeof(t_stream));
-	unPaquete->buffer->data = malloc(tamArch + tamRuta);
-	unPaquete->buffer->size = tamArch + tamRuta;
+	unPaquete->buffer->data = malloc(tamArch + tamRuta + sizeof(int));
+	unPaquete->buffer->size = tamArch + tamRuta + sizeof(int);
 
 	int desplazamiento = 0;
 

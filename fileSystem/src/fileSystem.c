@@ -465,7 +465,13 @@ void procesarEnviarRutaArchivoRutaDestino(t_paquete * unPaquete,
 	posicion -= 1;
 
 	//Almaceno el archivo en el FS
-	almacenarArchivo(rutaFS, archRuta->rutaDestino, separado[posicion],
+	char * destino = string_new();
+	int i;
+	for(i=0;i<posicion;i++){
+		string_append(&destino,separado[i]);
+	}
+
+	almacenarArchivo(rutaFS, destino, separado[posicion],
 			BINARIO);
 
 	//Borro el archivo temporal
