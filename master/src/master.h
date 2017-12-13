@@ -1,6 +1,6 @@
 #ifndef _MASTER_H_
 #define _MASTER_H_
-
+#define ERROR_SOCKET  -1
 
 //---------------------INCLUDES----------------------------------------------//
 
@@ -34,7 +34,7 @@ typedef struct
 
 // --------------------------------- ENCABEZADOS ---------------------------------------------- //
 
-int leerConfiguracion();
+int leerConfiguracionYConectarYama();
 void liberarListas();
 void inicializarVariablesGlobales();
 void imprimirMetricas();
@@ -50,7 +50,7 @@ void liberarMemoria();
 void calcularTiempoTotalTransformacion();
 void calcularTiempoTotalReduccionLocal();
 void liberarReduGlobal(t_indicacionReduccionGlobal * ind);
-
+void procesarError();
 
 
 // ------------------------------------- VARIABLES GLOBALES --------------------------------- //
@@ -82,6 +82,8 @@ bool errorTransformacion;
 bool errorReduLocal;
 bool errorReduGlobal;
 bool errorAlmacenamiento;
+bool errorWorker;
+bool dejarDeRecibirSolicitudes;
 
 // ------------------------------------- SEMAFOROS E HILOS ----------------------------------------------- //
 
