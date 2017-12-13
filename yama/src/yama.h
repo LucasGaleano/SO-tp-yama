@@ -71,6 +71,7 @@ void 							procesarEnviarListaNodoBloques			(t_paquete * unPaquete);
 void							procesarEnviarIndicacionTransformacion	(t_paquete * unPaquete);
 void							procesarTareaCompleta					(t_paquete * unPaquete, int *client_socket);
 void 							procesarResultadoTranformacion			(t_paquete * unPaquete, int *client_socket);
+void 							procesarResultadoReduccionLocal			(t_paquete* unPaquete, int *client_socket);
 
 /*----------------------------------Procesamiento de nodos y bloques-----------------------------------*/
 t_list* 						agruparNodosPorBloque					(t_list*);

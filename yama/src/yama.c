@@ -3,7 +3,8 @@
 int main(void) {
 
 	//Levanto el archivo de configuracion
-	char* path_config_yama ="/home/utnso/workspace/tp-2017-2c-NULL/configuraciones/yama.cfg";
+	char* path_config_yama =
+			"/home/utnso/workspace/tp-2017-2c-NULL/configuraciones/yama.cfg";
 
 	configuracion = leerArchivoDeConfiguracionYAMA(path_config_yama);
 
@@ -27,7 +28,6 @@ int main(void) {
 		exit(EXIT_FAILURE);
 	}
 
-
 	destruirConfiguracion(configuracion);
 //	list_destroy_and_destroy_elements(tabla_de_estados, (void*) eliminarElemento() ); //TODO PREGUNTAR SI ESTA BIEN LIBERAR DESPUES DE USAR
 
@@ -43,10 +43,13 @@ t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 
 	configuracion->ip = config_get_string_value(config, "FS_IP");
 	configuracion->puerto = config_get_string_value(config, "FS_PUERTO");
-	configuracion->retardo = config_get_int_value(config, "RETARDO_PLANIFICACION");
-	configuracion->algoritmo = config_get_string_value(config, "ALGORITMO_BALANCEO");
+	configuracion->retardo = config_get_int_value(config,
+			"RETARDO_PLANIFICACION");
+	configuracion->algoritmo = config_get_string_value(config,
+			"ALGORITMO_BALANCEO");
 	configuracion->puerto_yama = config_get_string_value(config, "PUERTO_YAMA");
-	configuracion->disponibilidad_base = config_get_int_value(config, "DISPONIBILIDAD_BASE");
+	configuracion->disponibilidad_base = config_get_int_value(config,
+			"DISPONIBILIDAD_BASE");
 
 	printf(
 			"Se levanto el proceso YAMA con: YAMA_PUERTO: %s  FS_IP: %s - FS_PUERTO: %s - RETARDO: %d - ALGORITMO: %s - DISPONIBILIDAD BASE: %d \n",
@@ -94,7 +97,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		procesarResultadoReduccionLocal(unPaquete, client_socket);
 		break;
 	case TAREA_COMPLETADA:
-		 ;
+		;
 		int resultado = recibirTareaCompletada(unPaquete);
 		//para reduccion global y almacenamiento. ALMACENAMIENTO_COMPLETADO, REDUCCION_GLOBAL
 		break;
@@ -135,7 +138,7 @@ void procesarRecibirError(t_paquete * unPaquete) { //supuestamente necesita un s
 
 	switch (error) {
 	case ERROR_REDUCCION_LOCAL:
-		printf("[-]fallo reduccion local");  //todo agregar error a todos los job
+		printf("[-]fallo reduccion local"); //todo agregar error a todos los job
 		exit(EXIT_FAILURE);
 
 		break;
@@ -155,13 +158,13 @@ void procesarRecibirError(t_paquete * unPaquete) { //supuestamente necesita un s
 
 }
 
-
-void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete, int *client_socket) {
+void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete,
+		int *client_socket) {
 	char * nomArchivo = recibirMensaje(unPaquete);
 	enviarRutaParaArrancarTransformacion(socketFS, nomArchivo);
 }
 
-void procesarEnviarListaNodoBloques(t_paquete * unPaquete){
+void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 
 	int idJob = generarJob();
 
@@ -173,137 +176,155 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete){
 	t_list* listaBloquesConNodos = agruparNodosPorBloque(listaNodoBloque); // LISTA DE BLOQUES CON LOS NODOS DONDE ESTA
 	t_list* nodosSinRepetidos = extraerNodosSinRepetidos(listaNodoBloque); //SOLO LOS NOMBRE NODOS SIN REPETIDOS
 
-	void agregarATablaPlanificador(char* nombreNodo){
+	void agregarATablaPlanificador(char* nombreNodo) {
 		planificador_agregarWorker(tablaPlanificador, nombreNodo);
 	}
 
-	list_iterate(nodosSinRepetidos,(void*) agregarATablaPlanificador);
+	list_iterate(nodosSinRepetidos, (void*) agregarATablaPlanificador);
 
-	planificador(configuracion->algoritmo, listaBloquesConNodos, tablaPlanificador, configuracion->disponibilidad_base);
+	planificador(configuracion->algoritmo, listaBloquesConNodos,
+			tablaPlanificador, configuracion->disponibilidad_base);
 
 	t_list* indicacionesDeTransformacionParaMaster = list_create();
 
-	void armarIndicacionDeTransformacionPorRegistro(t_registro_Tabla_Planificador* registroTabla){
-		t_indicacionTransformacion* indicacionTransformacion = malloc(sizeof(t_indicacionTransformacion));//TODO LIBERAR
+	void armarIndicacionDeTransformacionPorRegistro(
+			t_registro_Tabla_Planificador* registroTabla) {
+		t_indicacionTransformacion* indicacionTransformacion = malloc(
+				sizeof(t_indicacionTransformacion)); //TODO LIBERAR
 
 		int idNodo = registroTabla->id;
 		char* nombreNodo = obtenerNombreNodoDesdeId(idNodo);
 
-		t_puerto_ip* direccionNodo = buscarIpYPuertoConNombreNodo(nombreNodo, listaDireccionesNodos);
-		int tamanioArchivo = buscarTamanioArchivoConNombreNodo(nombreNodo, listaNodoBloque);
+		t_puerto_ip* direccionNodo = buscarIpYPuertoConNombreNodo(nombreNodo,
+				listaDireccionesNodos);
+		int tamanioArchivo = buscarTamanioArchivoConNombreNodo(nombreNodo,
+				listaNodoBloque);
 
-		void armarIndicacionDeTransformacionPorBloque(int numeroBloque){
+		void armarIndicacionDeTransformacionPorBloque(int numeroBloque) {
 			indicacionTransformacion->estado = PROCESANDO;
 			indicacionTransformacion->ip = direccionNodo->ip;
 			indicacionTransformacion->puerto = direccionNodo->puerto;
-			indicacionTransformacion->nodo = nombreNodo;				//TODO REVISAR SI HAY QUE RESERVAR MEMORIA
+			indicacionTransformacion->nodo = nombreNodo;//TODO REVISAR SI HAY QUE RESERVAR MEMORIA
 			indicacionTransformacion->bytes = tamanioArchivo;
 
-			int bloqueNodo = mapearBloqueArchivoABloqueNodo(listaNodoBloque, nombreNodo, numeroBloque);
+			int bloqueNodo = mapearBloqueArchivoABloqueNodo(listaNodoBloque,
+					nombreNodo, numeroBloque);
 			indicacionTransformacion->bloque = bloqueNodo;
-			indicacionTransformacion->rutaArchivoTemporal = nombreArchivoTemp(prefijoArchivosTemporalesTranformacion);
+			indicacionTransformacion->rutaArchivoTemporal = nombreArchivoTemp(
+					prefijoArchivosTemporalesTranformacion);
 
-			list_add(indicacionesDeTransformacionParaMaster, indicacionTransformacion);
+			list_add(indicacionesDeTransformacionParaMaster,
+					indicacionTransformacion);
 		}
-		list_iterate(registroTabla->listaBloques, (void*) armarIndicacionDeTransformacionPorBloque);
+		list_iterate(registroTabla->listaBloques,
+				(void*) armarIndicacionDeTransformacionPorBloque);
 	}
-	list_iterate(tablaPlanificador, (void*) armarIndicacionDeTransformacionPorRegistro);
+	list_iterate(tablaPlanificador,
+			(void*) armarIndicacionDeTransformacionPorRegistro);
 
-	void registrarYEnviarAMaster(t_indicacionTransformacion* indicacionDeTransformacion){
+	void registrarYEnviarAMaster(
+			t_indicacionTransformacion* indicacionDeTransformacion) {
 
 		//REGISTRAR EN TABLA DE ESTADO EL JOB
-		agregarRegistro(idJob, nodosBloques->masterSolicitante, indicacionDeTransformacion->nodo,
-				indicacionDeTransformacion->bloque, TRANSFORMACION, indicacionDeTransformacion->rutaArchivoTemporal,
-				PROCESANDO);
+		agregarRegistro(idJob, nodosBloques->masterSolicitante,
+				indicacionDeTransformacion->nodo,
+				indicacionDeTransformacion->bloque, TRANSFORMACION,
+				indicacionDeTransformacion->rutaArchivoTemporal, PROCESANDO);
 
 		//ENVIAR A MASTER LA INDICACION
-		enviarIndicacionTransformacion(nodosBloques->masterSolicitante, indicacionDeTransformacion);
+		enviarIndicacionTransformacion(nodosBloques->masterSolicitante,
+				indicacionDeTransformacion);
 	}
 
-	list_iterate(indicacionesDeTransformacionParaMaster, (void*) registrarYEnviarAMaster);
+	list_iterate(indicacionesDeTransformacionParaMaster,
+			(void*) registrarYEnviarAMaster);
 }
 
 void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
-	t_indicacionTransformacion* resultado = recibirIndicacionTransformacion(unPaquete);//todo falta librerar resultado
+	t_indicacionTransformacion* resultado = recibirIndicacionTransformacion(
+			unPaquete);				//todo falta librerar resultado
 
 	//ACTUALIZAR REGISTRO Y CONTINUAR O REPLANIFICAR ALGUN BLOQUE (VER REPLANIFICACION)
 	//todo FIJARSE QUE PASA CON LA TABLA DE ESTADO EN EL CASO DE QUE FALLE ALGUNA ETAPA
 
 	if (resultado->estado == FINALIZADO_OK) {
 
-		planificador_sumarWLWorker(tablaPlanificador, extraerIddelNodo(resultado->nodo), -1); //le saco carga de trabaja al nodo
+		planificador_sumarWLWorker(tablaPlanificador,
+				extraerIddelNodo(resultado->nodo), -1); //le saco carga de trabaja al nodo
 
-		modificarEstadoDeRegistroPorNodoYBloque(client_socket,
-				resultado->nodo,
-				resultado->bloque, TRANSFORMACION,
-				FINALIZADO_OK);
+		modificarEstadoDeRegistro(-1, *client_socket, resultado->nodo,
+				resultado->bloque, TRANSFORMACION, FINALIZADO_OK);
 
 		//MIRAR SI PARA UN MISMO NODO, TERMINARON TODAS LAS TRANSFORMACIONES
 
-		if (terminoUnNodoLaTransformacion( resultado->nodo, TRANSFORMACION, PROCESANDO)) {
+		if (buscarRegistro(-1, -1, resultado->nodo, -1, TRANSFORMACION,
+				PROCESANDO, NULL) == NULL) {
 
 			//SI -> MANDAR A HACER TODAS LAS REDUCCIONES LOCALES DE ESE NODO
-
 
 			//recorrer la tabla registros y enviar paquete reduccion local por cada nodo terminado
 
 			int i = 0;
 			int tam = list_size(tabla_de_estados);
-			while (tam > i)
-				{
+			while (tam > i) {
 
 				t_elemento_tabla_estado * reg = list_get(tabla_de_estados, i);
 
-				if (string_equals_ignore_case(reg->nodo,resultado->nodo))
-				{
-					t_indicacionReduccionLocal* indReducLocal = malloc(sizeof(t_indicacionReduccionLocal));
+				if (string_equals_ignore_case(reg->nodo, resultado->nodo)) {
+					t_indicacionReduccionLocal* indReducLocal = malloc(
+							sizeof(t_indicacionReduccionLocal));
 					indReducLocal->nodo = string_duplicate(resultado->nodo);
 					indReducLocal->ip = string_duplicate(resultado->ip);
 					indReducLocal->puerto = string_duplicate(resultado->puerto);
 					indReducLocal->archivoTemporalTransformacion =
 							string_duplicate(resultado->rutaArchivoTemporal);
-					indReducLocal->archivoTemporalReduccionLocal = nombreArchivoTemp(prefijoArchivosTemporalesReduLocal);
-
-
+					indReducLocal->archivoTemporalReduccionLocal =
+							nombreArchivoTemp(
+									prefijoArchivosTemporalesReduLocal);
 
 					//ACTUALIZAR TABLA DE ESTADO AVANZANDO LA ETAPA
 
-					agregarRegistro(reg->job, client_socket, indReducLocal->nodo,
-							reg->bloque, REDUCCION_LOCAL,
+					agregarRegistro(reg->job, *client_socket,
+							indReducLocal->nodo, reg->bloque, REDUCCION_LOCAL,
 							indReducLocal->archivoTemporalReduccionLocal,
 							PROCESANDO);
 
-					enviarIndicacionReduccionLocal(client_socket, indReducLocal);
+					enviarIndicacionReduccionLocal(*client_socket,
+							indReducLocal);
 					IndicReducLocal_destroy(indReducLocal);
 
 				}
 				i++;
-				}
+			}
 
 		}
-
-
 
 	}
 }
 
-void procesarResultadoReduccionLocal(t_paquete* unPaquete, int *client_socket){
+void procesarResultadoReduccionLocal(t_paquete* unPaquete, int *client_socket) {
 
-	t_indicacionReduccionLocal * indicReduLocal = recibirIndicacionReduccionLocal(unPaquete);
+	t_indicacionReduccionLocal * indicReduLocal =
+			recibirIndicacionReduccionLocal(unPaquete);
 
+	modificarEstadoDeRegistro(-1, -1, indicReduLocal->nodo, -1, REDUCCION_LOCAL,
+			FINALIZADO_OK);
 
+	t_elemento_tabla_estado* registro = buscarRegistro(-1, -1, NULL, -1, -1, -1,
+			indicReduLocal->archivoTemporalTransformacion);
 
+	if (buscarRegistro(registro->job, -1, indicReduLocal->nodo, -1,
+			REDUCCION_LOCAL, PROCESANDO, NULL) == NULL) {
 
+		enviarTareaCompletada(*client_socket, NO_CONTINUA);
 
-
-
+	}
 }
-
 
 /*-------------------------Funciones auxiliares-------------------------*/
 
-
-void destruirIndicacionDeTransformacion(t_indicacionTransformacion* indTransform) {
+void destruirIndicacionDeTransformacion(
+		t_indicacionTransformacion* indTransform) {
 	free(indTransform->nodo);
 	free(indTransform->ip);
 	free(indTransform->puerto);
@@ -345,12 +366,14 @@ t_list* agruparNodosPorBloque(t_list* listaDeNodoBloque) {
 	t_list* listaBloquesConListaDeNodos = list_create(); //TODO LIBERAR MEMORIA
 
 	void obtenerNodosDeBloque(int numeroBloque) {
-		t_nodos_por_bloque* bloqueConListaNodos = malloc(sizeof(t_nodos_por_bloque)); //TODO LIBERAR MEMORIA
+		t_nodos_por_bloque* bloqueConListaNodos = malloc(
+				sizeof(t_nodos_por_bloque)); //TODO LIBERAR MEMORIA
 		int y = 0;
 		for (; y < listaDeNodoBloque->elements_count; y++) {
 			t_nodo_bloque* nodoBloque = list_get(listaDeNodoBloque, y);
 			if (numeroBloque == nodoBloque->bloqueArchivo) {
-				list_add(bloqueConListaNodos->nodosEnLosQueEsta, nodoBloque->nomNodo);
+				list_add(bloqueConListaNodos->nodosEnLosQueEsta,
+						nodoBloque->nomNodo);
 			}
 		}
 		list_add(listaBloquesConListaDeNodos, bloqueConListaNodos);
@@ -361,7 +384,7 @@ t_list* agruparNodosPorBloque(t_list* listaDeNodoBloque) {
 	return listaBloquesConListaDeNodos;
 }
 
-t_list* extraerNodosSinRepetidos(t_list* listaDeNodoBloque){
+t_list* extraerNodosSinRepetidos(t_list* listaDeNodoBloque) {
 
 	t_list* nodosSinRepetidos = list_create(); //TODO LIBERAR LISTA
 
@@ -369,7 +392,8 @@ t_list* extraerNodosSinRepetidos(t_list* listaDeNodoBloque){
 		bool booleano = false;
 		int x = 0;
 		for (; x < nodosSinRepetidos->elements_count; x++) {
-			if (string_equals_ignore_case(list_get(nodosSinRepetidos, x), nombreNodo)) {
+			if (string_equals_ignore_case(list_get(nodosSinRepetidos, x),
+					nombreNodo)) {
 				booleano = true;
 				break;
 			}
@@ -396,7 +420,7 @@ void destruirConfiguracion(t_configuracion * configuracion) {
 	free(configuracion);
 }
 
-char* obtenerNombreNodoDesdeId(int idNodo){
+char* obtenerNombreNodoDesdeId(int idNodo) {
 	char* prefijoNodo = string_new();
 	char* numeroNodo = string_itoa(idNodo);
 	string_append(&prefijoNodo, numeroNodo);
@@ -404,8 +428,7 @@ char* obtenerNombreNodoDesdeId(int idNodo){
 	return prefijoNodo;
 }
 
-
-void IndicReducLocal_destroy(t_indicacionReduccionLocal* indReducLocal){
+void IndicReducLocal_destroy(t_indicacionReduccionLocal* indReducLocal) {
 
 	free(indReducLocal->archivoTemporalReduccionLocal);
 	free(indReducLocal->archivoTemporalTransformacion);

@@ -27,7 +27,7 @@ void agregarRegistro(int job, int master, char * nombreNodo, int bloque, int eta
 }
 
 void modificarEstadoDeRegistro(int job, int master, char* nombreNodo, int bloque, int etapa, int nuevoEstado){
-	t_elemento_tabla_estado* elemento = buscarRegistro(job, master, nombreNodo, bloque, etapa);
+	t_elemento_tabla_estado* elemento = buscarRegistro(job, master, nombreNodo, bloque, etapa, -1, NULL);
 	elemento->estado = nuevoEstado;
 }
 
@@ -51,36 +51,35 @@ void eliminarRegistro(int job, int master, char* nombreNodo, int bloque, int eta
 	list_remove_and_destroy_by_condition(tabla_de_estados, (void*) esRegistroBuscado, (void*) liberarRegistro);
 }
 
-t_elemento_tabla_estado* buscarRegistro(int job, int master, char* nombreNodo, int bloque, int etapa){
+t_elemento_tabla_estado* buscarRegistro(int job, int master, char* nombreNodo, int bloque, int etapa,int estado, char* archivo){
 	bool esRegistroBuscado(t_elemento_tabla_estado* elemento){
-			bool esJobIgual = elemento->job == job;
-			bool esMasterIgual = elemento->master == master;
-			bool esBloqueIgual = elemento->bloque == bloque;
-			bool esEtapaIgual = elemento->etapa == etapa;
-			bool esNombreNodoIgual = string_equals_ignore_case(elemento->nodo, nombreNodo);
 
-			return esJobIgual && esMasterIgual && esBloqueIgual && esNombreNodoIgual && esEtapaIgual;
+		bool esJobIgual = true;
+		bool esMasterIgual = true;
+		bool esBloqueIgual = true;
+		bool esEtapaIgual = true;
+		bool esNombreNodoIgual = true;
+		bool esEstadoIgual = true;
+		bool esArchivoIgual = true;
+			if(job!=-1)
+				esJobIgual = elemento->job == job;
+			if(master!=-1)
+				esMasterIgual = elemento->master == master;
+			if(bloque!=NULL)
+				esBloqueIgual = elemento->bloque == bloque;
+			if(etapa!=-1)
+				esEtapaIgual = elemento->etapa == etapa;
+			if(nombreNodo!=NULL)
+				esNombreNodoIgual = string_equals_ignore_case(elemento->nodo, nombreNodo);
+			if(estado!=-1)
+				esEstadoIgual = elemento->estado = estado;
+			if(archivo!=NULL)
+				esEstadoIgual = string_equals_ignore_case(elemento->nombreArchivoTemporal, archivo);
+
+			return esJobIgual && esMasterIgual && esBloqueIgual && esNombreNodoIgual && esEtapaIgual && esEstadoIgual;
 		}
 
 		return list_find(tabla_de_estados, (void*)esRegistroBuscado);
-}
-
-t_elemento_tabla_estado* buscarRegistroPorNodoYBloque(int master, char* nombreNodo, int bloque, int etapa){ //lo mismo sin el job
-	bool esRegistroBuscado(t_elemento_tabla_estado* elemento){
-			bool esMasterIgual = elemento->master == master;
-			bool esBloqueIgual = elemento->bloque == bloque;
-			bool esEtapaIgual = elemento->etapa == etapa;
-			bool esNombreNodoIgual = string_equals_ignore_case(elemento->nodo, nombreNodo);
-
-			return esMasterIgual && esBloqueIgual && esNombreNodoIgual && esEtapaIgual;
-		}
-
-		return list_find(tabla_de_estados, (void*)esRegistroBuscado);
-}
-
-void modificarEstadoDeRegistroPorNodoYBloque(int master, char* nombreNodo, int bloque, int etapa, int nuevoEstado){
-	t_elemento_tabla_estado* elemento = buscarRegistroPorNodoYBloque(master, nombreNodo, bloque, etapa);
-	elemento->estado = nuevoEstado;
 }
 
 t_elemento_tabla_estado* TerminoElNodo(char* nombreNodo,int etapa,int estado){
