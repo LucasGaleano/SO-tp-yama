@@ -36,12 +36,6 @@ int main(int argc, char **argv) {
 	//Libero memoria
 	log_destroy(logger);
 	config_destroy(conf);
-	free(ipFS);
-	free(puertoFS);
-	free(nombreNodo);
-	free(rutaDatabin);
-	free(ipNodo);
-	free(puertoNodo);
 
 	return EXIT_SUCCESS;
 }

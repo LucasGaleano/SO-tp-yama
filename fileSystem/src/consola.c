@@ -125,6 +125,7 @@ void ejecutarComando(char * linea, bool * ejecutar) {
 	if (string_starts_with(linea, "pruebaT")) {
 		almacenarArchivo("/home/utnso/Escritorio/nombres.csv", "base", "prueba",
 				TEXTO);
+		printf("Termine de almacenar el archivo \n");
 
 		return;
 	}
@@ -132,6 +133,7 @@ void ejecutarComando(char * linea, bool * ejecutar) {
 	if (string_starts_with(linea, "pruebaB")) {
 		almacenarArchivo("/home/utnso/Escritorio/Feraligatr4sotw-1.png", "base",
 				"prueba", BINARIO);
+		printf("Termine de almacenar el archivo \n");
 
 		return;
 	}

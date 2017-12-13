@@ -32,7 +32,7 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 			break;
 		case TEXTO:
 			buffer = dividirBloqueArchivoTexto(archivo, &desplazamiento);
-			tamBuffer = strlen(buffer);
+			tamBuffer = strlen(buffer) + 1;
 			//Verifico que el buffer no sea superior a el tamanio del bloque
 			if (tamBuffer > TAM_BLOQUE){
 				log_warning(logFileSystem,"El espacio del bloque no es suficiente para guardar el buffer \n");
