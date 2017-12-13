@@ -139,7 +139,6 @@ void recibirSolicitud(t_paquete * unPaquete, int * client_socket) {
 	default:
 		break;
 	}
-	log_destroy(logger);
 	destruirPaquete(unPaquete);
 }
 

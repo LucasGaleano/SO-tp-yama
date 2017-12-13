@@ -130,7 +130,7 @@ void procesarError(t_paquete * unPaquete, int * client_socket) {
 	nodo->disponible = false;
 
 	//Verifico si el FS queda en estado estable
-	if (verificarEstadoEstable()) {
+	if (verificarEstadoEstable()  && formateado) {
 		log_warning(logFileSystem,
 				"Se desconecto un Nodo pero el FS queda en estado estable");
 	} else {
