@@ -851,10 +851,10 @@ t_pedidoTransformacion * deserializarSolicitudTransformacion(t_stream * buffer) 
 	solicitud->rutaScriptTransformacion = strdup(buffer->data + desplazamiento);
 	desplazamiento += strlen(solicitud->rutaScriptTransformacion) + 1;
 
-	memcpy(&solicitud->numBloque, &buffer->data + desplazamiento, sizeof(int));
+	memcpy(&solicitud->numBloque, buffer->data + desplazamiento, sizeof(int));
 	desplazamiento += sizeof(int);
 
-	memcpy(&solicitud->cantBytes, &buffer->data + desplazamiento, sizeof(int));
+	memcpy(&solicitud->cantBytes, buffer->data + desplazamiento, sizeof(int));
 	desplazamiento += sizeof(int);
 
 	solicitud->rutaArchivoTemporal = strdup(buffer->data + desplazamiento);
@@ -896,14 +896,14 @@ t_pedidoReduccionGlobal * deserializarSolicitudReduccionGlobal(
 			buffer->data + desplazamiento);
 	desplazamiento += strlen(solicitud->archivoReduccionPorWorker) + 1;
 
-	memcpy(&solicitud->workerEncargado, &buffer->data, sizeof(int));
+	memcpy(&solicitud->workerEncargado, buffer->data, sizeof(int));
 	desplazamiento += sizeof(int);
 
 	solicitud->ArchivoResultadoReduccionGlobal = strdup(
 			buffer->data + desplazamiento);
 	desplazamiento += strlen(solicitud->ArchivoResultadoReduccionGlobal) + 1;
 
-	memcpy(&solicitud->cantWorkerInvolucradros, &buffer->data, sizeof(int));
+	memcpy(&solicitud->cantWorkerInvolucradros, buffer->data, sizeof(int));
 	desplazamiento += sizeof(int);
 
 	return solicitud;
