@@ -85,8 +85,13 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_LISTA_NODO_BLOQUES: //RECIBO LISTA DE ARCHIVOS DE FS CON UBICACIONES Y BLOQUES
 		procesarEnviarListaNodoBloques(unPaquete); //
 		break;
+
 	case ENVIAR_INDICACION_TRANSFORMACION:
 		procesarResultadoTranformacion(unPaquete, client_socket);
+		break;
+
+	case ENVIAR_INDICACION_REDUCCION_LOCAL:
+		procesarResultadoReduccionLocal(unPaquete, client_socket);
 		break;
 	case TAREA_COMPLETADA:
 		 ;
@@ -219,7 +224,7 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete){
 }
 
 void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
-	t_indicacionTransformacion* resultado = recibirIndicacionTransformacion(unPaquete);
+	t_indicacionTransformacion* resultado = recibirIndicacionTransformacion(unPaquete);//todo falta librerar resultado
 
 	//ACTUALIZAR REGISTRO Y CONTINUAR O REPLANIFICAR ALGUN BLOQUE (VER REPLANIFICACION)
 	//todo FIJARSE QUE PASA CON LA TABLA DE ESTADO EN EL CASO DE QUE FALLE ALGUNA ETAPA
@@ -238,19 +243,20 @@ void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
 		if (terminoUnNodoLaTransformacion( resultado->nodo, TRANSFORMACION, PROCESANDO)) {
 
 			//SI -> MANDAR A HACER TODAS LAS REDUCCIONES LOCALES DE ESE NODO
-			t_indicacionReduccionLocal* indReducLocal;
+
 
 			//recorrer la tabla registros y enviar paquete reduccion local por cada nodo terminado
 
 			int i = 0;
 			int tam = list_size(tabla_de_estados);
-			while (tam < i)
+			while (tam > i)
 				{
 
 				t_elemento_tabla_estado * reg = list_get(tabla_de_estados, i);
 
-				if (reg->nodo == resultado->nodo)
+				if (string_equals_ignore_case(reg->nodo,resultado->nodo))
 				{
+					t_indicacionReduccionLocal* indReducLocal = malloc(sizeof(t_indicacionReduccionLocal));
 					indReducLocal->nodo = string_duplicate(resultado->nodo);
 					indReducLocal->ip = string_duplicate(resultado->ip);
 					indReducLocal->puerto = string_duplicate(resultado->puerto);
@@ -263,24 +269,36 @@ void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
 					//ACTUALIZAR TABLA DE ESTADO AVANZANDO LA ETAPA
 
 					agregarRegistro(reg->job, client_socket, indReducLocal->nodo,
-							resultado->bloque, REDUCCION_LOCAL,
+							reg->bloque, REDUCCION_LOCAL,
 							indReducLocal->archivoTemporalReduccionLocal,
 							PROCESANDO);
 
-					enviarIndicacionReduccionLocal(client_socket,
-							indReducLocal);
-
+					enviarIndicacionReduccionLocal(client_socket, indReducLocal);
+					IndicReducLocal_destroy(indReducLocal);
 
 				}
 				i++;
 				}
-			IndicReducLocal_destroy(indReducLocal);
+
 		}
 
 
 
 	}
 }
+
+void procesarResultadoReduccionLocal(t_paquete* unPaquete, int *client_socket){
+
+	t_indicacionReduccionLocal * indicReduLocal = recibirIndicacionReduccionLocal(unPaquete);
+
+
+
+
+
+
+
+}
+
 
 /*-------------------------Funciones auxiliares-------------------------*/
 

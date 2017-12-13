@@ -119,7 +119,9 @@ bool terminoUnNodoLaTransformacion(char* nomNodo,int etapa, int estado){
 char* nombreArchivoTemp(char* prefijo){
 	char* nombre = string_new();
 	string_append(&nombre, prefijo);
-	string_append(&nombre, temporal_get_string_time());
+	char* hora = temporal_get_string_time();
+	string_append(&nombre, hora);
+	free(hora);
 	return nombre;
 }
 
