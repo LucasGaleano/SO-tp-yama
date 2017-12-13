@@ -224,7 +224,7 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete){
 }
 
 void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
-	t_indicacionTransformacion* resultado = recibirIndicacionTransformacion(unPaquete);
+	t_indicacionTransformacion* resultado = recibirIndicacionTransformacion(unPaquete);//todo falta librerar resultado
 
 	//ACTUALIZAR REGISTRO Y CONTINUAR O REPLANIFICAR ALGUN BLOQUE (VER REPLANIFICACION)
 	//todo FIJARSE QUE PASA CON LA TABLA DE ESTADO EN EL CASO DE QUE FALLE ALGUNA ETAPA
@@ -243,7 +243,7 @@ void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
 		if (terminoUnNodoLaTransformacion( resultado->nodo, TRANSFORMACION, PROCESANDO)) {
 
 			//SI -> MANDAR A HACER TODAS LAS REDUCCIONES LOCALES DE ESE NODO
-			t_indicacionReduccionLocal* indReducLocal;
+
 
 			//recorrer la tabla registros y enviar paquete reduccion local por cada nodo terminado
 
@@ -256,6 +256,7 @@ void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
 
 				if (string_equals_ignore_case(reg->nodo,resultado->nodo))
 				{
+					t_indicacionReduccionLocal* indReducLocal = malloc(sizeof(t_indicacionReduccionLocal));
 					indReducLocal->nodo = string_duplicate(resultado->nodo);
 					indReducLocal->ip = string_duplicate(resultado->ip);
 					indReducLocal->puerto = string_duplicate(resultado->puerto);
@@ -272,8 +273,7 @@ void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
 							indReducLocal->archivoTemporalReduccionLocal,
 							PROCESANDO);
 
-					enviarIndicacionReduccionLocal(client_socket,
-							indReducLocal);
+					enviarIndicacionReduccionLocal(client_socket, indReducLocal);
 					IndicReducLocal_destroy(indReducLocal);
 
 				}
