@@ -36,10 +36,14 @@ int main(void) {
 	//LEER ARCHIVO DE CONFIGURACION ---------------------------------------------------------
 
 	//int NOMBRE_NODO = config_get_string_value(conf,"NOMBRE_NODO");
-	char* PUERTO_WORKER = config_get_string_value(conf, "PUERTO_WORKER");
+	char* PUERTO_WORKER = "4000"; //config_get_string_value(conf, "PUERTO_WORKER");
 	RUTA_DATABIN = config_get_string_value(conf, "RUTA_DATABIN");
 	IP_FILESYSTEM = config_get_string_value(conf, "IP_FILESYSTEM"); // traigo los datos del archivo nodo.cfg
 	PUERTO_FILESYSTEM = config_get_string_value(conf, "PUERTO_FILESYSTEM");
+
+	signal(SIGFPE,signal_capturer);
+	signal(SIGSEGV,signal_capturer);
+	signal(16,signal_capturer);
 
 	iniciarServer(PUERTO_WORKER, (void *) procesarPaquete);
 
@@ -64,7 +68,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_SOLICITUD_TRANSFORMACION:
 		pid = fork();
 		if (pid < 0) {
-			enviarError(*client_socket, ERROR_TRANSFORMACION);
+			//enviarError(*client_socket, ERROR_TRANSFORMACION);
 			log_error(logger,
 					"No pudo crearse proceso hijo para antender operacion");
 			_Exit(EXIT_FAILURE);
@@ -88,6 +92,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 			enviarError(*client_socket, ERROR_REDUCCION_LOCAL);
 			log_error(logger,
 					"No pudo crearse proceso hijo para antender operacion");
+			_Exit(EXIT_FAILURE);
 		}
 		if (pid == 0) {
 			log_info(logger, "Se inicia etapa de reduccion local");
@@ -103,27 +108,36 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		}
 		break;
 	case ENVIAR_SOLICITUD_REDUCCION_GLOBAL:
-		auxRedG = recibirSolicitudReduccionGlobal(unPaquete);
-		if (auxRedG->workerEncargado) {
-			loc = (paquete_esclavo*) malloc(sizeof(paquete_esclavo));
-			log_info(logger, "Se inicia etapa de reduccion global");
-			paquetesEsclavos = list_create();
-			local = fopen(auxRedG->archivoReduccionPorWorker, "r");
-			if (local == NULL) {
-				log_error(logger,
-						"El archivo de reduccion local no pudo ser abiero");
-				enviarError(*client_socket, ERROR_REDUCCION_GLOBAL);
-				_Exit(EXIT_FAILURE);
+		pid = fork();
+		if (pid < 0) {
+			enviarError(*client_socket, ERROR_REDUCCION_GLOBAL);
+			log_error(logger,
+					"No pudo crearse proceso hijo para antender operacion");
+			_Exit(EXIT_FAILURE);
+		}
+		if (pid == 0) {
+			auxRedG = recibirSolicitudReduccionGlobal(unPaquete);
+			if (auxRedG->workerEncargado) {
+				loc = (paquete_esclavo*) malloc(sizeof(paquete_esclavo));
+				log_info(logger, "Se inicia etapa de reduccion global");
+				paquetesEsclavos = list_create();
+				local = fopen(auxRedG->archivoReduccionPorWorker, "r");
+				if (local == NULL) {
+					log_error(logger,
+							"El archivo de reduccion local no pudo ser abiero");
+					enviarError(*client_socket, ERROR_REDUCCION_GLOBAL);
+					_Exit(EXIT_FAILURE);
+				}
+				rutaFinalGlobal = auxRedG->ArchivoResultadoReduccionGlobal;
+				fgets(loc->palabra, TAM_MAX, local);
+				loc->socket_cliente = -1;
+				list_add(paquetesEsclavos, loc);
+				cantidadWorker = auxRedG->cantWorkerInvolucradros;
+				iniciarEncargado();
+			} else {
+				local = fopen(auxRedG->archivoReduccionPorWorker, "r");
+				iniciarEsclavo(auxRedG->ip, auxRedG->puerto);
 			}
-			rutaFinalGlobal = auxRedG->ArchivoResultadoReduccionGlobal;
-			fgets(loc->palabra, TAM_MAX, local);
-			loc->socket_cliente = -1;
-			list_add(paquetesEsclavos, loc);
-			cantidadWorker = auxRedG->cantWorkerInvolucradros;
-			iniciarEncargado();
-		} else {
-			local = fopen(auxRedG->archivoReduccionPorWorker, "r");
-			iniciarEsclavo(auxRedG->ip, auxRedG->puerto);
 		}
 		break;
 	case ENVIAR_SOLICITUD_ALMACENADO_FINAL:
@@ -172,6 +186,67 @@ void recibirHandshakeLocal(t_paquete * unPaquete, int * client_socket) {
 	}
 }
 
+void signal_capturer(int numeroSenial){
+
+	switch (numeroSenial)
+	{
+
+		case 8:
+			enviarError(socketMaster,ENVIAR_ERROR_JOB);
+			log_error(logger, "Error de coma flotante");
+			_Exit(EXIT_FAILURE);
+			break;
+		case 11:
+			enviarError(socketMaster,ENVIAR_ERROR_JOB);
+			log_error(logger, "Se cierra por violacion al segmento");
+			_Exit(EXIT_FAILURE);
+			break;
+		case 16:
+			enviarError(socketMaster,ENVIAR_ERROR_JOB);
+			log_error(logger, "Se cierra por desbordamiento de pila");
+			_Exit(EXIT_FAILURE);
+			break;
+		default:
+			enviarError(socketMaster,ENVIAR_ERROR_JOB);
+			log_error(logger, "PROCESO WORKER CIERRA POR NUMERO DE SEÑAL %d", numeroSenial);
+			_Exit(EXIT_FAILURE);
+			break;
+
+	}
+
+	return;
+}
+
+char* getBloque(int numBloque) {
+	struct stat sb;
+	char *map;
+	char *bloque = malloc(TAM_BLOQUE);
+
+	int fd = open(RUTA_DATABIN, O_RDONLY); //abrir archivo data.bin
+	fstat(fd, &sb);
+	map = mmap(NULL, //donde comienza a guardar el mapeo, NULL significa "donde quiera el S.O"
+			sb.st_size, //el tamaño del file
+			PROT_READ, //proteccion del file (PROT_READ = solo lectura)
+			MAP_SHARED, //que comparta el mapeo con otros procesos creo, no se bien que hace
+			fd, //el file descriptor
+			0); //desde donde leer
+	if (map == MAP_FAILED) {
+		close(fd);
+		log_error(logger, "Error al traer el bloque de data.bin");
+		return NULL;
+	}
+
+	int i = numBloque * TAM_BLOQUE;
+
+	memcpy(bloque, map + i, TAM_BLOQUE);
+
+	munmap(map, sb.st_size); //cierro mmap()
+
+	close(fd); //cierro archivo
+	return bloque;
+}
+
+
 void transformacion(unsigned int bloque, unsigned int bytes, char* rutaArchivo,
 		char* rutaScript) {
 
@@ -181,17 +256,15 @@ void transformacion(unsigned int bloque, unsigned int bytes, char* rutaArchivo,
 
 	//"echo hola pepe | ./script_transformacion.py > /tmp/resultado"
 
-	char* aux = "sort salidaDeTransformacion > ";
-
 	char* comando = (char*) malloc(
-			(strlen(aux) + strlen(rutaArchivo) + strlen(traido) + 15)
+			(strlen(rutaScript) + strlen(rutaArchivo) + strlen(traido) + 25)
 					* sizeof(char));
 
-	strcpy(comando, "echo ");
+	strcpy(comando, "cat ");
 	strcat(comando, traido);
 	strcat(comando, " | ./");
 	strcat(comando, rutaScript);
-	strcat(comando, " > ");
+	strcat(comando, " | sort > ");
 	strcat(comando, rutaArchivo);
 
 	system(comando);
@@ -253,10 +326,12 @@ void reduccionLocal(char** rutas, int cant, char* rutaFinal, char* rutaScript) {
 
 	comando = calloc((strlen(rutaScript) + strlen(rutaFinal) + 1),
 			sizeof(char));
+
 	strcpy(comando, rutaScript);
 	strcat(comando, " ");
 	strcat(comando, rutaFinal);
 	system(comando);
+
 	free(comando);
 
 	for (i = 0; i < cant; i++) {
@@ -319,7 +394,7 @@ void reduccionGlobal(void) {
 }
 
 void recibirDatos(t_paquete * unPaquete, int * client_socket) {
-	char leido[TAM_MAX];
+	paquete_esclavo* p;
 	switch (unPaquete->codigoOperacion) {
 	case HANDSHAKE:
 		recibirHandshakeLocal(unPaquete, client_socket);
@@ -327,7 +402,7 @@ void recibirDatos(t_paquete * unPaquete, int * client_socket) {
 			enviarHandshake(*client_socket, WORKER);
 		break;
 	case ENVIAR_MENSAJE:
-		paquete_esclavo* p = malloc(sizeof(paquete_esclavo));
+		p = malloc(sizeof(paquete_esclavo));
 		p->socket_cliente = *client_socket;
 		p->palabra = recibirMensaje(unPaquete);
 		list_add(paquetesEsclavos, p);
@@ -336,6 +411,7 @@ void recibirDatos(t_paquete * unPaquete, int * client_socket) {
 		break;
 	case ENVIAR_PALABRA:
 		aux->palabra = recibirMensaje(unPaquete);
+		break;
 	default:
 		break;
 	}
@@ -374,6 +450,7 @@ void recibirPedido(t_paquete* unPaquete, int* socket_server) {
 					"Se termino el envio del archivo para reduccion global");
 			_Exit(EXIT_SUCCESS);
 		}
+		break;
 	default:
 		break;
 	}
