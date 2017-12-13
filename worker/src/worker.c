@@ -59,6 +59,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	t_pedidoTransformacion *auxTransf;
 	t_pedidoReduccionLocal *auxRedL;
 	t_pedidoReduccionGlobal *auxRedG;
+	t_pedidoAlmacenadoFinal *auxPedF;
 	paquete_esclavo* loc;
 	switch (unPaquete->codigoOperacion) {
 	case HANDSHAKE:
@@ -129,6 +130,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 					_Exit(EXIT_FAILURE);
 				}
 				rutaFinalGlobal = auxRedG->ArchivoResultadoReduccionGlobal;
+				loc->palabra = calloc(TAM_MAX, sizeof(char));
 				fgets(loc->palabra, TAM_MAX, local);
 				loc->socket_cliente = -1;
 				list_add(paquetesEsclavos, loc);
@@ -143,27 +145,9 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_SOLICITUD_ALMACENADO_FINAL:
 		pid = fork();
 		if (pid == 0) {
-			log_info(logger, "Se inicio el almacenado final");
-			t_pedidoAlmacenadoFinal* algo = recibirSolicitudAlmacenadoFinal(
-					unPaquete);
-			int socketFS = conectarCliente(IP_FILESYSTEM, PUERTO_FILESYSTEM,
-					WORKER);
-			if (socketFS < 0) {
-				log_error(logger, "No se pudo conectar con el File System");
-				enviarError(*client_socket, ERROR_ALMACENAMIENTO_FINAL);
-				_Exit(EXIT_FAILURE);
-			}
-			FILE* apareoGlobal = fopen(algo->rutaAlmacenadoFinal, "r");
-			if (apareoGlobal == NULL) {
-				log_error(logger,
-						"No se pudo abrir el archivo de reduccion global");
-				enviarError(*client_socket, ERROR_ALMACENAMIENTO_FINAL);
-				_Exit(EXIT_FAILURE);
-			}
-			char leido[TAM_MAX];
-			while (fgets(leido, TAM_MAX, apareoGlobal) != NULL) {
-				enviarMensaje(socketFS, leido);
-			}
+			int s = conectarCliente(IP_FILESYSTEM, PUERTO_FILESYSTEM, WORKER);
+			auxPedF = recibirSolicitudAlmacenadoFinal(unPaquete);
+			enviarRutaArchivoRutaDestino(s, auxPedF->archivoReduccionGlobal, auxPedF->rutaAlmacenadoFinal);
 			enviarTareaCompletada(*client_socket, 1);
 		}
 		break;
@@ -363,6 +347,7 @@ void reduccionGlobal(void) {
 			fputs(fijo->palabra, apareoGlobal);
 			if (fijo->socket_cliente == -1) {
 				if (fgets(fijo->palabra, TAM_MAX, local) == NULL) {
+					free(fijo->palabra);
 					list_remove_and_destroy_element(paquetesEsclavos,
 							i % cantidadWorker, (void*) free);
 					cantidadWorker--;
@@ -384,7 +369,7 @@ void reduccionGlobal(void) {
 	fclose(apareoGlobal);
 
 	comando = calloc(
-			(strlen(rutaScriptReduccion) + strlen(rutaFinalGlobal) + 1),
+			(strlen(rutaScriptReduccion) + strlen(rutaFinalGlobal) + 5),
 			sizeof(char));
 	strcpy(comando, rutaScriptReduccion);
 	strcat(comando, " ");
@@ -409,7 +394,9 @@ void recibirDatos(t_paquete * unPaquete, int * client_socket) {
 		if (paquetesEsclavos->elements_count == cantidadWorker)
 		{
 			reduccionGlobal();
+			list_destroy(paquetesEsclavos);
 			enviarTareaCompletada(socketMaster, 1);
+			log_info(logger, "Se completo con exito la reduccion global");
 			_Exit(EXIT_SUCCESS);
 		}
 		break;
@@ -423,11 +410,7 @@ void recibirDatos(t_paquete * unPaquete, int * client_socket) {
 }
 
 void iniciarEncargado() {
-	iniciarServer(PUERTO_REDUCCION_GLOBAL, (void*) recibirDatos);
-	reduccionGlobal();
-	enviarTareaCompletada(socketMaster, 1);
-	fclose(local);
-	list_clean(paquetesEsclavos);
+	iniciarServer(PUERTO_REDUCCION_GLOBAL, (void*)recibirDatos);
 }
 
 void iniciarEsclavo(char* ip, char* puerto) {
@@ -441,6 +424,7 @@ void recibirPedido(t_paquete* unPaquete, int* socket_server) {
 	char leido[TAM_MAX];
 	switch (unPaquete->codigoOperacion) {
 	case HANDSHAKE:
+		fgets(leido, TAM_MAX, local);
 		enviarMensaje(*socket_server, leido);
 		break;
 	case ENVIAR_MENSAJE:

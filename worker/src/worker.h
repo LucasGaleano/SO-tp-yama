@@ -21,8 +21,7 @@
 #define PATHLOG "worker.log"
 #define PATHCONFIG "configuraciones/nodo.cfg"
 #define TAM_MAX 100
-#define TAM_BLOQUE 1048576 //1024 * 1024, un mega
-#define PUERTO_REDUCCION_GLOBAL "9999"
+#define PUERTO_REDUCCION_GLOBAL "3405"
 
 typedef struct
 {
