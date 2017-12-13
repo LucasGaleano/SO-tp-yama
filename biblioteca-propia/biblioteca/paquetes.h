@@ -23,6 +23,8 @@ void 							enviarRutaArchivo							(int, char *, int);
 
 void 							enviarMensaje								(int, char *);
 
+void 							enviarPalabra								(int, char *);
+
 void 							enviarArchivo								(int, char *);
 
 void 							enviarSolicitudInfoDataNode					(int);

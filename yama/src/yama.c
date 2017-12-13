@@ -85,9 +85,20 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_LISTA_NODO_BLOQUES: //RECIBO LISTA DE ARCHIVOS DE FS CON UBICACIONES Y BLOQUES
 		procesarEnviarListaNodoBloques(unPaquete); //
 		break;
-	case TAREA_COMPLETADA:
+
+	case ENVIAR_INDICACION_TRANSFORMACION:
 		procesarResultadoTranformacion(unPaquete, client_socket);
 		break;
+
+	case ENVIAR_INDICACION_REDUCCION_LOCAL:
+		procesarResultadoReduccionLocal(unPaquete, client_socket);
+		break;
+	case TAREA_COMPLETADA:
+		 ;
+		int resultado = recibirTareaCompletada(unPaquete);
+		//para reduccion global y almacenamiento. ALMACENAMIENTO_COMPLETADO, REDUCCION_GLOBAL
+		break;
+
 	default:
 		break;
 	}
@@ -118,32 +129,32 @@ void procesarRecibirArchivo(t_paquete * unPaquete) {
 //void * archivo = recibirArchivo(unPaquete);  todo Comento para que no tire error
 }
 
-void procesarRecibirError(t_paquete * unPaquete) {
-//int error = recibirError(unPaquete);
+void procesarRecibirError(t_paquete * unPaquete) { //supuestamente necesita un socket
 
-//		char* prefijo = string_new();//prefijo del archivo temporal
-//		string_append(prefijo, "reduccion:");
-//		char* nombreTempReduccion = nombreArchivoTemp(prefijo);
-//
-//		PaqueRedLocal->nodo = malloc(sizeof(paqueteTransform->nodo));
-//		PaqueRedLocal->ip = malloc(sizeof(paqueteTransform->ip));
-//		PaqueRedLocal->puerto = malloc(sizeof(paqueteTransform->puerto));
-//		PaqueRedLocal->archivoTemporalTransformacion = malloc(
-//				sizeof(paqueteTransform->rutaArchivoTemporal));
-//		PaqueRedLocal->archivoTemporalReduccionLocal = malloc(
-//				sizeof(nombreTempReduccion));
-//
-//		enviarIndicacionReduccionLocal(client_socket, PaqueRedLocal);
-//
-//
-//
-//
-//todo --> Si queres saber quien te envia el codigo de error lo haces con el client_socket de la funcion procesarPaquetes
-//int cliente_desconectado;
-//memcpy(&cliente_desconectado, unPaquete->buffer->data, sizeof(int));
-//
-//todo HACER ALGO ANTE EL ERROR
+	int error = recibirError(unPaquete);
+
+	switch (error) {
+	case ERROR_REDUCCION_LOCAL:
+		printf("[-]fallo reduccion local");  //todo agregar error a todos los job
+		exit(EXIT_FAILURE);
+
+		break;
+	case ERROR_REDUCCION_GLOBAL:
+		printf("[-]fallo reduccion global");
+		exit(EXIT_FAILURE);
+		break;
+
+	case ERROR_ALMACENAMIENTO_FINAL:
+		printf("[-]fallo almacenamiento final");
+		exit(EXIT_FAILURE);
+		break;
+	default:
+
+		break;
+	}
+
 }
+
 
 void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete, int *client_socket) {
 	char * nomArchivo = recibirMensaje(unPaquete);
@@ -182,6 +193,7 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete){
 		int tamanioArchivo = buscarTamanioArchivoConNombreNodo(nombreNodo, listaNodoBloque);
 
 		void armarIndicacionDeTransformacionPorBloque(int numeroBloque){
+			indicacionTransformacion->estado = PROCESANDO;
 			indicacionTransformacion->ip = direccionNodo->ip;
 			indicacionTransformacion->puerto = direccionNodo->puerto;
 			indicacionTransformacion->nodo = nombreNodo;				//TODO REVISAR SI HAY QUE RESERVAR MEMORIA
@@ -211,57 +223,82 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete){
 	list_iterate(indicacionesDeTransformacionParaMaster, (void*) registrarYEnviarAMaster);
 }
 
-void procesarResultadoTranformacion(t_paquete * unPaquete, int client_socket){
-	t_resultado_transformacion* resultado = recibirResultadoTransformacion(unPaquete);
+void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
+	t_indicacionTransformacion* resultado = recibirIndicacionTransformacion(unPaquete);//todo falta librerar resultado
 
 	//ACTUALIZAR REGISTRO Y CONTINUAR O REPLANIFICAR ALGUN BLOQUE (VER REPLANIFICACION)
 	//todo FIJARSE QUE PASA CON LA TABLA DE ESTADO EN EL CASO DE QUE FALLE ALGUNA ETAPA
 
-	if(resultado->estadoOperacion == FINALIZADO_OK){
+	if (resultado->estado == FINALIZADO_OK) {
+
+		planificador_sumarWLWorker(tablaPlanificador, extraerIddelNodo(resultado->nodo), -1); //le saco carga de trabaja al nodo
 
 		modificarEstadoDeRegistroPorNodoYBloque(client_socket,
-				resultado->indicacionTransformacion->nodo,
-				resultado->indicacionTransformacion->bloque, TRANSFORMACION,
+				resultado->nodo,
+				resultado->bloque, TRANSFORMACION,
 				FINALIZADO_OK);
 
-	};
+		//MIRAR SI PARA UN MISMO NODO, TERMINARON TODAS LAS TRANSFORMACIONES
+
+		if (terminoUnNodoLaTransformacion( resultado->nodo, TRANSFORMACION, PROCESANDO)) {
+
+			//SI -> MANDAR A HACER TODAS LAS REDUCCIONES LOCALES DE ESE NODO
 
 
-	//MIRAR SI PARA UN MISMO NODO, TERMINARON TODAS LAS TRANSFORMACIONES
+			//recorrer la tabla registros y enviar paquete reduccion local por cada nodo terminado
 
-	if(terminoUnNodoLaTransformacion(resultado->indicacionTransformacion->nodo, TRANSFORMACION, PROCESANDO)){
+			int i = 0;
+			int tam = list_size(tabla_de_estados);
+			while (tam > i)
+				{
 
-		//SI -> MANDAR A HACER TODAS LAS REDUCCIONES LOCALES DE ESE NODO
-		char* nodo;
-		char* ip;
-		char* puerto;
-		char* archivoTemporalTransformacion; // Existe
-		char* archivoTemporalReduccionLocal;
-		t_indicacionReduccionLocal* indReducLocal = IndicReducLocal_create();
+				t_elemento_tabla_estado * reg = list_get(tabla_de_estados, i);
 
-		indReducLocal->nodo = string_duplicate(resultado->indicacionTransformacion->nodo);
-		indReducLocal->ip = string_duplicate(resultado->indicacionTransformacion->ip);
-		indReducLocal->puerto = string_duplicate(resultado->indicacionTransformacion->puerto);
-		indReducLocal->archivoTemporalTransformacion = string_duplicate(resultado->indicacionTransformacion->rutaArchivoTemporal);
-		indReducLocal->archivoTemporalReduccionLocal = nombreArchivoTemp(prefijoArchivosTemporalesReduLocal);
-
-		int idJob = generarJob();
-
-		//ACTUALIZAR TABLA DE ESTADO AVANZANDO LA ETAPA
-
-		agregarRegistro(idJob, client_socket, indReducLocal->nodo,
-				indReducLocal->puerto, REDUCCION_LOCAL,
-				indReducLocal->archivoTemporalReduccionLocal, PROCESANDO);
+				if (string_equals_ignore_case(reg->nodo,resultado->nodo))
+				{
+					t_indicacionReduccionLocal* indReducLocal = malloc(sizeof(t_indicacionReduccionLocal));
+					indReducLocal->nodo = string_duplicate(resultado->nodo);
+					indReducLocal->ip = string_duplicate(resultado->ip);
+					indReducLocal->puerto = string_duplicate(resultado->puerto);
+					indReducLocal->archivoTemporalTransformacion =
+							string_duplicate(resultado->rutaArchivoTemporal);
+					indReducLocal->archivoTemporalReduccionLocal = nombreArchivoTemp(prefijoArchivosTemporalesReduLocal);
 
 
-		IndicReducLocal_destroy(indReducLocal);
+
+					//ACTUALIZAR TABLA DE ESTADO AVANZANDO LA ETAPA
+
+					agregarRegistro(reg->job, client_socket, indReducLocal->nodo,
+							reg->bloque, REDUCCION_LOCAL,
+							indReducLocal->archivoTemporalReduccionLocal,
+							PROCESANDO);
+
+					enviarIndicacionReduccionLocal(client_socket, indReducLocal);
+					IndicReducLocal_destroy(indReducLocal);
+
+				}
+				i++;
+				}
+
+		}
+
 
 
 	}
+}
+
+void procesarResultadoReduccionLocal(t_paquete* unPaquete, int *client_socket){
+
+	t_indicacionReduccionLocal * indicReduLocal = recibirIndicacionReduccionLocal(unPaquete);
+
+
+
+
 
 
 
 }
+
 
 /*-------------------------Funciones auxiliares-------------------------*/
 
@@ -367,20 +404,8 @@ char* obtenerNombreNodoDesdeId(int idNodo){
 	return prefijoNodo;
 }
 
-t_indicacionReduccionLocal* IndicReducLocal_create(){
 
-	t_indicacionReduccionLocal* indReducLocal = malloc(sizeof(t_indicacionReduccionLocal));
-	indReducLocal->puerto = malloc(sizeof(char) * 5);
-	indReducLocal->nodo = malloc(sizeof(char) * 5);
-	indReducLocal->ip = malloc(sizeof(char) * 16);
-	indReducLocal->archivoTemporalTransformacion = malloc(sizeof(char) * 60);
-	indReducLocal->archivoTemporalReduccionLocal = malloc(sizeof(char) * 60);
-
-	return indReducLocal;
-
-}
-
-IndicReducLocal_destroy(t_indicacionReduccionLocal* indReducLocal){
+void IndicReducLocal_destroy(t_indicacionReduccionLocal* indReducLocal){
 
 	free(indReducLocal->archivoTemporalReduccionLocal);
 	free(indReducLocal->archivoTemporalTransformacion);

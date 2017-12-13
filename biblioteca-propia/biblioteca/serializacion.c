@@ -357,6 +357,7 @@ void serializarSolicitudAlmacenadoFinal(t_paquete * unPaquete,
 
 void serializarIndicacionTransformacion(t_paquete * unPaquete,
 		t_indicacionTransformacion * indicacion) {
+	int tamEstado = sizeof(int);
 	int tamNodo = string_length(indicacion->nodo) + 1;
 	int tamDireccion = string_length(indicacion->ip) + 1;
 	int tamPuerto = string_length(indicacion->puerto) + 1;
@@ -365,7 +366,7 @@ void serializarIndicacionTransformacion(t_paquete * unPaquete,
 	int tamRutaArchivoTemporal = string_length(indicacion->rutaArchivoTemporal)
 			+ 1;
 
-	int tamTotal = tamNodo + tamDireccion + tamPuerto + tamBloque + tamBytes
+	int tamTotal = tamEstado + tamNodo + tamDireccion + tamPuerto + tamBloque + tamBytes
 			+ tamRutaArchivoTemporal;
 
 	unPaquete->buffer = malloc(sizeof(t_stream));
@@ -374,6 +375,10 @@ void serializarIndicacionTransformacion(t_paquete * unPaquete,
 	unPaquete->buffer->data = malloc(tamTotal);
 
 	int desplazamiento = 0;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, &indicacion->estado,
+			tamEstado);
+	desplazamiento += tamEstado;
 
 	memcpy(unPaquete->buffer->data + desplazamiento, indicacion->nodo, tamNodo);
 	desplazamiento += tamNodo;
@@ -875,10 +880,10 @@ t_pedidoTransformacion * deserializarSolicitudTransformacion(t_stream * buffer) 
 	solicitud->rutaScriptTransformacion = strdup(buffer->data + desplazamiento);
 	desplazamiento += strlen(solicitud->rutaScriptTransformacion) + 1;
 
-	memcpy(&solicitud->numBloque, &buffer->data + desplazamiento, sizeof(int));
+	memcpy(&solicitud->numBloque, buffer->data + desplazamiento, sizeof(int));
 	desplazamiento += sizeof(int);
 
-	memcpy(&solicitud->cantBytes, &buffer->data + desplazamiento, sizeof(int));
+	memcpy(&solicitud->cantBytes, buffer->data + desplazamiento, sizeof(int));
 	desplazamiento += sizeof(int);
 
 	solicitud->rutaArchivoTemporal = strdup(buffer->data + desplazamiento);
@@ -920,14 +925,14 @@ t_pedidoReduccionGlobal * deserializarSolicitudReduccionGlobal(
 			buffer->data + desplazamiento);
 	desplazamiento += strlen(solicitud->archivoReduccionPorWorker) + 1;
 
-	memcpy(&solicitud->workerEncargado, &buffer->data, sizeof(int));
+	memcpy(&solicitud->workerEncargado, buffer->data, sizeof(int));
 	desplazamiento += sizeof(int);
 
 	solicitud->ArchivoResultadoReduccionGlobal = strdup(
 			buffer->data + desplazamiento);
 	desplazamiento += strlen(solicitud->ArchivoResultadoReduccionGlobal) + 1;
 
-	memcpy(&solicitud->cantWorkerInvolucradros, &buffer->data, sizeof(int));
+	memcpy(&solicitud->cantWorkerInvolucradros, buffer->data, sizeof(int));
 	desplazamiento += sizeof(int);
 
 	return solicitud;
@@ -955,6 +960,9 @@ t_indicacionTransformacion * deserializarIndicacionTransformacion(
 			sizeof(t_indicacionTransformacion));
 
 	int desplazamiento = 0;
+
+	memcpy(&indicacion->estado, buffer->data + desplazamiento, sizeof(int));
+	desplazamiento += sizeof(int);
 
 	indicacion->nodo = strdup(buffer->data + desplazamiento);
 	desplazamiento += strlen(indicacion->nodo) + 1;
@@ -1152,9 +1160,6 @@ t_solicitudArchivo * deserializarRutaArchivo(t_stream * buffer) {
 	return solicitud;
 }
 
-//t_resultado_transformacion* deserializarResultadoTransformacion(t_stream * buffer){
-//	//TODO HACER SEREALIZACION DE RECEPCION DE RESULTADO DE TRANSFORMACION
-//}
 
 t_archivo_y_ruta * deserializarRutaArchivoRutaDestino(t_stream * buffer){
 	t_archivo_y_ruta * archRuta = malloc(sizeof(t_archivo_y_ruta));

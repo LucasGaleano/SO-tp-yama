@@ -200,6 +200,16 @@ void enviarRutaArchivo(int server_socket, char * rutaArchivo,
 	enviarPaquetes(server_socket, unPaquete);
 }
 
+void enviarPalabra(int server_socket, char * mensaje) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_PALABRA;
+
+	serializarMensaje(unPaquete, mensaje);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
+
 void enviarMensaje(int server_socket, char * mensaje) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 

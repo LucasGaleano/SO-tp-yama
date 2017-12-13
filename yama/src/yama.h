@@ -8,7 +8,6 @@
 #include <commons/collections/list.h>
 #include <commons/collections/queue.h>
 #include <biblioteca/sockets.h>
-//#include <biblioteca/estructurasWorkerMaster.h>
 #include <commons/string.h>
 #include <pthread.h>
 
@@ -70,7 +69,8 @@ void 							procesarRecibirError					(t_paquete * unPaquete);
 void 							procesarEnviarSolicitudTransformacion	(t_paquete * unPaquete, int * client_socket);
 void 							procesarEnviarListaNodoBloques			(t_paquete * unPaquete);
 void							procesarEnviarIndicacionTransformacion	(t_paquete * unPaquete);
-void							procesarTareaCompleta					(t_paquete * unPaquete, int client_socket);
+void							procesarTareaCompleta					(t_paquete * unPaquete, int *client_socket);
+void 							procesarResultadoTranformacion			(t_paquete * unPaquete, int *client_socket);
 
 /*----------------------------------Procesamiento de nodos y bloques-----------------------------------*/
 t_list* 						agruparNodosPorBloque					(t_list*);
