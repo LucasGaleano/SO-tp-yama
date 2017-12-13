@@ -2,6 +2,9 @@
 
 int main(void) {
 
+
+	listaDireccionesNodos = list_create();
+
 	//Levanto el archivo de configuracion
 	char* path_config_yama =
 			"/home/utnso/workspace/tp-2017-2c-NULL/configuraciones/yama.cfg";
@@ -88,18 +91,14 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_LISTA_NODO_BLOQUES: //RECIBO LISTA DE ARCHIVOS DE FS CON UBICACIONES Y BLOQUES
 		procesarEnviarListaNodoBloques(unPaquete); //
 		break;
-
 	case ENVIAR_INDICACION_TRANSFORMACION:
 		procesarResultadoTranformacion(unPaquete, client_socket);
 		break;
-
 	case ENVIAR_INDICACION_REDUCCION_LOCAL:
 		procesarResultadoReduccionLocal(unPaquete, client_socket);
 		break;
 	case TAREA_COMPLETADA:
-		;
-		int resultado = recibirTareaCompletada(unPaquete);
-		//para reduccion global y almacenamiento. ALMACENAMIENTO_COMPLETADO, REDUCCION_GLOBAL
+		procesarTareaCompletada(unPaquete, client_socket);
 		break;
 
 	default:
@@ -171,7 +170,7 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 	t_nodos_bloques * nodosBloques = recibirListaNodoBloques(unPaquete); //RECIBO UN STRUCT CON 2 LISTAS ANIDADAS
 
 	t_list* listaNodoBloque = nodosBloques->nodoBloque;
-	t_list* listaDireccionesNodos = nodosBloques->puertoIP;
+	listaDireccionesNodos = list_take(nodosBloques->puertoIP,nodosBloques->puertoIP->elements_count);
 
 	t_list* listaBloquesConNodos = agruparNodosPorBloque(listaNodoBloque); // LISTA DE BLOQUES CON LOS NODOS DONDE ESTA
 	t_list* nodosSinRepetidos = extraerNodosSinRepetidos(listaNodoBloque); //SOLO LOS NOMBRE NODOS SIN REPETIDOS
@@ -204,7 +203,7 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 			indicacionTransformacion->estado = PROCESANDO;
 			indicacionTransformacion->ip = direccionNodo->ip;
 			indicacionTransformacion->puerto = direccionNodo->puerto;
-			indicacionTransformacion->nodo = nombreNodo;//TODO REVISAR SI HAY QUE RESERVAR MEMORIA
+			indicacionTransformacion->nodo = nombreNodo; //TODO REVISAR SI HAY QUE RESERVAR MEMORIA
 			indicacionTransformacion->bytes = tamanioArchivo;
 
 			int bloqueNodo = mapearBloqueArchivoABloqueNodo(listaNodoBloque,
@@ -236,8 +235,7 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 				indicacionDeTransformacion);
 	}
 
-	list_iterate(indicacionesDeTransformacionParaMaster,
-			(void*) registrarYEnviarAMaster);
+	list_iterate(indicacionesDeTransformacionParaMaster, (void*) registrarYEnviarAMaster);
 }
 
 void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
@@ -304,21 +302,59 @@ void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
 
 void procesarResultadoReduccionLocal(t_paquete* unPaquete, int *client_socket) {
 
-	t_indicacionReduccionLocal * indicReduLocal =
-			recibirIndicacionReduccionLocal(unPaquete);
+	t_indicacionReduccionLocal * indicReduLocal = recibirIndicacionReduccionLocal(unPaquete);
 
-	modificarEstadoDeRegistro(-1, -1, indicReduLocal->nodo, -1, REDUCCION_LOCAL,
-			FINALIZADO_OK);
+	modificarEstadoDeRegistro(-1, -1, indicReduLocal->nodo, -1, REDUCCION_LOCAL, FINALIZADO_OK);
 
-	t_elemento_tabla_estado* registro = buscarRegistro(-1, -1, NULL, -1, -1, -1,
-			indicReduLocal->archivoTemporalTransformacion);
+	t_elemento_tabla_estado* registro = buscarRegistro(-1, -1, NULL, -1, -1, -1, indicReduLocal->archivoTemporalTransformacion);
 
-	if (buscarRegistro(registro->job, -1, indicReduLocal->nodo, -1,
-			REDUCCION_LOCAL, PROCESANDO, NULL) == NULL) {
+	if (buscarRegistro(registro->job, -1, indicReduLocal->nodo, -1,REDUCCION_LOCAL, PROCESANDO, NULL) == NULL) {
 
 		enviarTareaCompletada(*client_socket, NO_CONTINUA);
 
+		t_list* listaDeIndicacionesReduccionGlobal = list_create();
+
+		char* nombreArchivoReduccionGlobal = nombreArchivoTemp(prefijoArchivosTemporalesReduGlobal);
+
+		void xxxxxxxxxxx(t_elemento_tabla_estado* elemento){
+			if(elemento->job == registro->job && elemento->etapa == REDUCCION_LOCAL && elemento->estado == FINALIZADO_OK){
+				t_indicacionReduccionGlobal* indicacionReduccionGlobal = malloc(sizeof(t_indicacionReduccionGlobal));//TODO LIBERAR MEMORIA
+				//todo ver lo del encargado
+
+				int esEncargadoReduccionGlobal(char* nodo){
+					char* nodoEncargado = obtenerEncargadoReduccionGlobal();
+					return string_equals_ignore_case(nodo, nodoEncargado);
+				}
+
+				indicacionReduccionGlobal->encargado = esEncargadoReduccionGlobal(elemento->nodo);
+				indicacionReduccionGlobal->archivoDeReduccionGlobal = string_duplicate(nombreArchivoReduccionGlobal);
+				indicacionReduccionGlobal->archivoDeReduccionLocal = string_duplicate(elemento->nombreArchivoTemporal);
+				indicacionReduccionGlobal->nodo = string_duplicate(elemento->nodo);
+				t_puerto_ip* PyIP = buscarIpYPuertoConNombreNodo(elemento->nodo, listaDireccionesNodos);
+				indicacionReduccionGlobal->ip = string_duplicate(PyIP->ip);
+				indicacionReduccionGlobal->puerto = string_duplicate(PyIP->puerto);
+				//todo liberar
+
+				list_add(listaDeIndicacionesReduccionGlobal,indicacionReduccionGlobal);
+			}
+		}
+
+		list_iterate(tabla_de_estados, (void*)xxxxxxxxxxx);
+
+		void enviarIndicacionReduccionGlobal(int server_socket, t_indicacionReduccionGlobal * indicacion);
+
+		//TODO DEFINIR ESTO YA !!!!!
+		enviarListaDeIndicacionReduccionGlobal(client_socket, listaDeIndicacionesReduccionGlobal);
 	}
+
+
+
+
+
+}
+
+void procesarTareaCompletada( unPaquete, client_socket) {
+
 }
 
 /*-------------------------Funciones auxiliares-------------------------*/
@@ -366,8 +402,8 @@ t_list* agruparNodosPorBloque(t_list* listaDeNodoBloque) {
 	t_list* listaBloquesConListaDeNodos = list_create(); //TODO LIBERAR MEMORIA
 
 	void obtenerNodosDeBloque(int numeroBloque) {
-		t_nodos_por_bloque* bloqueConListaNodos = malloc(
-				sizeof(t_nodos_por_bloque)); //TODO LIBERAR MEMORIA
+		t_nodos_por_bloque* bloqueConListaNodos = malloc(sizeof(t_nodos_por_bloque)); //TODO LIBERAR MEMORIA
+		bloqueConListaNodos->nodosEnLosQueEsta = list_create();
 		int y = 0;
 		for (; y < listaDeNodoBloque->elements_count; y++) {
 			t_nodo_bloque* nodoBloque = list_get(listaDeNodoBloque, y);

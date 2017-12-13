@@ -312,3 +312,9 @@ static int PosicionarClockMayorDisp(t_list* tablaPlanificador) {
 	}
 	return clockP;
 }
+
+char* obtenerEncargadoReduccionGlobal(){
+	//TODO IMPLEMENTAR. NO RECIBE NADA PERO DEVUELVE EL CHAR* O INT (AVISARME QUE TE CONVIEN)
+	//DEL NODO ENCARGADO DE REALIZAR LA REDUCCION GLOBAL
+}
+
