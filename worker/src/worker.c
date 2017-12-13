@@ -36,7 +36,7 @@ int main(void) {
 	//LEER ARCHIVO DE CONFIGURACION ---------------------------------------------------------
 
 	//int NOMBRE_NODO = config_get_string_value(conf,"NOMBRE_NODO");
-	char* PUERTO_WORKER = "4000"; //config_get_string_value(conf, "PUERTO_WORKER");
+	char* PUERTO_WORKER = config_get_string_value(conf, "PUERTO_WORKER");
 	RUTA_DATABIN = config_get_string_value(conf, "RUTA_DATABIN");
 	IP_FILESYSTEM = config_get_string_value(conf, "IP_FILESYSTEM"); // traigo los datos del archivo nodo.cfg
 	PUERTO_FILESYSTEM = config_get_string_value(conf, "PUERTO_FILESYSTEM");
