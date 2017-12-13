@@ -3,7 +3,7 @@
 int main(int argc, char **argv) {
 
 	//Creo archivo de log
-	t_log_level logLevel = LOG_LEVEL_INFO; //elijo enum de log
+	t_log_level logLevel = LOG_LEVEL_TRACE; //elijo enum de log
 	logger = log_create("dataNode.log", "dataNode", true, logLevel); //creo archivo log
 
 	//Leer archivo de configuracion
