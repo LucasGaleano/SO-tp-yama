@@ -121,11 +121,11 @@ enum tipoArchivo{
 };
 
 enum error{
-	ERROR_TRANSFORMACION,
-	ERROR_REDUCCION_LOCAL,
-	ERROR_REDUCCION_GLOBAL,
-	ERROR_ALMACENAMIENTO_FINAL,
-	ERROR_MASTER,
+	ERROR_TRANSFORMACION =-14,
+	ERROR_REDUCCION_LOCAL=-15,
+	ERROR_REDUCCION_GLOBAL=-17,
+	ERROR_ALMACENAMIENTO_FINAL=-18,
+	ERROR_MASTER=-20,
 };
 
 /*------------------------------Estructuras de comunicacion FS DataNode------------------------------*/

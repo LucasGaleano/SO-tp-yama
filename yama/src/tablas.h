@@ -35,7 +35,7 @@ t_elemento_tabla_estado* crearRegistro(int job, int master, char * nombreNodo, i
 
 void agregarRegistro(int job, int master, char * nombreNodo, int bloque, int etapa, char * nombreArchivoTemporal, int estado);
 
-t_elemento_tabla_estado* buscarRegistro(int job, int master, char* nombreNodo, int bloque, int etapa);
+t_elemento_tabla_estado* buscarRegistro(int job, int master, char* nombreNodo, int bloque, int etapa,int estado, char* archivo);
 
 void modificarEstadoDeRegistro(int job, int master, char* nombreNodo, int bloque, int etapa, int nuevoEstado);
 
