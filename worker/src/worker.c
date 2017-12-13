@@ -36,7 +36,7 @@ int main(void) {
 	//LEER ARCHIVO DE CONFIGURACION ---------------------------------------------------------
 
 	//int NOMBRE_NODO = config_get_string_value(conf,"NOMBRE_NODO");
-	char* PUERTO_WORKER = "4000"; //config_get_string_value(conf, "PUERTO_WORKER");
+	char* PUERTO_WORKER = config_get_string_value(conf, "PUERTO_WORKER");
 	RUTA_DATABIN = config_get_string_value(conf, "RUTA_DATABIN");
 	IP_FILESYSTEM = config_get_string_value(conf, "IP_FILESYSTEM"); // traigo los datos del archivo nodo.cfg
 	PUERTO_FILESYSTEM = config_get_string_value(conf, "PUERTO_FILESYSTEM");
@@ -59,6 +59,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	t_pedidoTransformacion *auxTransf;
 	t_pedidoReduccionLocal *auxRedL;
 	t_pedidoReduccionGlobal *auxRedG;
+	t_pedidoAlmacenadoFinal *auxPedF;
 	paquete_esclavo* loc;
 	switch (unPaquete->codigoOperacion) {
 	case HANDSHAKE:
@@ -143,27 +144,9 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_SOLICITUD_ALMACENADO_FINAL:
 		pid = fork();
 		if (pid == 0) {
-			log_info(logger, "Se inicio el almacenado final");
-			t_pedidoAlmacenadoFinal* algo = recibirSolicitudAlmacenadoFinal(
-					unPaquete);
-			int socketFS = conectarCliente(IP_FILESYSTEM, PUERTO_FILESYSTEM,
-					WORKER);
-			if (socketFS < 0) {
-				log_error(logger, "No se pudo conectar con el File System");
-				enviarError(*client_socket, ERROR_ALMACENAMIENTO_FINAL);
-				_Exit(EXIT_FAILURE);
-			}
-			FILE* apareoGlobal = fopen(algo->rutaAlmacenadoFinal, "r");
-			if (apareoGlobal == NULL) {
-				log_error(logger,
-						"No se pudo abrir el archivo de reduccion global");
-				enviarError(*client_socket, ERROR_ALMACENAMIENTO_FINAL);
-				_Exit(EXIT_FAILURE);
-			}
-			char leido[TAM_MAX];
-			while (fgets(leido, TAM_MAX, apareoGlobal) != NULL) {
-				enviarMensaje(socketFS, leido);
-			}
+			int s = conectarCliente(IP_FILESYSTEM, PUERTO_FILESYSTEM, WORKER);
+			auxPedF = recibirSolicitudAlmacenadoFinal(unPaquete);
+			enviarRutaArchivoRutaDestino(s, auxPedF->archivoReduccionGlobal, auxPedF->rutaAlmacenadoFinal);
 			enviarTareaCompletada(*client_socket, 1);
 		}
 		break;
