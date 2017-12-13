@@ -16,6 +16,7 @@
 #include <sys/stat.h> //fstat()
 #include <sys/mman.h>  //mmap()
 #include <unistd.h>  //PROT_READ del mmap()
+#include <signal.h>
 
 #define PATHLOG "worker.log"
 #define PATHCONFIG "configuraciones/nodo.cfg"
@@ -31,9 +32,15 @@ typedef struct
 
 void recibirHandshakeLocal(t_paquete*, int*);
 
+char* getBloque(int);
+
+void signal_capturer(int);
+
 void procesarPaquete(t_paquete*, int*);
 
-void recibirSolicitud(t_paquete*, int*);
+void recibirPedido(t_paquete*, int*);
+
+void recibirDatos(t_paquete *, int *);
 
 void transformacion (unsigned int, unsigned int, char*, char*);
 
