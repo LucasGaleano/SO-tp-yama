@@ -29,6 +29,7 @@ void				procesarRespuestaEscrituraBloque	(t_paquete *, int);
 void 				procesarBloqueGenerarCopia			(t_paquete *);
 void 				procesarEnviarRutaArchivo			(t_paquete *, int);
 void 				procesarNombre						(t_paquete *, int *);
+void 				procesarEnviarRutaArchivoRutaDestino(t_paquete *, int);
 
 /*-------------------------Manejos de estado-------------------------*/
 void 				manejoDeEstado						(char *);

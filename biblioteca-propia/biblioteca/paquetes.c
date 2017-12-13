@@ -179,7 +179,7 @@ void enviarSolicitudNombre(int server_socket) {
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarNombre(int server_socket, char * nombre, char* ip, char * puerto){
+void enviarNombre(int server_socket, char * nombre, char* ip, char * puerto) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_NOMBRE;
@@ -189,7 +189,8 @@ void enviarNombre(int server_socket, char * nombre, char* ip, char * puerto){
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarRutaArchivo(int server_socket, char * rutaArchivo, int masterSolicitante) {
+void enviarRutaArchivo(int server_socket, char * rutaArchivo,
+		int masterSolicitante) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_RUTA_ARCHIVO;
@@ -317,12 +318,12 @@ void enviarRespuestaEscrituraBloque(int server_socket, bool exito,
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarSolicitudInfoDataNode(int server_socket){
+void enviarSolicitudInfoDataNode(int server_socket) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_SOLICITUD_INFO_DATANODE;
 
-	serializarNumero(unPaquete,0);
+	serializarNumero(unPaquete, 0);
 
 	enviarPaquetes(server_socket, unPaquete);
 }
@@ -455,12 +456,23 @@ void enviarTareaCompletada(int server_socket, int cod_tarea) {
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarListaNodoBloques(int server_socket, t_nodos_bloques * listaNodoBloque, int masterSolicitante) {
+void enviarListaNodoBloques(int server_socket,
+		t_nodos_bloques * listaNodoBloque, int masterSolicitante) {
 	t_paquete* unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_LISTA_NODO_BLOQUES;
 
 	serializarListaNodoBloques(unPaquete, listaNodoBloque, masterSolicitante);
+
+	enviarPaquetes(server_socket, unPaquete);
+}
+
+void enviarRutaArchivoRutaDestino(int server_socket, char * rutaArchivo, char * rutaAGuardar) {
+	t_paquete* unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_RUTA_ARCHIVO_RUTA_DESTINO;
+
+	serializarRutaArchivoRutaDestino(unPaquete, rutaArchivo, rutaAGuardar);
 
 	enviarPaquetes(server_socket, unPaquete);
 }
@@ -475,7 +487,7 @@ t_solicitudArchivo * recibirRutaArchivo(t_paquete * unPaquete) {
 	return deserializarRutaArchivo(unPaquete->buffer);
 }
 
-t_nodo_nombre * recibirNombre(t_paquete * unPaquete){
+t_nodo_nombre * recibirNombre(t_paquete * unPaquete) {
 	return deserializarNombreIPPuerto(unPaquete->buffer);
 }
 
@@ -577,10 +589,14 @@ int recibirTareaCompletada(t_paquete * unPaquete) {
 	return deserializarNumero(unPaquete->buffer);
 }
 
-t_nodos_bloques * recibirListaNodoBloques(t_paquete * unPaquete){
-	 return deserializarListaNodoBloques(unPaquete->buffer); //TODO HACER CLICK EN LA FN() Y TERMINAR LA DESERIALIZACION
+t_nodos_bloques * recibirListaNodoBloques(t_paquete * unPaquete) {
+	return deserializarListaNodoBloques(unPaquete->buffer); //TODO HACER CLICK EN LA FN() Y TERMINAR LA DESERIALIZACION
 }
 
 //t_resultado_transformacion* recibirResultadoTransformacion(t_paquete* unPaquete){
 //	return deserializarResultadoTransformacion(unPaquete->buffer);
 //}
+
+t_archivo_y_ruta * recibirRutaArchivoRutaDestino(t_paquete * unPaquete){
+	return deserializarRutaArchivoRutaDestino(unPaquete->buffer);
+}

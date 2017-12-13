@@ -670,6 +670,35 @@ void serializarRutaArchivo(t_paquete * unPaquete, char * rutaArchivo,
 			tamMasterSolicitante);
 }
 
+void serializarRutaArchivoRutaDestino(t_paquete * unPaquete, void * rutaArchivo,
+		char *rutaAGuardar) {
+	size_t tamArch;
+
+	FILE * archivofd;
+
+	void * archivo = abrirArchivo(rutaArchivo, &tamArch, &archivofd);
+
+	int tamRuta = strlen(rutaAGuardar) + 1;
+
+	unPaquete->buffer = malloc(sizeof(t_stream));
+	unPaquete->buffer->data = malloc(tamArch + tamRuta);
+	unPaquete->buffer->size = tamArch + tamRuta;
+
+	int desplazamiento = 0;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, rutaAGuardar, tamRuta);
+	desplazamiento += tamRuta;
+
+	memcpy(unPaquete->buffer->data + desplazamiento, &tamArch, sizeof(int));
+	desplazamiento += sizeof(int);
+
+	memcpy(unPaquete->buffer->data + desplazamiento, archivo, tamArch);
+
+	munmap(archivo, tamArch);
+
+	fclose(archivofd);
+}
+
 /*-------------------------Deserializacion-------------------------*/
 int deserializarNumero(t_stream* buffer) {
 	return *(int*) (buffer->data);
@@ -1087,7 +1116,8 @@ t_nodos_bloques * deserializarListaNodoBloques(t_stream * buffer) {
 	}
 
 	//Deserializo socket master solicitante
-	memcpy(&nodosBloques->masterSolicitante, buffer->data + desplazamiento, sizeof(int));
+	memcpy(&nodosBloques->masterSolicitante, buffer->data + desplazamiento,
+			sizeof(int));
 
 	return nodosBloques;
 }
@@ -1125,6 +1155,21 @@ t_solicitudArchivo * deserializarRutaArchivo(t_stream * buffer) {
 //t_resultado_transformacion* deserializarResultadoTransformacion(t_stream * buffer){
 //	//TODO HACER SEREALIZACION DE RECEPCION DE RESULTADO DE TRANSFORMACION
 //}
+
+t_archivo_y_ruta * deserializarRutaArchivoRutaDestino(t_stream * buffer){
+	t_archivo_y_ruta * archRuta = malloc(sizeof(t_archivo_y_ruta));
+
+	archRuta->rutaDestino = strdup(buffer->data);
+	int desplazamiento = strlen(archRuta->rutaDestino) + 1;
+
+	memcpy(&archRuta->tamArchivo,buffer->data + desplazamiento, sizeof(int));
+	desplazamiento += sizeof(int);
+
+	archRuta->archivo = malloc(archRuta->tamArchivo);
+	memcpy(archRuta->archivo,buffer->data + desplazamiento, archRuta->tamArchivo);
+
+	return archRuta;
+}
 
 /*-------------------------Funciones auxiliares-------------------------*/
 void * abrirArchivo(char * rutaArchivo, size_t * tamArc, FILE ** archivo) {

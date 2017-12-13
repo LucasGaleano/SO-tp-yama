@@ -69,6 +69,9 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_RUTA_ARCHIVO:
 		procesarEnviarRutaArchivo(unPaquete, *client_socket);
 		break;
+	case ENVIAR_RUTA_ARCHIVO_RUTA_DESTINO:
+		procesarEnviarRutaArchivoRutaDestino(unPaquete, *client_socket);
+		break;
 	default:
 		break;
 	}
@@ -419,6 +422,54 @@ void procesarNombre(t_paquete * unPaquete, int * client_socket) {
 	free(nodo->nombre);
 	free(nodo->puerto);
 	free(nodo);
+}
+
+void procesarEnviarRutaArchivoRutaDestino(t_paquete * unPaquete,
+		int client_socket) {
+	t_archivo_y_ruta * archRuta = deserializarRutaArchivoRutaDestino(
+			unPaquete->buffer);
+
+	//Creo la carpeta temporal
+	char * rutaFS = string_new();
+	string_append(&rutaFS, RUTA_METADATA);
+	string_append(&rutaFS, "metadata/temporales/");
+
+	mkdir(rutaFS, 0777);
+
+	//Creo el archivo temporal
+	string_append(&rutaFS, "almacenamientoFinal");
+	FILE* file = fopen(rutaFS, "w+b");
+
+	fwrite(archRuta->archivo, archRuta->tamArchivo, 1, file);
+
+	fclose(file);
+
+	//Busco el nombre del archivo
+	char ** separado = string_split(archRuta->rutaDestino, "/");
+
+	int posicion;
+
+	for (posicion = 0; separado[posicion] != NULL; ++posicion) {
+	}
+
+	posicion -= 1;
+
+	//Almaceno el archivo en el FS
+	almacenarArchivo(rutaFS,archRuta->rutaDestino,separado[posicion],BINARIO);
+
+	//Borro el archivo temporal
+	remove(rutaFS);
+
+	//Borro la carpeta temporales
+	char * rutaTemporal = string_new();
+	string_append(&rutaTemporal, RUTA_METADATA);
+	string_append(&rutaTemporal, "metadata/temporales");
+	remove(rutaTemporal);
+
+	//Libero memoria
+	free(rutaFS);
+	free(rutaTemporal);
+	destruirSubstring(separado);
 }
 
 /*-------------------------Manejos de estado-------------------------*/

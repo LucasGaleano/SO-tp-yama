@@ -54,9 +54,9 @@ void							enviarTareaCompletada						(int, int);
 
 void							enviarListaNodoBloques						(int, t_nodos_bloques *, int);
 
-void 							enviarRutaParaArrancarTransformacion		(int server_socket, char * ruta);
+void 							enviarRutaParaArrancarTransformacion		(int, char *);
 
-char * 							recibirRutaParaArrancarTransformacion		(t_paquete * unPaquete);
+void 							enviarRutaArchivoRutaDestino				(int, char *, char *);
 
 /*-----------------------------------Recibir paquetes-----------------------------------*/
 int 							recibirHandshake							(t_paquete *);
@@ -96,5 +96,9 @@ int								recibirError								(t_paquete *);
 int								recibirTareaCompletada						(t_paquete *);
 
 t_nodos_bloques *				recibirListaNodoBloques						(t_paquete *);
+
+char * 							recibirRutaParaArrancarTransformacion		(t_paquete *);
+
+t_archivo_y_ruta * 				recibirRutaArchivoRutaDestino				(t_paquete *);
 
 #endif /* SRC_PROCESAMIENTOPAQUETES_H_ */

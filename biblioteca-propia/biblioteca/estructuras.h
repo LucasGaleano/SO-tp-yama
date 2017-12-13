@@ -99,7 +99,9 @@ enum cod_op{
 
 	ENVIAR_ERROR_JOB,
 
-	RESULTADO_TRANSFORMACION
+	RESULTADO_TRANSFORMACION,
+
+	ENVIAR_RUTA_ARCHIVO_RUTA_DESTINO,
 
 };
 
@@ -263,5 +265,13 @@ typedef struct {
 	t_list * puertoIP;
 	int masterSolicitante;
 } t_nodos_bloques;
+
+/*------------------------------Estructuras de comunicacion FS Worker------------------------------*/
+typedef struct {
+	char * rutaDestino;
+	int tamArchivo;
+	void * archivo;
+} t_archivo_y_ruta;
+
 
 #endif /* BIBLIOTECA_ESTRUCTURAS_H_ */
