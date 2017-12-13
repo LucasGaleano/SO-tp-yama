@@ -206,7 +206,7 @@ void mandarDatosTransformacion(t_indicacionTransformacion * transformacion){
 
 		gestionarSolicitudes(conexionWorker, (void *) procesarPaquete);
 
-		if(errorTransformacion || errorWorker)
+		if(errorTransformacion || errorWorker || dejarDeRecibirSolicitudes)
 		{
 			tablaMetricas.cantidadFallosTransformacion ++;
 			pthread_mutex_unlock(&mutexErrorTransformacion);
@@ -284,7 +284,7 @@ void mandarDatosReduccionLocal(t_indicacionReduccionLocal * reduccion)
 
 		gestionarSolicitudes(worker,(void*) procesarPaquete);
 
-		if(errorReduLocal || errorWorker)
+		if(errorReduLocal || errorWorker || dejarDeRecibirSolicitudes)
 		{
 			tablaMetricas.cantidadFallosReduccionLocal ++;
 			pthread_mutex_unlock(&mutexErrorReduccionLocal);
@@ -395,7 +395,7 @@ void gestionarReduccionGlobal()
 
 		gestionarSolicitudes(conexionWorker,(void *) procesarPaquete);
 
-		if (errorReduGlobal || errorWorker)
+		if (errorReduGlobal || errorWorker || dejarDeRecibirSolicitudes)
 		{
 			tablaMetricas.cantidadFallosReduccionGlobal ++;
 			enviarError(conexionYama,ERROR_REDUCCION_GLOBAL);
@@ -435,7 +435,7 @@ void gestionarAlmacenadoFinal(t_indicacionAlmacenadoFinal * indicacion)
 
 	gestionarSolicitudes(conexionWorker,(void *) procesarPaquete);
 
-	if (errorAlmacenamiento || errorWorker)
+	if (errorAlmacenamiento || errorWorker || dejarDeRecibirSolicitudes)
 	{
 		tablaMetricas.cantidadFallosAlmacenamiento ++;
 		enviarError(conexionYama,ERROR_ALMACENAMIENTO_FINAL);
