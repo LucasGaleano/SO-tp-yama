@@ -8,6 +8,9 @@ int main(void) {
 	//Levanto el archivo de configuracion
 	char* path_config_yama =
 			"/home/utnso/workspace/tp-2017-2c-NULL/configuraciones/yama.cfg";
+	logYama = log_create("yama.log", "Yama", true, LOG_LEVEL_TRACE);
+
+	log_trace(logYama, "Arranca proceso Yama");
 
 	configuracion = leerArchivoDeConfiguracionYAMA(path_config_yama);
 
@@ -16,8 +19,6 @@ int main(void) {
 
 	//Creo estructuras administrativas
 	idJob = 0;
-	cola_master = queue_create();
-	masterConectados = list_create(); //TODO VER QUE ONDA COMO HAGO CON LOS MASTERS
 	tabla_de_estados = list_create();
 	tablaPlanificador = Planificador_create();
 
@@ -68,6 +69,7 @@ t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 /*-------------------------Manejo de conexiones-------------------------*/
 void iniciarServidor(char* unPuerto) {
 	iniciarServer(unPuerto, (void *) procesarPaquete);
+	log_trace(logYama, "Inicia Yama como servidor esperando un master");
 }
 
 /*-------------------------Procesamiento paquetes-------------------------*/
@@ -91,7 +93,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_LISTA_NODO_BLOQUES: //RECIBO LISTA DE ARCHIVOS DE FS CON UBICACIONES Y BLOQUES
 		procesarEnviarListaNodoBloques(unPaquete); //
 		break;
-	case ENVIAR_INDICACION_TRANSFORMACION:
+	case RESULTADO_TRANSFORMACION: //TODO REVISAR SI ESTAN BIEN LAS OPERACIONES EN EL CASE, ¿¿MASTER MANDA ESO??
 		procesarResultadoTranformacion(unPaquete, client_socket);
 		break;
 	case ENVIAR_INDICACION_REDUCCION_LOCAL:
@@ -115,6 +117,7 @@ void procesarRecibirHandshake(t_paquete * unPaquete, int * client_socket) {
 		;
 		int * a = malloc(sizeof(int));
 		memcpy(a, client_socket, sizeof(int));
+		//TODO CHECKEAR HANDSHAKE
 		list_add(masterConectados, a); // una lista de master conectados para distribuir job
 		break;
 	default:
@@ -257,7 +260,7 @@ void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
 
 		if (buscarRegistro(-1, -1, resultado->nodo, -1, TRANSFORMACION,
 				PROCESANDO, NULL) == NULL) {
-
+				//TODO POR QUE UN MISMO NODO ????
 			//SI -> MANDAR A HACER TODAS LAS REDUCCIONES LOCALES DE ESE NODO
 
 			//recorrer la tabla registros y enviar paquete reduccion local por cada nodo terminado
@@ -316,7 +319,7 @@ void procesarResultadoReduccionLocal(t_paquete* unPaquete, int *client_socket) {
 
 		char* nombreArchivoReduccionGlobal = nombreArchivoTemp(prefijoArchivosTemporalesReduGlobal);
 
-		void xxxxxxxxxxx(t_elemento_tabla_estado* elemento){
+		void siCumpleCondicionArmarIndicacionDeReduccionGlobal(t_elemento_tabla_estado* elemento){
 			if(elemento->job == registro->job && elemento->etapa == REDUCCION_LOCAL && elemento->estado == FINALIZADO_OK){
 				t_indicacionReduccionGlobal* indicacionReduccionGlobal = malloc(sizeof(t_indicacionReduccionGlobal));//TODO LIBERAR MEMORIA
 				//todo ver lo del encargado
@@ -339,17 +342,16 @@ void procesarResultadoReduccionLocal(t_paquete* unPaquete, int *client_socket) {
 			}
 		}
 
-		list_iterate(tabla_de_estados, (void*)xxxxxxxxxxx);
+		list_iterate(tabla_de_estados, (void*)siCumpleCondicionArmarIndicacionDeReduccionGlobal);
 
-		void enviarIndicacionReduccionGlobal(int server_socket, t_indicacionReduccionGlobal * indicacion);
+		void enviarIndicacionRedGlob(t_indicacionReduccionGlobal* indicacion){
 
-		//TODO DEFINIR ESTO YA !!!!!
-		enviarListaDeIndicacionReduccionGlobal(client_socket, listaDeIndicacionesReduccionGlobal);
+			enviarIndicacionReduccionGlobal(*client_socket , indicacion);
+		}
+
+		list_iterate(listaDeIndicacionesReduccionGlobal, (void*)enviarIndicacionRedGlob);//Mando todas las indicaciones
+		enviarTareaCompletada(*client_socket, NO_CONTINUA); //aviso que ya esta
 	}
-
-
-
-
 
 }
 

@@ -10,6 +10,7 @@
 #include <biblioteca/sockets.h>
 #include <commons/string.h>
 #include <pthread.h>
+#include <commons/log.h>
 
 #include "tablas.h"
 #include <biblioteca/paquetes.h>
@@ -29,6 +30,8 @@ typedef struct {
 
 /*----------------------------------Variables globales----------------------------------*/
 t_configuracion * configuracion;
+
+t_log* logYama;
 
 //Socket FS
 int socketFS;
