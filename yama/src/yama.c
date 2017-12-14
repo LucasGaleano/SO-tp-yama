@@ -2,22 +2,21 @@
 
 int main(void) {
 
-
-	listaDireccionesNodos = list_create();
-
 	//Levanto el archivo de configuracion
 	char* path_config_yama =
 			"/home/utnso/workspace/tp-2017-2c-NULL/configuraciones/yama.cfg";
+
 	logYama = log_create("yama.log", "Yama", true, LOG_LEVEL_TRACE);
 
-	log_trace(logYama, "Arranca proceso Yama");
-
 	configuracion = leerArchivoDeConfiguracionYAMA(path_config_yama);
+
+	log_trace(logYama, "Arranca proceso Yama");
 
 	//Me conecto con el file system
 	socketFS = conectarCliente(configuracion->ip, configuracion->puerto, YAMA); //todo VERIFICAR CONEXION CON FS ROMPER
 
 	//Creo estructuras administrativas
+	listaDireccionesNodos = list_create();
 	idJob = 0;
 	tabla_de_estados = list_create();
 	tablaPlanificador = Planificador_create();
@@ -45,22 +44,22 @@ t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 
 	configuracion = malloc(sizeof(t_configuracion));
 
-	configuracion->ip = config_get_string_value(config, "FS_IP");
-	configuracion->puerto = config_get_string_value(config, "FS_PUERTO");
-	configuracion->retardo = config_get_int_value(config,
-			"RETARDO_PLANIFICACION");
-	configuracion->algoritmo = config_get_string_value(config,
-			"ALGORITMO_BALANCEO");
-	configuracion->puerto_yama = config_get_string_value(config, "PUERTO_YAMA");
-	configuracion->disponibilidad_base = config_get_int_value(config,
-			"DISPONIBILIDAD_BASE");
+	configuracion->ip = strdup(config_get_string_value(config, "FS_IP"));
 
-	printf(
-			"Se levanto el proceso YAMA con: YAMA_PUERTO: %s  FS_IP: %s - FS_PUERTO: %s - RETARDO: %d - ALGORITMO: %s - DISPONIBILIDAD BASE: %d \n",
-			configuracion->puerto_yama, configuracion->ip,
-			configuracion->puerto, configuracion->retardo,
-			configuracion->algoritmo, configuracion->disponibilidad_base);
+	configuracion->puerto = strdup(config_get_string_value(config, "FS_PUERTO"));
 
+	configuracion->retardo = config_get_int_value(config, "RETARDO_PLANIFICACION");
+
+	configuracion->algoritmo = strdup(config_get_string_value(config,"ALGORITMO_BALANCEO"));
+
+	configuracion->disponibilidad_base = config_get_int_value(config,"DISPONIBILIDAD_BASE");
+
+	printf("Se levanto el proceso YAMA con: FS_IP: %s - FS_PUERTO: %s - RETARDO: %d - ALGORITMO: %s - DISPONIBILIDAD BASE: %d \n",
+			configuracion->ip,
+			configuracion->puerto,
+			configuracion->retardo,
+			configuracion->algoritmo,
+			configuracion->disponibilidad_base);
 	config_destroy(config);
 
 	return configuracion;
@@ -69,7 +68,6 @@ t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 /*-------------------------Manejo de conexiones-------------------------*/
 void iniciarServidor(char* unPuerto) {
 	iniciarServer(unPuerto, (void *) procesarPaquete, logYama);
-	log_trace(logYama, "Inicia Yama como servidor esperando un master");
 }
 
 /*-------------------------Procesamiento paquetes-------------------------*/
