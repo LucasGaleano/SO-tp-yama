@@ -35,8 +35,13 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 			;
 			t_stream * bufferEncontrado = dividirBloqueArchivoTexto(archivo,
 					&desplazamiento, tamArch);
-			tamBuffer = bufferEncontrado->size;
-			buffer = bufferEncontrado->data;
+			buffer = malloc(bufferEncontrado->size);
+			memcpy(buffer,bufferEncontrado->data,bufferEncontrado->size);
+			memcpy(&tamBuffer,&bufferEncontrado->size,sizeof(int));
+
+			free(bufferEncontrado->data);
+			free(bufferEncontrado);
+
 			//Verifico que el buffer no sea superior a el tamanio del bloque
 			if (tamBuffer > TAM_BLOQUE) {
 				log_warning(logFileSystem,
