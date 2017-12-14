@@ -11,7 +11,7 @@
 
 #include <biblioteca/sockets.h>
 
-#define RUTA_METADATA "/home/utnso/Escritorio/"
+#define RUTA_METADATA "/home/utnso/"
 
 /*---------	---------------Estructuras-------------------------*/
 //Tabla de sockets
