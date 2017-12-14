@@ -9,6 +9,8 @@
 #include <string.h>
 #include <biblioteca/estructuras.h>
 
+t_list* listaDireccionesNodos;
+
 t_puerto_ip* buscarIpYPuertoConNombreNodo		(char* nombreNodo, t_list* listaDireccionesNodos);
 int 		 buscarTamanioArchivoConNombreNodo	(char* nombreNodo, t_list* listaBloquesNodos);
 int mapearBloqueArchivoABloqueNodo(t_list* listaBloquesNodos, char* nombreNodo, int bloqueArchivo);
