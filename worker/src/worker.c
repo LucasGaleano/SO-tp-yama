@@ -415,6 +415,7 @@ void recibirDatos(t_paquete * unPaquete, int * client_socket) {
 		}
 		break;
 	case ENVIAR_PALABRA:
+		free(aux->palabra);
 		aux->palabra = recibirMensaje(unPaquete);
 		break;
 	default:
