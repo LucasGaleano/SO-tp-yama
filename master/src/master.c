@@ -320,7 +320,7 @@ void gestionarReduccionGlobal() {
 	gettimeofday(&t0, NULL);
 	int cantidadSolicitudes = list_size(indicacionesDeReduccionGlobal);
 	int posActual = 0;
-	t_pedidoReduccionGlobal * pedidos = calloc(cantidadSolicitudes - 1,
+	t_pedidoReduccionGlobal ** pedidos = calloc(cantidadSolicitudes - 1,
 			sizeof(t_pedidoReduccionGlobal));
 	int conexionWorker;
 	while (posActual < (cantidadSolicitudes - 1)) // no sumo posActual si encuentro al encargado
@@ -377,6 +377,7 @@ void gestionarReduccionGlobal() {
 		free(pedidos[posActual]->archivoReduccionPorWorker);
 		free(pedidos[posActual]->ip);
 		free(pedidos[posActual]->puerto);
+		free(pedidos[posActual]);
 		posActual++;
 	}
 
