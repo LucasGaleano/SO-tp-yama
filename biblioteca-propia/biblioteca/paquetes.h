@@ -48,7 +48,7 @@ void 							enviarSolicitudAlmacenadoFinal				(int, t_pedidoAlmacenadoFinal *);
 
 void 							enviarIndicacionTransformacion				(int, t_indicacionTransformacion *);
 void 							enviarIndicacionReduccionLocal				(int, t_indicacionReduccionLocal *);
-void 							enviarIndicacionReduccionGlobal				(int, t_indicacionReduccionGlobal *);
+void 							enviarIndicacionReduccionGlobal				(int, t_list *);
 void 							enviarIndicacionAlmacenadoFinal				(int, t_indicacionAlmacenadoFinal *);
 
 void							enviarError									(int, int);

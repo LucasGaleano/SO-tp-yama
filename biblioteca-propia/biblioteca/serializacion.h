@@ -36,7 +36,7 @@ void 							serializarSolicitudAlmacenadoFinal				(t_paquete *, t_pedidoAlmacena
 
 void 							serializarIndicacionTransformacion				(t_paquete *, t_indicacionTransformacion *);
 void 							serializarIndicacionReduccionLocal				(t_paquete *, t_indicacionReduccionLocal *);
-void 							serializarIndicacionReduccionGlobal				(t_paquete *, t_indicacionReduccionGlobal *);
+void 							serializarIndicacionReduccionGlobal				(t_paquete *, t_list *);
 void 							serializarIndicacionAlmacenadoFinal				(t_paquete *, t_indicacionAlmacenadoFinal *);
 
 void 							serializarListaNodoBloques						(t_paquete *, t_nodos_bloques *, int);
@@ -78,7 +78,7 @@ t_pedidoAlmacenadoFinal* 		deserializarSolicitudAlmacenadoFinal			(t_stream *);
 
 t_indicacionTransformacion* 	deserializarIndicacionTransformacion			(t_stream *);
 t_indicacionReduccionLocal* 	deserializarIndicacionReduccionLocal			(t_stream *);
-t_indicacionReduccionGlobal* 	deserializarIndicacionReduccionGlobal			(t_stream *);
+t_list *					 	deserializarIndicacionReduccionGlobal			(t_stream *);
 t_indicacionAlmacenadoFinal* 	deserializarIndicacionAlmacenadoFinal			(t_stream *);
 
 t_nodos_bloques *				deserializarListaNodoBloques					(t_stream *);
