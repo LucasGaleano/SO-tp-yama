@@ -130,7 +130,7 @@ void procesarError(t_paquete * unPaquete, int * client_socket) {
 	nodo->disponible = false;
 
 	//Verifico si el FS queda en estado estable
-	if (verificarEstadoEstable()  && formateado) {
+	if (verificarEstadoEstable() && formateado) {
 		log_warning(logFileSystem,
 				"Se desconecto un Nodo pero el FS queda en estado estable");
 	} else {
@@ -467,12 +467,11 @@ void procesarEnviarRutaArchivoRutaDestino(t_paquete * unPaquete,
 	//Almaceno el archivo en el FS
 	char * destino = string_new();
 	int i;
-	for(i=0;i<posicion;i++){
-		string_append(&destino,separado[i]);
+	for (i = 0; i < posicion; i++) {
+		string_append(&destino, separado[i]);
 	}
 
-	almacenarArchivo(rutaFS, destino, separado[posicion],
-			BINARIO);
+	almacenarArchivo(rutaFS, destino, separado[posicion], BINARIO);
 
 	//Borro el archivo temporal
 	remove(rutaFS);
@@ -555,6 +554,16 @@ void consideroEstadoAnterior() {
 
 /*-------------------------Estado estable/no estable-------------------------*/
 bool verificarEstadoEstable() {
+	char * rutaArchivos = string_new();
+	string_append(&rutaArchivos, RUTA_METADATA);
+	string_append(&rutaArchivos, "metadata/archivos");
+
+	if (mkdir(rutaArchivos, 0777) != -1) {
+		remove(rutaArchivos);
+		free(rutaArchivos);
+		return true;
+	}
+
 	t_list * listaArchivos = buscarTodosArchivos();
 
 	bool estoyEnEstadoEstable(char * rutaArchivo) {

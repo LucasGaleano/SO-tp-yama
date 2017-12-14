@@ -871,6 +871,28 @@ void copiarArchivoYamafsALocal(char * linea) {
 
 	posicion -= 1;
 
+	//Busco el index del padre
+	int indexPadre;
+
+	if (posicion == 0) {
+		indexPadre = obtenerIndex("root");
+	} else {
+		indexPadre = obtenerIndex(separado[posicion - 1]);
+	}
+
+	//Abro el archivo de config
+	char * rutaFS = string_new();
+	string_append(&rutaFS, RUTA_METADATA);
+	string_append(&rutaFS, "metadata/archivos/");
+	char * indexChar = string_itoa(indexPadre);
+	string_append(&rutaFS, indexChar);
+	string_append(&rutaFS, "/");
+	string_append(&rutaFS, separado[posicion]);
+
+	t_config * configArchivo = config_create(rutaFS);
+
+	int tamArchivo = config_get_int_value(configArchivo,"TAMANIO");
+
 	//Reconstruyo el archivo que me piden
 	char* archivoTemporal = leerArchivo(path_archivo_origen);
 
@@ -885,7 +907,7 @@ void copiarArchivoYamafsALocal(char * linea) {
 
 	FILE* file = fopen(directorio_filesystem, "w+b");
 
-	fwrite(archivoTemporal, strlen(archivoTemporal), 1, file);
+	fwrite(archivoTemporal, tamArchivo, 1, file);
 
 	fclose(file);
 
@@ -894,6 +916,10 @@ void copiarArchivoYamafsALocal(char * linea) {
 	free(directorio_filesystem);
 	free(archivoTemporal);
 	destruirSubstring(separado);
+	free(indexChar);
+	free(rutaFS);
+	config_destroy(configArchivo);
+
 }
 
 void crearCopiaBloqueEnNodo(char * linea) {
