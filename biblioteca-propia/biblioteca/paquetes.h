@@ -91,7 +91,7 @@ t_pedidoAlmacenadoFinal* 		recibirSolicitudAlmacenadoFinal				(t_paquete *);
 
 t_indicacionTransformacion* 	recibirIndicacionTransformacion				(t_paquete *);
 t_indicacionReduccionLocal*	 	recibirIndicacionReduccionLocal				(t_paquete *);
-t_indicacionReduccionGlobal*	recibirIndicacionReduccionGlobal			(t_paquete *);
+t_list *						recibirIndicacionReduccionGlobal			(t_paquete *);
 t_indicacionAlmacenadoFinal* 	recibirIndicacionAlmacenadoFinal			(t_paquete *);
 
 int								recibirError								(t_paquete *);

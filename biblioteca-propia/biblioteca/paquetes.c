@@ -571,7 +571,7 @@ t_indicacionReduccionLocal * recibirIndicacionReduccionLocal(
 	return deserializarIndicacionReduccionLocal(unPaquete->buffer);
 }
 
-t_indicacionReduccionGlobal * recibirIndicacionReduccionGlobal(
+t_list * recibirIndicacionReduccionGlobal(
 		t_paquete * unPaquete) {
 	return deserializarIndicacionReduccionGlobal(unPaquete->buffer);
 }
