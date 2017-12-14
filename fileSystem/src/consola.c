@@ -125,6 +125,7 @@ void ejecutarComando(char * linea, bool * ejecutar) {
 	if (string_starts_with(linea, "pruebaT")) {
 		almacenarArchivo("/home/utnso/Escritorio/nombres.csv", "base", "prueba",
 				TEXTO);
+		printf("Termine de almacenar el archivo \n");
 
 		return;
 	}
@@ -132,7 +133,15 @@ void ejecutarComando(char * linea, bool * ejecutar) {
 	if (string_starts_with(linea, "pruebaB")) {
 		almacenarArchivo("/home/utnso/Escritorio/Feraligatr4sotw-1.png", "base",
 				"prueba", BINARIO);
+		printf("Termine de almacenar el archivo \n");
 
+		return;
+	}
+
+	if (string_starts_with(linea, "pruebaD")) {
+		char * path_archivo = obtenerParametro(linea, 1);
+		int index = obtenerIndexDirectorio(path_archivo);
+		printf("%d \n", index);
 		return;
 	}
 
@@ -182,7 +191,7 @@ void ejecutarMan() {
 			"	mkdir --> Crea un directorio. Si el directorio ya existe, el comando deberá informarlo \n");
 	printf(
 			"	cpfrom --> Copiar un archivo local al yamafs, siguiendo los lineamientos en la operaciòn Almacenar Archivo, de la Interfaz del FileSystem \n");
-	printf("	cpto --> Copiar un archivo local al yamafs \n");
+	printf("	cpto --> Copiar un archivo del yamafs al fs local \n");
 	printf(
 			"	cpblock --> Crea una copia de un bloque de un archivo en el nodo dado \n");
 	printf("	md5 --> Solicitar el MD5 de un archivo en yamafs \n");
@@ -207,11 +216,13 @@ void formatearFilesystem() {
 
 	char * archivoDirectorio = string_new();
 	string_append(&archivoDirectorio, RUTA_METADATA);
-	borrarArchivosDirectorios("metadata/bitmaps");
+	string_append(&archivoDirectorio, "metadata/bitmaps");
+	borrarArchivosDirectorios(archivoDirectorio);
 
 	char * ruta = string_new();
 	string_append(&ruta, RUTA_METADATA);
 	string_append(&ruta, "metadata");
+	mkdir(ruta, 0777);
 	crearTablaNodos(ruta);
 	crearTablaDirectorios(ruta);
 
@@ -249,13 +260,7 @@ void eliminarArchivo(char * linea) {
 	posicion -= 1;
 
 	//Busco el index del padre
-	int indexPadre;
-
-	if (posicion == 0) {
-		indexPadre = obtenerIndex("root");
-	} else {
-		indexPadre = obtenerIndex(separado[posicion - 1]);
-	}
+	int indexPadre = obtenerIndexPadre(path_archivo);
 
 	//Busco la configuracion del archivo
 	char * rutaFS = string_new();
@@ -346,13 +351,7 @@ void eliminarDirectorio(char * linea) {
 	posicion -= 1;
 
 	//Busco el directorio que voy a eliminar
-	int indexPadre;
-
-	if (posicion == 0) {
-		indexPadre = obtenerIndex("root");
-	} else {
-		indexPadre = obtenerIndex(separado[posicion - 1]);
-	}
+	int indexPadre = obtenerIndexPadre(path_directorio);
 
 	bool esRegistroBuscado(t_directory * registro) {
 		return string_equals_ignore_case(registro->nombre, separado[posicion])
@@ -430,13 +429,7 @@ void eliminarBloque(char * linea) {
 	posicion -= 1;
 
 	//Busco el index del padre
-	int indexPadre;
-
-	if (posicion == 0) {
-		indexPadre = obtenerIndex("root");
-	} else {
-		indexPadre = obtenerIndex(separado[posicion - 1]);
-	}
+	int indexPadre = obtenerIndexPadre(path_archivo);
 
 	//Busco la configuracion del archivo
 	char * rutaFS = string_new();
@@ -613,7 +606,7 @@ void modificar(char * linea) {
 		return;
 	}
 
-	//Busco el nombre del directorio original
+	//Busco el nombre de lo que voy a elminir
 	char ** separadoOriginal = string_split(path_original, "/");
 
 	int posicionOriginal;
@@ -624,7 +617,31 @@ void modificar(char * linea) {
 
 	posicionOriginal -= 1;
 
-	//Busco el nombre del directorio final
+	//Busco lo que voy a modificar
+	int indexPadreOriginal = obtenerIndexPadre(path_original);
+
+	bool esRegistroBuscado(t_directory * registro) {
+		return string_equals_ignore_case(registro->nombre,
+				separadoOriginal[posicionOriginal])
+				&& registro->padre == indexPadreOriginal;
+	}
+
+	t_directory * registroDirectorio = list_find(tablaDirectorios,
+			(void*) esRegistroBuscado);
+
+	if (registroDirectorio == NULL) {
+		modificarArchivo(path_original, path_final);
+		return;
+	}
+
+	//Verifico si quiero renombrar o mover
+	char * nuevoNombre = string_new();
+	int nuevoIndex = registroDirectorio->padre;
+
+	//Busco el index del padre del nombre final
+	int indexPadreFinal = obtenerIndexPadre(path_final);
+
+	//Busco el nombre de lo nuevo
 	char ** separadoFinal = string_split(path_final, "/");
 
 	int posicionFinal;
@@ -635,44 +652,6 @@ void modificar(char * linea) {
 
 	posicionFinal -= 1;
 
-	//Busco lo que voy a modificar
-	int indexPadre;
-
-	if (posicionOriginal == 0) {
-		indexPadre = obtenerIndex("root");
-	} else {
-		indexPadre = obtenerIndex(separadoOriginal[posicionOriginal - 1]);
-	}
-
-	bool esRegistroBuscado(t_directory * registro) {
-		return string_equals_ignore_case(registro->nombre,
-				separadoOriginal[posicionOriginal])
-				&& registro->padre == indexPadre;
-	}
-
-	t_directory * registroDirectorio = list_find(tablaDirectorios,
-			(void*) esRegistroBuscado);
-
-	if (registroDirectorio == NULL) {
-		modificarArchivo(separadoOriginal, separadoFinal, indexPadre,
-				posicionOriginal, posicionFinal, path_original);
-		free(path_final);
-		return;
-	}
-
-	//Verifico si quiero renombrar o mover
-	char * nuevoNombre = string_new();
-	int nuevoIndex = registroDirectorio->padre;
-
-	//Busco el index del padre del nombre final
-	int indexPadreFinal;
-
-	if (posicionFinal == 0) {
-		indexPadreFinal = obtenerIndex("root");
-	} else {
-		indexPadreFinal = obtenerIndex(separadoFinal[posicionFinal - 1]);
-	}
-
 	//Busco los hijos del directorio
 	bool soyDirectorio(t_directory * registro) {
 		return string_equals_ignore_case(registro->nombre,
@@ -682,11 +661,7 @@ void modificar(char * linea) {
 
 	if (list_any_satisfy(tablaDirectorios, (void*) soyDirectorio)) {
 		//Quiero mover un archivo
-		if (posicionFinal == 0) {
-			nuevoIndex = obtenerIndex("root");
-		} else {
-			nuevoIndex = obtenerIndex(separadoFinal[posicionFinal]);
-		}
+		nuevoIndex = obtenerIndexDirectorio(path_final);
 		string_append(&nuevoNombre, registroDirectorio->nombre);
 	} else {
 		//Quiero renombrar un archivo
@@ -750,13 +725,7 @@ void crearDirectorio(char * linea) {
 
 	strncpy(registro->nombre, separado[posicion], sizeof(registro->nombre) - 1);
 
-	int indexPadre;
-
-	if (posicion == 0) {
-		indexPadre = obtenerIndex("root");
-	} else {
-		indexPadre = obtenerIndex(separado[posicion - 1]);
-	}
+	int indexPadre = obtenerIndexPadre(path_dir);
 
 	if (indexPadre == -1) {
 		printf(
@@ -869,6 +838,22 @@ void copiarArchivoYamafsALocal(char * linea) {
 
 	posicion -= 1;
 
+	//Busco el index del padre
+	int indexPadre = obtenerIndexPadre(path_archivo_origen);
+
+	//Abro el archivo de config
+	char * rutaFS = string_new();
+	string_append(&rutaFS, RUTA_METADATA);
+	string_append(&rutaFS, "metadata/archivos/");
+	char * indexChar = string_itoa(indexPadre);
+	string_append(&rutaFS, indexChar);
+	string_append(&rutaFS, "/");
+	string_append(&rutaFS, separado[posicion]);
+
+	t_config * configArchivo = config_create(rutaFS);
+
+	int tamArchivo = config_get_int_value(configArchivo, "TAMANIO");
+
 	//Reconstruyo el archivo que me piden
 	char* archivoTemporal = leerArchivo(path_archivo_origen);
 
@@ -883,7 +868,7 @@ void copiarArchivoYamafsALocal(char * linea) {
 
 	FILE* file = fopen(directorio_filesystem, "w+b");
 
-	fwrite(archivoTemporal, strlen(archivoTemporal), 1, file);
+	fwrite(archivoTemporal, tamArchivo, 1, file);
 
 	fclose(file);
 
@@ -892,6 +877,10 @@ void copiarArchivoYamafsALocal(char * linea) {
 	free(directorio_filesystem);
 	free(archivoTemporal);
 	destruirSubstring(separado);
+	free(indexChar);
+	free(rutaFS);
+	config_destroy(configArchivo);
+
 }
 
 void crearCopiaBloqueEnNodo(char * linea) {
@@ -932,13 +921,7 @@ void crearCopiaBloqueEnNodo(char * linea) {
 	posicion -= 1;
 
 	//Busco el index del padre
-	int indexPadre;
-
-	if (posicion == 0) {
-		indexPadre = obtenerIndex("root");
-	} else {
-		indexPadre = obtenerIndex(separado[posicion - 1]);
-	}
+	int indexPadre = obtenerIndexPadre(rutaArchivo);
 
 	//Abro el archivo de config
 	char * rutaFS = string_new();
@@ -1001,13 +984,7 @@ void solicitarHash(char * linea) {
 	posicion -= 1;
 
 	//Busco el index del padre
-	int indexPadre;
-
-	if (posicion == 0) {
-		indexPadre = obtenerIndex("root");
-	} else {
-		indexPadre = obtenerIndex(separado[posicion - 1]);
-	}
+	int indexPadre = obtenerIndexPadre(path_archivo_yamafs);
 
 	//Abro el archivo de config
 	char * ruta = string_new();
@@ -1095,6 +1072,15 @@ void listarArchivos(char * linea) {
 	if (path_directorio == NULL)
 		return;
 
+	//Busco el index del direc
+	int indexDir = obtenerIndexPadre(path_directorio);
+
+	if (indexDir <= 0) {
+		printf("%s: No existe el directorio \n", path_directorio);
+		free(path_directorio);
+		return;
+	}
+
 	//Busco el nombre del directorio
 	char ** separado = string_split(path_directorio, "/");
 
@@ -1106,13 +1092,7 @@ void listarArchivos(char * linea) {
 	posicion -= 1;
 
 	//Busco el index del padre del nombre final
-	int indexPadre;
-
-	if (posicion == 0) {
-		indexPadre = obtenerIndex("root");
-	} else {
-		indexPadre = obtenerIndex(separado[posicion - 1]);
-	}
+	int indexPadre = obtenerIndexPadre(path_directorio);
 
 	//Busco los hijos del directorio
 	bool esRegistroBuscado(t_directory * registro) {
@@ -1184,13 +1164,7 @@ void mostrarInfo(char * linea) {
 	posicion -= 1;
 
 	//Busco el index del padre
-	int indexPadre;
-
-	if (posicion == 0) {
-		indexPadre = obtenerIndex("root");
-	} else {
-		indexPadre = obtenerIndex(separado[posicion - 1]);
-	}
+	int indexPadre = obtenerIndexPadre(path_archivo);
 
 	//Abro el archivo de config
 	char * rutaFS = string_new();
@@ -1372,9 +1346,21 @@ void borrarArchivosDirectorios(char * ruta) {
 	closedir(dir);
 }
 
-void modificarArchivo(char ** separadoOriginal, char ** separadoFinal,
-		int indexPadre, int posicionOriginal, int posicionFinal,
-		char * path_original) {
+void modificarArchivo(char* path_original, char* path_final) {
+	//Busco el nombre de lo que voy a elminir
+	char ** separadoOriginal = string_split(path_original, "/");
+
+	int posicionOriginal;
+
+	for (posicionOriginal = 0; separadoOriginal[posicionOriginal] != NULL;
+			++posicionOriginal) {
+	}
+
+	posicionOriginal -= 1;
+
+	//Busco el index del archivo
+	int indexPadre = obtenerIndexPadre(path_original);
+
 	//Verifico que el archivo que voy a modificar exista
 	char * rutaFS = string_new();
 	string_append(&rutaFS, RUTA_METADATA);
@@ -1391,7 +1377,6 @@ void modificarArchivo(char ** separadoOriginal, char ** separadoFinal,
 
 		//Libero memoria
 		destruirSubstring(separadoOriginal);
-		destruirSubstring(separadoFinal);
 		free(path_original);
 		free(rutaFS);
 		free(indexPadreChar);
@@ -1399,16 +1384,19 @@ void modificarArchivo(char ** separadoOriginal, char ** separadoFinal,
 		return;
 	}
 
-	//Verifico si quiero renombrar o mover
-
 	//Busco el index del padre del nombre final
-	int indexPadreFinal;
+	int indexPadreFinal = obtenerIndexPadre(path_final);
 
-	if (posicionFinal == 0) {
-		indexPadreFinal = obtenerIndex("root");
-	} else {
-		indexPadreFinal = obtenerIndex(separadoFinal[posicionFinal - 1]);
+	//Busco el nombre de lo que voy a elminir
+	char ** separadoFinal = string_split(path_final, "/");
+
+	int posicionFinal;
+
+	for (posicionFinal = 0; separadoOriginal[posicionFinal] != NULL;
+			++posicionFinal) {
 	}
+
+	posicionFinal -= 1;
 
 	//Busco los hijos del directorio
 	bool esRegistroBuscado(t_directory * registro) {

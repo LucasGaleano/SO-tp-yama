@@ -8,10 +8,10 @@ t_list * listaTemporal;
 /*-------------------------Almacenar archivo-------------------------*/
 void				almacenarArchivo				(char *, char *, char *, int);
 void * 				dividirBloqueArchivoBinario		(void *, size_t, int *, int *);
-void * 				dividirBloqueArchivoTexto		(void *, int *);
+t_stream *			dividirBloqueArchivoTexto		(void *, int *,int);
 char * 				buscarNodoMenosCargado			(void);
 int 				buscarBloqueAEscribir			(char *);
-char * 				generarBloque					(void *, int);
+t_stream *			generarBloque					(void *, int);
 
 /*-------------------------Leer archivo-------------------------*/
 char* 				leerArchivo						(char *);

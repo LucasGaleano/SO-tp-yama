@@ -204,13 +204,7 @@ t_config * crearArchivoTablaArchivo(char * origen, char *destino, char * nombre,
 	for (posicion = 0; listaDestino[posicion] != NULL; ++posicion) {
 	}
 
-	int indexPadre;
-
-	if (posicion == 0) {
-		indexPadre = obtenerIndex("root");
-	} else {
-		indexPadre = obtenerIndex(listaDestino[posicion - 1]);
-	}
+	int indexPadre = obtenerIndexDirectorio(destino);
 
 	char * indexPadreString = string_itoa(indexPadre);
 
@@ -423,7 +417,8 @@ bool soyEstable(char * rutaArchivo) {
 			free(nodo);
 		}
 
-		list_destroy_and_destroy_elements(bloquesDisponibles, (void*)borrarBloque);
+		list_destroy_and_destroy_elements(bloquesDisponibles,
+				(void*) borrarBloque);
 
 	}
 
@@ -831,8 +826,8 @@ void crearArchivoTablaBitmap(t_nodo_info * info) {
 	string_append(&rutaArchivo, ".dat");
 
 	char * aux = string_new();
-	string_append(&aux,RUTA_METADATA);
-	string_append(&aux,"metadata/bitmaps");
+	string_append(&aux, RUTA_METADATA);
+	string_append(&aux, "metadata/bitmaps");
 	mkdir(aux, 0777);
 	free(aux);
 
@@ -897,7 +892,7 @@ int buscarBloqueLibre(t_config * tablaBitMaps) {
 
 void liberarBloquebitMap(char * nomNodo, int bloque) {
 	char * rutaBitMap = string_new();
-	string_append(&rutaBitMap,RUTA_METADATA);
+	string_append(&rutaBitMap, RUTA_METADATA);
 	string_append(&rutaBitMap, "metadata/bitmaps/");
 	string_append(&rutaBitMap, nomNodo);
 	string_append(&rutaBitMap, ".dat");
@@ -1023,19 +1018,66 @@ int buscarIndexLibre() {
 	return index;
 }
 
-int obtenerIndex(char * nombre) {
+int obtenerIndex(char ** separado, int posicion) {
 	bool esPadreBuscado(t_directory * registro) {
-		return string_equals_ignore_case(registro->nombre, nombre);
+		return string_equals_ignore_case(registro->nombre, "root") && -1 == registro->padre;
 	}
 
 	t_directory *registro = list_find(tablaDirectorios, (void*) esPadreBuscado);
 
-	if (registro == NULL) {
-		return -1;
-	}
+	int registroPadre = registro->index;
 
-	return registro->index;
+	int i;
+	for (i = 0; i < posicion; i++) {
+		bool esPadreBuscado(t_directory * registro) {
+			return string_equals_ignore_case(registro->nombre, separado[i])
+					&& registroPadre == registro->padre;
+		}
+
+		t_directory * registro = list_find(tablaDirectorios,
+				(void*) esPadreBuscado);
+
+		if(registro == NULL){
+			return -2;
+		}
+
+		registroPadre = registro->index;
+	}
+	return registroPadre;
 }
+
+int obtenerIndexDirectorio(char * rutaDirectorio) {
+	char ** separado = string_split(rutaDirectorio, "/");
+
+	int posicion;
+
+	for (posicion = 0; separado[posicion] != NULL; ++posicion)
+		;
+
+	int index = obtenerIndex(separado,posicion);
+
+	destruirSubstring(separado);
+
+	return index;
+}
+
+int obtenerIndexPadre(char * rutaDirectorio) {
+	char ** separado = string_split(rutaDirectorio, "/");
+
+	int posicion;
+
+	for (posicion = 0; separado[posicion] != NULL; ++posicion)
+		;
+
+	posicion --;
+
+	int index = obtenerIndex(separado,posicion);
+
+	destruirSubstring(separado);
+
+	return index;
+}
+
 
 void destruirSubstring(char ** sub) {
 	int i;
