@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
 	enviarRutaParaArrancarTransformacion(conexionYama, rutaArchivoParaArrancar);
 
 	while (!finDeSolicitudes && !dejarDeRecibirSolicitudes) {
-
+		log_trace(logMaster, "Esperando solicitud de Yama");
 		gestionarSolicitudes(conexionYama, (void *) procesarPaquete, logMaster);
 
 	}

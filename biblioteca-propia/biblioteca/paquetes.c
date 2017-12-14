@@ -443,6 +443,8 @@ void enviarRutaParaArrancarTransformacion(int server_socket, char * ruta) {
 	unPaquete->codigoOperacion = ENVIAR_RUTA_PARA_ARRANCAR_TRANSFORMACION;
 
 	serializarMensaje(unPaquete, ruta);
+
+	enviarPaquetes(server_socket, unPaquete);
 }
 
 void enviarError(int server_socket, int cod_error) {

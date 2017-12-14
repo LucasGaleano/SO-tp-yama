@@ -24,8 +24,8 @@ typedef struct {
 	char * puerto;
 	int retardo;
 	char * algoritmo;
-	char * puerto_yama;
 	int disponibilidad_base;
+	char* puerto_yama;
 } t_configuracion;
 
 /*----------------------------------Variables globales----------------------------------*/
@@ -35,9 +35,6 @@ t_log* logYama;
 
 //Socket FS
 int socketFS;
-
-//Globales Masters
-t_queue* cola_master;
 
 long idJob;
 
@@ -51,7 +48,6 @@ t_list* masterConectados;
 int socketFS;
 t_queue* cola_master;
 long idJob;
-t_list* masterConectados;
 
 /*----------------------------------Planificador--------------------------------------------*/
 

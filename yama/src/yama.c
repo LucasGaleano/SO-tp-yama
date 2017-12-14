@@ -2,22 +2,21 @@
 
 int main(void) {
 
-
-	listaDireccionesNodos = list_create();
-
 	//Levanto el archivo de configuracion
 	char* path_config_yama =
 			"/home/utnso/workspace/tp-2017-2c-NULL/configuraciones/yama.cfg";
+
 	logYama = log_create("yama.log", "Yama", true, LOG_LEVEL_TRACE);
 
-	log_trace(logYama, "Arranca proceso Yama");
-
 	configuracion = leerArchivoDeConfiguracionYAMA(path_config_yama);
+
+	log_trace(logYama, "Arranca proceso Yama");
 
 	//Me conecto con el file system
 	socketFS = conectarCliente(configuracion->ip, configuracion->puerto, YAMA); //todo VERIFICAR CONEXION CON FS ROMPER
 
 	//Creo estructuras administrativas
+	listaDireccionesNodos = list_create();
 	idJob = 0;
 	tabla_de_estados = list_create();
 	tablaPlanificador = Planificador_create();
@@ -31,6 +30,8 @@ int main(void) {
 		perror("Error el crear el thread servidor.");
 		exit(EXIT_FAILURE);
 	}
+
+	pthread_join(threadServerYama, NULL);
 
 	destruirConfiguracion(configuracion);
 //	list_destroy_and_destroy_elements(tabla_de_estados, (void*) eliminarElemento() ); //TODO PREGUNTAR SI ESTA BIEN LIBERAR DESPUES DE USAR
@@ -59,9 +60,12 @@ t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 
 	printf(
 			"Se levanto el proceso YAMA con: YAMA_PUERTO: %s  FS_IP: %s - FS_PUERTO: %s - RETARDO: %d - ALGORITMO: %s - DISPONIBILIDAD BASE: %d \n",
-			configuracion->puerto_yama, configuracion->ip,
-			configuracion->puerto, configuracion->retardo,
-			configuracion->algoritmo, configuracion->disponibilidad_base);
+			configuracion->puerto_yama,
+			configuracion->ip,
+			configuracion->puerto,
+			configuracion->retardo,
+			configuracion->algoritmo,
+			configuracion->disponibilidad_base);
 
 	config_destroy(config);
 
@@ -71,7 +75,6 @@ t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 /*-------------------------Manejo de conexiones-------------------------*/
 void iniciarServidor(char* unPuerto) {
 	iniciarServer(unPuerto, (void *) procesarPaquete, logYama);
-	log_trace(logYama, "Inicia Yama como servidor esperando un master");
 }
 
 /*-------------------------Procesamiento paquetes-------------------------*/
@@ -120,7 +123,6 @@ void procesarRecibirHandshake(t_paquete * unPaquete, int * client_socket) {
 		int * a = malloc(sizeof(int));
 		memcpy(a, client_socket, sizeof(int));
 		//TODO CHECKEAR HANDSHAKE
-		list_add(masterConectados, a); // una lista de master conectados para distribuir job
 		break;
 	default:
 		*client_socket = -1;
@@ -162,14 +164,15 @@ void procesarRecibirError(t_paquete * unPaquete) { //supuestamente necesita un s
 
 }
 
-void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete,
-		int *client_socket) {
+void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete, int *client_socket) {
 	char * nomArchivo = recibirMensaje(unPaquete);
+	log_trace(logYama, "Recibida ruta de Archivo");
 	enviarRutaParaArrancarTransformacion(socketFS, nomArchivo);
+	log_trace(logYama, "Enviada ruta para obtener Nodos y Bloques");
 }
 
 void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
-
+	log_trace(logYama, "Recibida lista de bloques y nodos de File System");
 	int idJob = generarJob();
 
 	t_nodos_bloques * nodosBloques = recibirListaNodoBloques(unPaquete); //RECIBO UN STRUCT CON 2 LISTAS ANIDADAS
