@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
 
 	//Quedo a la espera de solicitudes
 	while (recibirSolicitudes) {
-		gestionarSolicitudes(socketFileSystem, (void*) recibirSolicitud);
+		gestionarSolicitudes(socketFileSystem, (void*) recibirSolicitud, logger);
 	}
 
 	//Libero memoria
