@@ -93,7 +93,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_LISTA_NODO_BLOQUES: //RECIBO LISTA DE ARCHIVOS DE FS CON UBICACIONES Y BLOQUES
 		procesarEnviarListaNodoBloques(unPaquete); //
 		break;
-	case RESULTADO_TRANSFORMACION: //TODO REVISAR SI ESTAN BIEN LAS OPERACIONES EN EL CASE, ¿¿MASTER MANDA ESO??
+	case ENVIAR_INDICACION_TRANSFORMACION:
 		procesarResultadoTranformacion(unPaquete, client_socket);
 		break;
 	case ENVIAR_INDICACION_REDUCCION_LOCAL:
@@ -344,13 +344,7 @@ void procesarResultadoReduccionLocal(t_paquete* unPaquete, int *client_socket) {
 
 		list_iterate(tabla_de_estados, (void*)siCumpleCondicionArmarIndicacionDeReduccionGlobal);
 
-		void enviarIndicacionRedGlob(t_indicacionReduccionGlobal* indicacion){
-
-			enviarIndicacionReduccionGlobal(*client_socket , indicacion);
-		}
-
-		list_iterate(listaDeIndicacionesReduccionGlobal, (void*)enviarIndicacionRedGlob);//Mando todas las indicaciones
-		enviarTareaCompletada(*client_socket, NO_CONTINUA); //aviso que ya esta
+		enviarIndicacionReduccionGlobal(*client_socket , listaDeIndicacionesReduccionGlobal);
 	}
 
 }

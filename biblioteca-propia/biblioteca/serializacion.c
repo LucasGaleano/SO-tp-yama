@@ -328,8 +328,8 @@ void serializarSolicitudReduccionGlobal(t_paquete * unPaquete,
 	desplazamiento += tamArchivoResultadoReduccionGlobal;
 
 	memcpy(unPaquete->buffer->data + desplazamiento,
-				&solicitud->cantWorkerInvolucradros, cantidadWorker);
-		desplazamiento += cantidadWorker;
+			&solicitud->cantWorkerInvolucradros, cantidadWorker);
+	desplazamiento += cantidadWorker;
 }
 
 void serializarSolicitudAlmacenadoFinal(t_paquete * unPaquete,
@@ -367,8 +367,8 @@ void serializarIndicacionTransformacion(t_paquete * unPaquete,
 	int tamRutaArchivoTemporal = string_length(indicacion->rutaArchivoTemporal)
 			+ 1;
 
-	int tamTotal = tamEstado + tamNodo + tamDireccion + tamPuerto + tamBloque + tamBytes
-			+ tamRutaArchivoTemporal;
+	int tamTotal = tamEstado + tamNodo + tamDireccion + tamPuerto + tamBloque
+			+ tamBytes + tamRutaArchivoTemporal;
 
 	unPaquete->buffer = malloc(sizeof(t_stream));
 	unPaquete->buffer->size = tamTotal;
@@ -450,49 +450,69 @@ void serializarIndicacionReduccionLocal(t_paquete * unPaquete,
 }
 
 void serializarIndicacionReduccionGlobal(t_paquete * unPaquete,
-		t_indicacionReduccionGlobal * indicacion) {
-	int tamNodo = string_length(indicacion->nodo) + 1;
-	int tamDireccion = string_length(indicacion->ip) + 1;
-	int tamPuerto = string_length(indicacion->puerto) + 1;
-	int tamArchivoDeReduccionLocal = string_length(
-			indicacion->archivoDeReduccionLocal) + 1;
-	int tamArchivoDeReduccionGlobal = string_length(
-			indicacion->archivoDeReduccionGlobal) + 1;
-	int tamEncargado = sizeof(int);
-
-	int tamTotal = tamNodo + tamDireccion + tamPuerto
-			+ tamArchivoDeReduccionLocal + tamArchivoDeReduccionGlobal
-			+ tamEncargado;
+		t_list* listaIndicacionesGlobales) {
 
 	unPaquete->buffer = malloc(sizeof(t_stream));
-	unPaquete->buffer->size = tamTotal;
-
-	unPaquete->buffer->data = malloc(tamTotal);
-
+	unPaquete->buffer->size = 0;
 	int desplazamiento = 0;
 
-	memcpy(unPaquete->buffer->data + desplazamiento, indicacion->nodo, tamNodo);
-	desplazamiento += tamNodo;
+	//Cantidad de elementos de las listas
+	int cantIndicacionesGlobales = listaIndicacionesGlobales->elements_count;
 
-	memcpy(unPaquete->buffer->data + desplazamiento, indicacion->ip,
-			tamDireccion);
-	desplazamiento += tamDireccion;
+	unPaquete->buffer->data = malloc(sizeof(int));
+	memcpy(unPaquete->buffer->data, &cantIndicacionesGlobales, sizeof(int));
 
-	memcpy(unPaquete->buffer->data + desplazamiento, indicacion->puerto,
-			tamPuerto);
-	desplazamiento += tamPuerto;
+	desplazamiento += sizeof(int);
+	unPaquete->buffer->size += desplazamiento;
 
-	memcpy(unPaquete->buffer->data + desplazamiento,
-			indicacion->archivoDeReduccionLocal, tamArchivoDeReduccionLocal);
-	desplazamiento += tamArchivoDeReduccionLocal;
+	void serializarInidicacionReduccionGlobal(
+			t_indicacionReduccionGlobal* indicacionDeReduccionGlobal) {
+		int tamNodo = string_length(indicacionDeReduccionGlobal->nodo) + 1;
+		int tamIp = string_length(indicacionDeReduccionGlobal->ip) + 1;
+		int tamPuerto = string_length(indicacionDeReduccionGlobal->puerto) + 1;
+		int tamArchivoGlobal = string_length(
+				indicacionDeReduccionGlobal->archivoDeReduccionGlobal) + 1;
+		int tamArchivoLocal = string_length(
+				indicacionDeReduccionGlobal->archivoDeReduccionLocal) + 1;
+		int tamEncargado = sizeof(int);
 
-	memcpy(unPaquete->buffer->data + desplazamiento,
-			indicacion->archivoDeReduccionGlobal, tamArchivoDeReduccionGlobal);
-	desplazamiento += tamArchivoDeReduccionGlobal;
+		int tamTotal = tamNodo + tamIp + tamPuerto + tamArchivoGlobal
+				+ tamArchivoLocal + tamEncargado;
 
-	memcpy(unPaquete->buffer->data + desplazamiento, &indicacion->encargado,
-			tamEncargado);
-	desplazamiento += tamEncargado;
+		unPaquete->buffer->size += tamTotal;
+
+		unPaquete->buffer->data = realloc(unPaquete->buffer->data,
+				unPaquete->buffer->size);
+
+		memcpy(unPaquete->buffer->data + desplazamiento,
+				indicacionDeReduccionGlobal->nodo, tamNodo);
+		desplazamiento += tamNodo;
+
+		memcpy(unPaquete->buffer->data + desplazamiento,
+				indicacionDeReduccionGlobal->ip, tamIp);
+		desplazamiento += tamIp;
+
+		memcpy(unPaquete->buffer->data + desplazamiento,
+				indicacionDeReduccionGlobal->puerto, tamPuerto);
+		desplazamiento += tamPuerto;
+
+		memcpy(unPaquete->buffer->data + desplazamiento,
+				indicacionDeReduccionGlobal->archivoDeReduccionGlobal,
+				tamArchivoGlobal);
+		desplazamiento += tamArchivoGlobal;
+
+		memcpy(unPaquete->buffer->data + desplazamiento,
+				indicacionDeReduccionGlobal->archivoDeReduccionLocal,
+				tamArchivoLocal);
+		desplazamiento += tamArchivoLocal;
+
+		memcpy(unPaquete->buffer->data + desplazamiento,
+				indicacionDeReduccionGlobal->encargado, tamEncargado);
+		desplazamiento += tamEncargado;
+	}
+
+	list_iterate(listaIndicacionesGlobales,
+			(void*) serializarInidicacionReduccionGlobal);
 
 }
 
@@ -926,14 +946,16 @@ t_pedidoReduccionGlobal * deserializarSolicitudReduccionGlobal(
 			buffer->data + desplazamiento);
 	desplazamiento += strlen(solicitud->archivoReduccionPorWorker) + 1;
 
-	memcpy(&solicitud->workerEncargado, buffer->data + desplazamiento, sizeof(int));
+	memcpy(&solicitud->workerEncargado, buffer->data + desplazamiento,
+			sizeof(int));
 	desplazamiento += sizeof(int);
 
 	solicitud->ArchivoResultadoReduccionGlobal = strdup(
 			buffer->data + desplazamiento);
 	desplazamiento += strlen(solicitud->ArchivoResultadoReduccionGlobal) + 1;
 
-	memcpy(&solicitud->cantWorkerInvolucradros, buffer->data + desplazamiento, sizeof(int));
+	memcpy(&solicitud->cantWorkerInvolucradros, buffer->data + desplazamiento,
+			sizeof(int));
 	desplazamiento += sizeof(int);
 
 	return solicitud;
@@ -1012,33 +1034,41 @@ t_indicacionReduccionLocal * deserializarIndicacionReduccionLocal(
 	return indicacion;
 }
 
-t_indicacionReduccionGlobal * deserializarIndicacionReduccionGlobal(
-		t_stream * buffer) {
-	t_indicacionReduccionGlobal * indicacion = malloc(
-			sizeof(t_indicacionReduccionGlobal));
-
+t_list * deserializarIndicacionReduccionGlobal(t_stream * buffer) {
 	int desplazamiento = 0;
-
-	indicacion->nodo = strdup(buffer->data + desplazamiento);
-	desplazamiento += strlen(indicacion->nodo) + 1;
-
-	indicacion->ip = strdup(buffer->data + desplazamiento);
-	desplazamiento += strlen(indicacion->ip) + 1;
-
-	indicacion->puerto = strdup(buffer->data + desplazamiento);
-	desplazamiento += strlen(indicacion->puerto) + 1;
-
-	indicacion->archivoDeReduccionLocal = strdup(buffer->data + desplazamiento);
-	desplazamiento += strlen(indicacion->archivoDeReduccionLocal) + 1;
-
-	indicacion->archivoDeReduccionGlobal = strdup(
-			buffer->data + desplazamiento);
-	desplazamiento += strlen(indicacion->archivoDeReduccionGlobal) + 1;
-
-	memcpy(&indicacion->encargado, buffer->data + desplazamiento, sizeof(int));
+	int cantidadElementos = 0;
+	memcpy(&cantidadElementos, buffer->data + desplazamiento, sizeof(int));
 	desplazamiento += sizeof(int);
 
-	return indicacion;
+	t_list * indicaciones = list_create();
+
+	int i;
+	for (i = 0; i < cantidadElementos; ++i) {
+		t_indicacionReduccionGlobal * indicacionReducGlob = malloc(
+				sizeof(t_indicacionReduccionGlobal));
+
+		indicacionReducGlob->nodo = strdup(buffer->data + desplazamiento);
+		desplazamiento += strlen(indicacionReducGlob->nodo) + 1;
+
+		indicacionReducGlob->ip = strdup(buffer->data + desplazamiento);
+		desplazamiento += strlen(indicacionReducGlob->ip) + 1;
+
+		indicacionReducGlob->puerto = strdup(buffer->data + desplazamiento);
+		desplazamiento += strlen(indicacionReducGlob->puerto) + 1;
+
+		indicacionReducGlob->archivoDeReduccionGlobal = strdup(buffer->data + desplazamiento);
+		desplazamiento += strlen(indicacionReducGlob->archivoDeReduccionGlobal) + 1;
+
+		indicacionReducGlob->archivoDeReduccionLocal = strdup(buffer->data + desplazamiento);
+		desplazamiento += strlen(indicacionReducGlob->archivoDeReduccionLocal) + 1;
+
+		memcpy(&indicacionReducGlob->encargado, buffer->data + desplazamiento,
+				sizeof(int));
+		desplazamiento += sizeof(int);
+
+		list_add(indicaciones, indicacionReducGlob);
+	}
+	return indicaciones;
 }
 
 t_indicacionAlmacenadoFinal * deserializarIndicacionAlmacenadoFinal(
@@ -1161,18 +1191,18 @@ t_solicitudArchivo * deserializarRutaArchivo(t_stream * buffer) {
 	return solicitud;
 }
 
-
-t_archivo_y_ruta * deserializarRutaArchivoRutaDestino(t_stream * buffer){
+t_archivo_y_ruta * deserializarRutaArchivoRutaDestino(t_stream * buffer) {
 	t_archivo_y_ruta * archRuta = malloc(sizeof(t_archivo_y_ruta));
 
 	archRuta->rutaDestino = strdup(buffer->data);
 	int desplazamiento = strlen(archRuta->rutaDestino) + 1;
 
-	memcpy(&archRuta->tamArchivo,buffer->data + desplazamiento, sizeof(int));
+	memcpy(&archRuta->tamArchivo, buffer->data + desplazamiento, sizeof(int));
 	desplazamiento += sizeof(int);
 
 	archRuta->archivo = malloc(archRuta->tamArchivo);
-	memcpy(archRuta->archivo,buffer->data + desplazamiento, archRuta->tamArchivo);
+	memcpy(archRuta->archivo, buffer->data + desplazamiento,
+			archRuta->tamArchivo);
 
 	return archRuta;
 }

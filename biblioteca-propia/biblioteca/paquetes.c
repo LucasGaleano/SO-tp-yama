@@ -416,13 +416,12 @@ void enviarIndicacionReduccionLocal(int server_socket,
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarIndicacionReduccionGlobal(int server_socket,
-		t_indicacionReduccionGlobal * indicacion) {
+void enviarIndicacionReduccionGlobal(int server_socket, t_list * listaIndicacionGlobal) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_INDICACION_REDUCCION_GLOBAL;
 
-	serializarIndicacionReduccionGlobal(unPaquete, indicacion);
+	serializarIndicacionReduccionGlobal(unPaquete, listaIndicacionGlobal);
 
 	enviarPaquetes(server_socket, unPaquete);
 }
