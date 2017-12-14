@@ -1073,7 +1073,7 @@ void listarArchivos(char * linea) {
 		return;
 
 	//Busco el index del direc
-	int indexDir = obtenerIndexPadre(path_directorio);
+	int indexDir = obtenerIndexDirectorio(path_directorio);
 
 	if (indexDir <= 0) {
 		printf("%s: No existe el directorio \n", path_directorio);
