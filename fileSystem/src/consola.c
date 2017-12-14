@@ -209,11 +209,13 @@ void formatearFilesystem() {
 
 	char * archivoDirectorio = string_new();
 	string_append(&archivoDirectorio, RUTA_METADATA);
-	borrarArchivosDirectorios("metadata/bitmaps");
+	string_append(&archivoDirectorio, "metadata/bitmaps");
+	borrarArchivosDirectorios(archivoDirectorio);
 
 	char * ruta = string_new();
 	string_append(&ruta, RUTA_METADATA);
 	string_append(&ruta, "metadata");
+	mkdir(ruta, 0777);
 	crearTablaNodos(ruta);
 	crearTablaDirectorios(ruta);
 

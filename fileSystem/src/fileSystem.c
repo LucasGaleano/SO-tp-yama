@@ -5,7 +5,7 @@ int main(int argc, char **argv) {
 	estadoEstable = false;
 
 	//Creo archivo de log
-	logFileSystem = log_create("log_FileSystem.log", "fileSystem", false,
+	logFileSystem = log_create("log_FileSystem.log", "fileSystem", true,
 			LOG_LEVEL_TRACE);
 	log_trace(logFileSystem, "Inicio el proceso fileSystem \n");
 
@@ -81,11 +81,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 void procesarHandshake(t_paquete * unPaquete, int * client_socket) {
 	switch (recibirHandshake(unPaquete)) {
 	case DATANODE:
-		if (formateado) {
-			*client_socket = -1;
-		} else {
-			enviarSolicitudNombre(*client_socket);
-		}
+		enviarSolicitudNombre(*client_socket);
 		break;
 	case YAMA:
 		if (!estadoEstable)
@@ -156,11 +152,11 @@ void procesarRespuestaEscrituraBloque(t_paquete * unPaquete, int client_socket) 
 
 	if (respuesta->exito) {
 		log_trace(logFileSystem,
-				"Se pudo guardar el bloque: %d en el nodo: %s \n",
+				"Se pudo guardar el bloque: %d en el nodo: %s ",
 				respuesta->numBloque, nomNodo);
 	} else {
 		log_warning(logFileSystem,
-				"No se pudo guardar el bloque: %d en el nodo: %s \n",
+				"No se pudo guardar el bloque: %d en el nodo: %s",
 				respuesta->numBloque, nomNodo);
 	}
 
@@ -397,24 +393,24 @@ void procesarNombre(t_paquete * unPaquete, int * client_socket) {
 	agregarNodoTablaSockets(nodo->nombre, *client_socket, nodo->ip,
 			nodo->puerto);
 
-	if (estadoAnterior) {
+	if (estadoAnterior || formateado) {
 		bool soyNodoBuscado(t_nodo_info * nodoTabla) {
 			return string_equals_ignore_case(nodoTabla->nombre, nodo->nombre);
 		}
 
-		t_nodo_info * nodo = list_find(tablaNodos->infoDeNodo,
+		t_nodo_info * nodoTabla = list_find(tablaNodos->infoDeNodo,
 				(void*) soyNodoBuscado);
 
-		if (nodo == NULL) {
+		if (nodoTabla == NULL) {
 			eliminarNodoTablaSockets(*client_socket);
 			*client_socket = -1;
 			return;
 		}
 
-		nodo->disponible = true;
+		nodoTabla->disponible = true;
 
-		tablaNodos->tamanio += nodo->total;
-		tablaNodos->libres += nodo->libre;
+		tablaNodos->tamanio += nodoTabla->total;
+		tablaNodos->libres += nodoTabla->libre;
 
 		persistirTablaNodos();
 
@@ -507,7 +503,7 @@ void ignoroEstadoAnterior() {
 
 	estadoAnterior = false;
 
-//Verifico que la carpeta metadata exista
+	//Verifico que la carpeta metadata exista
 	char * ruta = string_new();
 	string_append(&ruta, RUTA_METADATA);
 	string_append(&ruta, "metadata");
@@ -522,18 +518,16 @@ void ignoroEstadoAnterior() {
 		system(comando);
 
 		free(comando);
-
-		mkdir(ruta, 0777);
 	}
 
-//Libero memoria
+	remove(ruta);
+
+	//Libero memoria
 	free(ruta);
 }
 
 void consideroEstadoAnterior() {
 	log_trace(logFileSystem, "Considero estado anterior \n");
-
-	estadoAnterior = true;
 
 //Verifico que la carpeta metadata exista
 	char * ruta = string_new();
@@ -543,10 +537,9 @@ void consideroEstadoAnterior() {
 	if (mkdir(ruta, 0777) == -1) {
 		crearTablaNodosSegunArchivo(RUTA_METADATA);
 		crearTablaDirectorioSegunArchivo(RUTA_METADATA);
-	} else {
-		//Creo las nuevas tablas administrativas
-		crearTablaNodos(ruta);
-		crearTablaDirectorios(ruta);
+		estadoAnterior = true;
+	}else{
+		remove(ruta);
 	}
 
 	free(ruta);
@@ -574,6 +567,8 @@ bool verificarEstadoEstable() {
 			(void*) estoyEnEstadoEstable);
 
 	list_destroy_and_destroy_elements(listaArchivos, free);
+
+	free(rutaArchivos);
 
 	return todosEstanEstables;
 }

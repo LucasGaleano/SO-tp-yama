@@ -36,8 +36,8 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 			t_stream * bufferEncontrado = dividirBloqueArchivoTexto(archivo,
 					&desplazamiento, tamArch);
 			buffer = malloc(bufferEncontrado->size);
-			memcpy(buffer,bufferEncontrado->data,bufferEncontrado->size);
-			memcpy(&tamBuffer,&bufferEncontrado->size,sizeof(int));
+			memcpy(buffer, bufferEncontrado->data, bufferEncontrado->size);
+			memcpy(&tamBuffer, &bufferEncontrado->size, sizeof(int));
 
 			free(bufferEncontrado->data);
 			free(bufferEncontrado);
@@ -140,7 +140,8 @@ t_stream * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento,
 	t_stream * bloqueAGurdar = generarBloque(archivo + *desplazamiento,
 			tamRestante);
 
-	while (noTermino && tamRestante > 0 && (bufferFinal->size + bloqueAGurdar->size) < TAM_BLOQUE) {
+	while (noTermino && tamRestante > 0
+			&& (bufferFinal->size + bloqueAGurdar->size) < TAM_BLOQUE) {
 
 		//Guardo el bloque al buffer
 		bufferFinal->data = realloc(bufferFinal->data,
@@ -160,11 +161,12 @@ t_stream * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento,
 		bloqueAGurdar = generarBloque(archivo + *desplazamiento, tamRestante);
 
 		if (bloqueAGurdar->size == 0) {
-			noTermino = true;
-			free(bloqueAGurdar->data);
-			free(bloqueAGurdar);
+			noTermino = false;
 		}
 	}
+
+	free(bloqueAGurdar->data);
+	free(bloqueAGurdar);
 
 	return bufferFinal;
 
@@ -305,11 +307,13 @@ char * leerArchivo(char * rutaArchivo) {
 		if (!estadoEstable) {
 			return NULL;
 		}
+
 		list_add(tablaTareas, tarea);
 
 		if (!estadoEstable) {
 			return NULL;
 		}
+
 		enviarSolicitudLecturaArchTemp(
 				buscarSocketPorNombre(nodoBloque->nomNodo), nodoBloque->bloque,
 				bloque);
@@ -380,10 +384,11 @@ char * leerArchivo(char * rutaArchivo) {
 
 t_nodoBloque * nodoMenosSaturado(t_list * listaNodoBloque) {
 
-	bool nodoMenosCargado(t_nodoBloque * nodo, t_nodoBloque * nodoMasCargado) {
+	bool nodoMenosCargado(t_nodoBloque * nodo, t_nodoBloque * nodoMenosCargado) {
 		int cantTareasNodo = cantidadTareas(nodo->nomNodo);
-		int cantTareasNodoMasCargado = cantidadTareas(nodoMasCargado->nomNodo);
-		return cantTareasNodo < cantTareasNodoMasCargado;
+		int cantTareasNodoMenosCargado = cantidadTareas(
+				nodoMenosCargado->nomNodo);
+		return cantTareasNodo < cantTareasNodoMenosCargado;
 	}
 
 	list_sort(listaNodoBloque, (void*) nodoMenosCargado);
