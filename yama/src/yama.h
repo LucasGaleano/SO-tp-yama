@@ -36,9 +36,6 @@ t_log* logYama;
 //Socket FS
 int socketFS;
 
-//Globales Masters
-t_queue* cola_master;
-
 long idJob;
 
 //prefijo archivos temporales
@@ -51,7 +48,6 @@ t_list* masterConectados;
 int socketFS;
 t_queue* cola_master;
 long idJob;
-t_list* masterConectados;
 
 /*----------------------------------Planificador--------------------------------------------*/
 

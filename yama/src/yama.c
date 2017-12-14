@@ -123,7 +123,6 @@ void procesarRecibirHandshake(t_paquete * unPaquete, int * client_socket) {
 		int * a = malloc(sizeof(int));
 		memcpy(a, client_socket, sizeof(int));
 		//TODO CHECKEAR HANDSHAKE
-		list_add(masterConectados, a); // una lista de master conectados para distribuir job
 		break;
 	default:
 		*client_socket = -1;
