@@ -26,7 +26,8 @@ int conectarCliente(const char * ip, const char * puerto, int cliente) {
 	return socketfd;
 }
 
-void gestionarSolicitudes(int server_socket, void(*procesarPaquete)(void*, int*)) {
+void gestionarSolicitudes(int server_socket,
+		void (*procesarPaquete)(void*, int*), t_log * logger) {
 
 	int tamPaquete = recibirTamPaquete(server_socket);
 
@@ -37,8 +38,8 @@ void gestionarSolicitudes(int server_socket, void(*procesarPaquete)(void*, int*)
 
 		procesarPaquete(unPaquete, &server_socket);
 
-		if(server_socket == -1){
-			printf("El socket %d no a pasado el handshake "
+		if (server_socket == -1) {
+			log_error(logger, "El socket %d no a pasado el handshake "
 					"y ha sido desconectado.\n", socketAux);
 
 			//El server hace lo que tiene que hacer cuando se desconecta el socket
@@ -46,7 +47,7 @@ void gestionarSolicitudes(int server_socket, void(*procesarPaquete)(void*, int*)
 			procesarPaquete(unPaqueteError, &server_socket);
 
 		}
-	}else{
+	} else {
 		//El server hace lo que tiene que hacer cuando se desconecta el socket
 		t_paquete * unPaqueteError = crearPaqueteError(server_socket);
 		procesarPaquete(unPaqueteError, &server_socket);
@@ -54,10 +55,10 @@ void gestionarSolicitudes(int server_socket, void(*procesarPaquete)(void*, int*)
 	}
 }
 
-
 /*------------------------------Servidor------------------------------*/
 
-void iniciarServer(const char * puerto, void(*procesarPaquete)(void*, int*)) {
+void iniciarServer(const char * puerto, void (*procesarPaquete)(void*, int*),
+		t_log * logger) {
 	fd_set set_master;
 	fd_set set_copia;
 
@@ -73,7 +74,7 @@ void iniciarServer(const char * puerto, void(*procesarPaquete)(void*, int*)) {
 	//Setteo el socket mas alto
 	int descriptor_mas_alto = server_socket;
 
-	printf("Servidor listo para escuchar conexiones\n");
+	log_trace(logger, "Servidor listo para escuchar conexiones\n");
 
 	while (true) {
 		set_copia = set_master;
@@ -94,10 +95,11 @@ void iniciarServer(const char * puerto, void(*procesarPaquete)(void*, int*)) {
 				//Si el descriptor es igual al server_socket quiere decir que un nuevo cliente se quiere conectar
 				if (n_descriptor == server_socket) {
 					gestionarNuevasConexiones(server_socket, &set_master,
-							&descriptor_mas_alto);
+							&descriptor_mas_alto, logger);
 				} else {
 					//Si el decriptor pertenece a un socket cliente ya aceptado
-					gestionarDatosCliente(n_descriptor, &set_master, (void *) procesarPaquete);
+					gestionarDatosCliente(n_descriptor, &set_master,
+							(void *) procesarPaquete, logger);
 				}
 			}
 			n_descriptor++;
@@ -150,7 +152,7 @@ int crearSocketServer(const char * puerto) {
 }
 
 void gestionarNuevasConexiones(int server_socket, fd_set * set_master,
-		int * descriptor_mas_alto) {
+		int * descriptor_mas_alto, t_log * logger) {
 	//Socket del nuevo cliente
 	int client_socket;
 
@@ -161,13 +163,14 @@ void gestionarNuevasConexiones(int server_socket, fd_set * set_master,
 	//Acepto la nueva condicion
 	if ((client_socket = accept(server_socket, (struct sockaddr *) &addr,
 			&addrlen)) == -1) {
-		printf("El socket %d ha producido un error"
+		log_error(logger, "El socket %d ha producido un error"
 				"y ha sido desconectado.\n", client_socket);
 		perror("accept");
 		return;
 	}
 
-	printf("El socket %d se ha conectado al servidor.\n", client_socket);
+	log_trace(logger, "El socket %d se ha conectado al servidor.\n",
+			client_socket);
 
 	//Añado al conjunto maestro
 	FD_SET(client_socket, set_master);
@@ -177,7 +180,8 @@ void gestionarNuevasConexiones(int server_socket, fd_set * set_master,
 		*descriptor_mas_alto = client_socket;
 }
 
-void gestionarDatosCliente(int client_socket, fd_set * set_master, void(*procesarPaquete)(void*, int*)) {
+void gestionarDatosCliente(int client_socket, fd_set * set_master,
+		void (*procesarPaquete)(void*, int*), t_log * logger) {
 
 	int tamPaquete = recibirTamPaquete(client_socket);
 
@@ -188,8 +192,8 @@ void gestionarDatosCliente(int client_socket, fd_set * set_master, void(*procesa
 
 		procesarPaquete(unPaquete, &client_socket);
 
-		if(client_socket == -1){
-			printf("El socket %d no a pasado el handshake "
+		if (client_socket == -1) {
+			log_error(logger, "El socket %d no a pasado el handshake "
 					"y ha sido desconectado.\n", socketAux);
 
 			//Cierro el socket
@@ -203,7 +207,7 @@ void gestionarDatosCliente(int client_socket, fd_set * set_master, void(*procesa
 			procesarPaquete(unPaqueteError, &client_socket);
 
 		}
-	}else{
+	} else {
 		//El server hace lo que tiene que hacer cuando se desconecta el socket
 		t_paquete * unPaqueteError = crearPaqueteError(client_socket);
 		procesarPaquete(unPaqueteError, &client_socket);
