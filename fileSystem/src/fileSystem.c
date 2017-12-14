@@ -587,7 +587,7 @@ t_list * buscarTodosArchivos() {
 
 /*-------------------------Funciones auxiliares-------------------------*/
 void iniciarServidor(char* unPuerto) {
-	iniciarServer(unPuerto, (void *) procesarPaquete);
+	iniciarServer(unPuerto, (void *) procesarPaquete, logFileSystem);
 }
 
 void listarArchivosDeMismaCarpeta(char * ruta, t_list * listaArchivos) {
