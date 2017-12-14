@@ -42,12 +42,11 @@ void 				mostrarInfo								(char *);
 
 /*------------------------------Auxiliares------------------------------*/
 char * 				obtenerParametro				(char *, int);
-int 				obtenerIndex					(char *);
 bool 				verificarDuplicados				(t_directory *);
 char ** 			buscarBloqueABorar				(int, int *, int *, t_config *);
 int 				cantArchivosEnDirectorio		(char *);
 void 				listarArchivosDirectorios		(char *);
 void 				borrarArchivosDirectorios		(char *);
-void				modificarArchivo				(char **, char **, int, int, int, char *);
+void				modificarArchivo				(char *, char *);
 void 				imprimirBloque					(t_config *, int, int);
 #endif /* CONSOLA_H_ */

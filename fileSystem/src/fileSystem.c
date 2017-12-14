@@ -5,7 +5,7 @@ int main(int argc, char **argv) {
 	estadoEstable = false;
 
 	//Creo archivo de log
-	logFileSystem = log_create("log_FileSystem.log", "fileSystem", false,
+	logFileSystem = log_create("log_FileSystem.log", "fileSystem", true,
 			LOG_LEVEL_TRACE);
 	log_trace(logFileSystem, "Inicio el proceso fileSystem \n");
 
@@ -81,11 +81,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 void procesarHandshake(t_paquete * unPaquete, int * client_socket) {
 	switch (recibirHandshake(unPaquete)) {
 	case DATANODE:
-		if (formateado) {
-			*client_socket = -1;
-		} else {
-			enviarSolicitudNombre(*client_socket);
-		}
+		enviarSolicitudNombre(*client_socket);
 		break;
 	case YAMA:
 		if (!estadoEstable)
@@ -130,7 +126,7 @@ void procesarError(t_paquete * unPaquete, int * client_socket) {
 	nodo->disponible = false;
 
 	//Verifico si el FS queda en estado estable
-	if (verificarEstadoEstable()  && formateado) {
+	if (verificarEstadoEstable() && formateado) {
 		log_warning(logFileSystem,
 				"Se desconecto un Nodo pero el FS queda en estado estable");
 	} else {
@@ -156,11 +152,11 @@ void procesarRespuestaEscrituraBloque(t_paquete * unPaquete, int client_socket) 
 
 	if (respuesta->exito) {
 		log_trace(logFileSystem,
-				"Se pudo guardar el bloque: %d en el nodo: %s \n",
+				"Se pudo guardar el bloque: %d en el nodo: %s ",
 				respuesta->numBloque, nomNodo);
 	} else {
 		log_warning(logFileSystem,
-				"No se pudo guardar el bloque: %d en el nodo: %s \n",
+				"No se pudo guardar el bloque: %d en el nodo: %s",
 				respuesta->numBloque, nomNodo);
 	}
 
@@ -183,13 +179,7 @@ void procesarBloqueGenerarCopia(t_paquete * unPaquete) {
 	posicion -= 1;
 
 	//Busco index del padre
-	int indexPadre;
-
-	if (posicion == 0) {
-		indexPadre = obtenerIndex("root");
-	} else {
-		indexPadre = obtenerIndex(separado[posicion - 1]);
-	}
+	int indexPadre = obtenerIndexPadre(bloqueGenerarCopia->rutaArchivo);
 
 	//Creo el config del archivo
 	char * rutaFS = string_new();
@@ -267,13 +257,7 @@ void procesarEnviarRutaArchivo(t_paquete * unPaquete, int client_socket) {
 	posicion -= 1;
 
 	//Busco el index del padre
-	int indexPadre;
-
-	if (posicion == 0) {
-		indexPadre = obtenerIndex("root");
-	} else {
-		indexPadre = obtenerIndex(separado[posicion - 1]);
-	}
+	int indexPadre = obtenerIndexPadre(archivoPedido->rutaArchivo);
 
 	//Busco la configuracion del archivo
 	char * rutaFS = string_new();
@@ -397,24 +381,24 @@ void procesarNombre(t_paquete * unPaquete, int * client_socket) {
 	agregarNodoTablaSockets(nodo->nombre, *client_socket, nodo->ip,
 			nodo->puerto);
 
-	if (estadoAnterior) {
+	if (estadoAnterior || formateado) {
 		bool soyNodoBuscado(t_nodo_info * nodoTabla) {
 			return string_equals_ignore_case(nodoTabla->nombre, nodo->nombre);
 		}
 
-		t_nodo_info * nodo = list_find(tablaNodos->infoDeNodo,
+		t_nodo_info * nodoTabla = list_find(tablaNodos->infoDeNodo,
 				(void*) soyNodoBuscado);
 
-		if (nodo == NULL) {
+		if (nodoTabla == NULL) {
 			eliminarNodoTablaSockets(*client_socket);
 			*client_socket = -1;
 			return;
 		}
 
-		nodo->disponible = true;
+		nodoTabla->disponible = true;
 
-		tablaNodos->tamanio += nodo->total;
-		tablaNodos->libres += nodo->libre;
+		tablaNodos->tamanio += nodoTabla->total;
+		tablaNodos->libres += nodoTabla->libre;
 
 		persistirTablaNodos();
 
@@ -467,12 +451,11 @@ void procesarEnviarRutaArchivoRutaDestino(t_paquete * unPaquete,
 	//Almaceno el archivo en el FS
 	char * destino = string_new();
 	int i;
-	for(i=0;i<posicion;i++){
-		string_append(&destino,separado[i]);
+	for (i = 0; i < posicion; i++) {
+		string_append(&destino, separado[i]);
 	}
 
-	almacenarArchivo(rutaFS, destino, separado[posicion],
-			BINARIO);
+	almacenarArchivo(rutaFS, destino, separado[posicion], BINARIO);
 
 	//Borro el archivo temporal
 	remove(rutaFS);
@@ -508,7 +491,7 @@ void ignoroEstadoAnterior() {
 
 	estadoAnterior = false;
 
-//Verifico que la carpeta metadata exista
+	//Verifico que la carpeta metadata exista
 	char * ruta = string_new();
 	string_append(&ruta, RUTA_METADATA);
 	string_append(&ruta, "metadata");
@@ -523,18 +506,16 @@ void ignoroEstadoAnterior() {
 		system(comando);
 
 		free(comando);
-
-		mkdir(ruta, 0777);
 	}
 
-//Libero memoria
+	remove(ruta);
+
+	//Libero memoria
 	free(ruta);
 }
 
 void consideroEstadoAnterior() {
 	log_trace(logFileSystem, "Considero estado anterior \n");
-
-	estadoAnterior = true;
 
 //Verifico que la carpeta metadata exista
 	char * ruta = string_new();
@@ -544,10 +525,9 @@ void consideroEstadoAnterior() {
 	if (mkdir(ruta, 0777) == -1) {
 		crearTablaNodosSegunArchivo(RUTA_METADATA);
 		crearTablaDirectorioSegunArchivo(RUTA_METADATA);
-	} else {
-		//Creo las nuevas tablas administrativas
-		crearTablaNodos(ruta);
-		crearTablaDirectorios(ruta);
+		estadoAnterior = true;
+	}else{
+		remove(ruta);
 	}
 
 	free(ruta);
@@ -555,6 +535,16 @@ void consideroEstadoAnterior() {
 
 /*-------------------------Estado estable/no estable-------------------------*/
 bool verificarEstadoEstable() {
+	char * rutaArchivos = string_new();
+	string_append(&rutaArchivos, RUTA_METADATA);
+	string_append(&rutaArchivos, "metadata/archivos");
+
+	if (mkdir(rutaArchivos, 0777) != -1) {
+		remove(rutaArchivos);
+		free(rutaArchivos);
+		return true;
+	}
+
 	t_list * listaArchivos = buscarTodosArchivos();
 
 	bool estoyEnEstadoEstable(char * rutaArchivo) {
@@ -565,6 +555,8 @@ bool verificarEstadoEstable() {
 			(void*) estoyEnEstadoEstable);
 
 	list_destroy_and_destroy_elements(listaArchivos, free);
+
+	free(rutaArchivos);
 
 	return todosEstanEstables;
 }

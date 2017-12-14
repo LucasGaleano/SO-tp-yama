@@ -10,7 +10,8 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 	void * archivo = abrirArchivo(rutaArchivo, &tamArch, &archivofd);
 
 	if (archivo == NULL) {
-		log_warning(logFileSystem,"%s: No existe el archivo o el directorio", rutaArchivo);
+		log_warning(logFileSystem, "%s: No existe el archivo o el directorio",
+				rutaArchivo);
 		return;
 	}
 
@@ -31,16 +32,27 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 					&desplazamiento, &tamBuffer);
 			break;
 		case TEXTO:
-			buffer = dividirBloqueArchivoTexto(archivo, &desplazamiento);
-			tamBuffer = strlen(buffer);
+			;
+			t_stream * bufferEncontrado = dividirBloqueArchivoTexto(archivo,
+					&desplazamiento, tamArch);
+			buffer = malloc(bufferEncontrado->size);
+			memcpy(buffer, bufferEncontrado->data, bufferEncontrado->size);
+			memcpy(&tamBuffer, &bufferEncontrado->size, sizeof(int));
+
+			free(bufferEncontrado->data);
+			free(bufferEncontrado);
+
 			//Verifico que el buffer no sea superior a el tamanio del bloque
-			if (tamBuffer > TAM_BLOQUE){
-				log_warning(logFileSystem,"El espacio del bloque no es suficiente para guardar el buffer \n");
-				log_warning(logFileSystem,"Bloque %d corrupto \n", numeroBloque);
+			if (tamBuffer > TAM_BLOQUE) {
+				log_warning(logFileSystem,
+						"El espacio del bloque no es suficiente para guardar el buffer \n");
+				log_warning(logFileSystem, "Bloque %d corrupto \n",
+						numeroBloque);
 			}
 			break;
 		default:
-			log_warning(logFileSystem,"No puedo enviar el archivo xq no conosco su tipo de dato");
+			log_warning(logFileSystem,
+					"No puedo enviar el archivo xq no conosco su tipo de dato");
 			return;
 			break;
 		}
@@ -112,57 +124,52 @@ void * dividirBloqueArchivoBinario(void * archivo, size_t tamArch,
 	return buffer;
 }
 
-void * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento) {
+t_stream * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento,
+		int tamArchivo) {
 
-	int tamArchivo = strlen(archivo);
+	bool noTermino = true;
 
 	int tamRestante = tamArchivo - *desplazamiento;
 
-	char * buffer = string_new();
+	t_stream * bufferFinal = malloc(sizeof(t_stream));
 
-	int tamBuffer = 0;
+	bufferFinal->size = 0;
+	bufferFinal->data = malloc(1);
 
 	//Genero el bloque
-	char * bloqueAGurdar = generarBloque(archivo + *desplazamiento,
+	t_stream * bloqueAGurdar = generarBloque(archivo + *desplazamiento,
 			tamRestante);
-	int tamBloqueAGuardar = strlen(bloqueAGurdar);
 
-	//Pregunto si es el ultimo bloque
-	if ((tamRestante - tamBloqueAGuardar) != 0) {
-		tamBloqueAGuardar++;
-	}
+	while (noTermino && tamRestante > 0
+			&& (bufferFinal->size + bloqueAGurdar->size) < TAM_BLOQUE) {
 
-	while (tamRestante > 0 && (tamBuffer + tamBloqueAGuardar) < TAM_BLOQUE) {
 		//Guardo el bloque al buffer
-		string_append(&buffer, bloqueAGurdar);
+		bufferFinal->data = realloc(bufferFinal->data,
+				bufferFinal->size + bloqueAGurdar->size);
+		memcpy(bufferFinal->data + bufferFinal->size, bloqueAGurdar->data,
+				bloqueAGurdar->size);
+		bufferFinal->size += bloqueAGurdar->size;
 
-		//Pregunto si es el ultimo bloque
-		if ((tamRestante - tamBloqueAGuardar) != 0) {
-			string_append(&buffer, "\n");
-		}
+		tamRestante -= bloqueAGurdar->size;
 
-		tamRestante -= tamBloqueAGuardar;
+		*desplazamiento = *desplazamiento + bloqueAGurdar->size;
 
-		*desplazamiento = *desplazamiento + tamBloqueAGuardar;
-
-		tamBuffer += tamBloqueAGuardar;
-
+		free(bloqueAGurdar->data);
 		free(bloqueAGurdar);
 
 		//Genero el bloque
 		bloqueAGurdar = generarBloque(archivo + *desplazamiento, tamRestante);
-		tamBloqueAGuardar = strlen(bloqueAGurdar);
 
-		//Pregunto si es el ultimo bloque
-		if ((tamRestante - tamBloqueAGuardar) != 0) {
-			tamBloqueAGuardar++;
+		if (bloqueAGurdar->size == 0) {
+			noTermino = false;
 		}
-
 	}
 
+	free(bloqueAGurdar->data);
 	free(bloqueAGurdar);
 
-	return buffer;
+	return bufferFinal;
+
 }
 
 char * buscarNodoMenosCargado() {
@@ -210,7 +217,7 @@ int buscarBloqueAEscribir(char * nombreNodo) {
 	return buscarBloqueLibre(configBitMap);
 }
 
-char * generarBloque(void * archivo, int tamRestante) {
+t_stream * generarBloque(void * archivo, int tamRestante) {
 
 	int desplazamiento = 0;
 	int tamALeer = 0;
@@ -222,17 +229,18 @@ char * generarBloque(void * archivo, int tamRestante) {
 
 	if (prueba == NULL) {
 		tamALeer += tamRestante;
-		desplazamiento = 0;
 	} else {
-		tamALeer += prueba - archivo;
+		tamALeer += prueba - archivo + 1;
 	}
 
-	char * bloque = malloc(tamALeer + 1);
-	char * finBloque = "\0";
-	memcpy(bloque, archivo + desplazamiento, tamALeer);
-	memcpy(bloque + tamALeer, finBloque, 1);
+	t_stream * buffer = malloc(sizeof(t_stream));
 
-	return bloque;
+	buffer->data = malloc(tamALeer);
+	buffer->size = tamALeer;
+
+	memcpy(buffer->data, archivo + desplazamiento, tamALeer);
+
+	return buffer;
 }
 
 /*-------------------------Leer archivo-------------------------*/
@@ -251,13 +259,7 @@ char * leerArchivo(char * rutaArchivo) {
 	posicion -= 1;
 
 	//Busco el index del padre
-	int indexPadre;
-
-	if (posicion == 0) {
-		indexPadre = obtenerIndex("root");
-	} else {
-		indexPadre = obtenerIndex(separado[posicion - 1]);
-	}
+	int indexPadre = obtenerIndexPadre(rutaArchivo);
 
 	//Busco la configuracion del archivo
 	char * rutaFS = string_new();
@@ -283,7 +285,9 @@ char * leerArchivo(char * rutaArchivo) {
 	//Busco los bloques en los nodos
 	int bloque = 0;
 
-	if(!estadoEstable){return NULL;}
+	if (!estadoEstable) {
+		return NULL;
+	}
 
 	t_list * listaNodoBloque = buscarBloque(configArchivo, bloque);
 
@@ -294,10 +298,16 @@ char * leerArchivo(char * rutaArchivo) {
 		tarea->nomNodo = strdup(nodoBloque->nomNodo);
 		tarea->bloque = nodoBloque->bloque;
 
-		if(!estadoEstable){return NULL;}
+		if (!estadoEstable) {
+			return NULL;
+		}
+
 		list_add(tablaTareas, tarea);
 
-		if(!estadoEstable){return NULL;}
+		if (!estadoEstable) {
+			return NULL;
+		}
+
 		enviarSolicitudLecturaArchTemp(
 				buscarSocketPorNombre(nodoBloque->nomNodo), nodoBloque->bloque,
 				bloque);
@@ -312,14 +322,20 @@ char * leerArchivo(char * rutaArchivo) {
 
 		bloque++;
 
-		if(!estadoEstable){return NULL;}
+		if (!estadoEstable) {
+			return NULL;
+		}
 		listaNodoBloque = buscarBloque(configArchivo, bloque);
 	}
 
 	list_destroy(listaNodoBloque);
 
 	//Espero que lleguen todos los bloques
-	while (list_size(listaTemporal) < bloque){if(!estadoEstable){return NULL;}}
+	while (list_size(listaTemporal) < bloque) {
+		if (!estadoEstable) {
+			return NULL;
+		}
+	}
 
 	//Creo el archivo temporal en base a la lista
 	bool odenarArchivo(t_respuestaLecturaArchTemp *primero,
@@ -333,11 +349,11 @@ char * leerArchivo(char * rutaArchivo) {
 
 	int desplazamiento = 0;
 
-	int i;
+	int i, tamBuffer;
 	for (i = 0; i < list_size(listaTemporal); i++) {
 		t_respuestaLecturaArchTemp * bloque = list_get(listaTemporal, i);
 
-		int tamBuffer = buscarTamBloque(configArchivo, bloque->orden);
+		tamBuffer = buscarTamBloque(configArchivo, bloque->orden);
 
 		archivoTemporal = realloc(archivoTemporal, desplazamiento + tamBuffer);
 		memcpy(archivoTemporal + desplazamiento, bloque->data, tamBuffer);
@@ -362,10 +378,11 @@ char * leerArchivo(char * rutaArchivo) {
 
 t_nodoBloque * nodoMenosSaturado(t_list * listaNodoBloque) {
 
-	bool nodoMenosCargado(t_nodoBloque * nodo, t_nodoBloque * nodoMasCargado) {
+	bool nodoMenosCargado(t_nodoBloque * nodo, t_nodoBloque * nodoMenosCargado) {
 		int cantTareasNodo = cantidadTareas(nodo->nomNodo);
-		int cantTareasNodoMasCargado = cantidadTareas(nodoMasCargado->nomNodo);
-		return cantTareasNodo < cantTareasNodoMasCargado;
+		int cantTareasNodoMenosCargado = cantidadTareas(
+				nodoMenosCargado->nomNodo);
+		return cantTareasNodo < cantTareasNodoMenosCargado;
 	}
 
 	list_sort(listaNodoBloque, (void*) nodoMenosCargado);

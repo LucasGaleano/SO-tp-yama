@@ -115,10 +115,13 @@ void 						destruirTablaTareas				(void);
 /*-------------------------Funciones auxiliares-------------------------*/
 char * 						armarRegistroDirectorio			(char *, int);
 int 						buscarIndexLibre				(void);
-int 						obtenerIndex					(char *);
 void 						llenarBitmap					(void);
 void 						destruirSubstring				(char **);
 bool 						bloqueNodoVacio					(char **);
 bool 						nodoDisponible					(char *);
+
+int obtenerIndex(char ** separado, int posicion);
+int obtenerIndexDirectorio(char * rutaDirectorio);
+int obtenerIndexPadre(char * rutaDirectorio);
 
 #endif /* TABLAS_H_ */
