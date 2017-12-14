@@ -191,7 +191,7 @@ void ejecutarMan() {
 			"	mkdir --> Crea un directorio. Si el directorio ya existe, el comando deberá informarlo \n");
 	printf(
 			"	cpfrom --> Copiar un archivo local al yamafs, siguiendo los lineamientos en la operaciòn Almacenar Archivo, de la Interfaz del FileSystem \n");
-	printf("	cpto --> Copiar un archivo local al yamafs \n");
+	printf("	cpto --> Copiar un archivo del yamafs al fs local \n");
 	printf(
 			"	cpblock --> Crea una copia de un bloque de un archivo en el nodo dado \n");
 	printf("	md5 --> Solicitar el MD5 de un archivo en yamafs \n");
@@ -1072,6 +1072,15 @@ void listarArchivos(char * linea) {
 	if (path_directorio == NULL)
 		return;
 
+	//Busco el index del direc
+	int indexDir = obtenerIndexPadre(path_directorio);
+
+	if (indexDir <= 0) {
+		printf("%s: No existe el directorio \n", path_directorio);
+		free(path_directorio);
+		return;
+	}
+
 	//Busco el nombre del directorio
 	char ** separado = string_split(path_directorio, "/");
 
@@ -1374,7 +1383,6 @@ void modificarArchivo(char* path_original, char* path_final) {
 
 		return;
 	}
-
 
 	//Busco el index del padre del nombre final
 	int indexPadreFinal = obtenerIndexPadre(path_final);

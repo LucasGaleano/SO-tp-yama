@@ -204,7 +204,7 @@ t_config * crearArchivoTablaArchivo(char * origen, char *destino, char * nombre,
 	for (posicion = 0; listaDestino[posicion] != NULL; ++posicion) {
 	}
 
-	int indexPadre = obtenerIndexPadre(destino);
+	int indexPadre = obtenerIndexDirectorio(destino);
 
 	char * indexPadreString = string_itoa(indexPadre);
 
@@ -1036,6 +1036,10 @@ int obtenerIndex(char ** separado, int posicion) {
 
 		t_directory * registro = list_find(tablaDirectorios,
 				(void*) esPadreBuscado);
+
+		if(registro == NULL){
+			return -2;
+		}
 
 		registroPadre = registro->index;
 	}
