@@ -44,6 +44,7 @@ int main(void) {
 	signal(SIGFPE,signal_capturer);
 	signal(SIGSEGV,signal_capturer);
 	signal(16,signal_capturer);
+	signal(SIGCHLD, SIG_IGN);
 
 	iniciarServer(PUERTO_WORKER, (void *) procesarPaquete);
 
@@ -442,4 +443,5 @@ void recibirPedido(t_paquete* unPaquete, int* socket_server) {
 	default:
 		break;
 	}
+	destruirPaquete(unPaquete);
 }
