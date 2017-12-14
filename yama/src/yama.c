@@ -164,10 +164,11 @@ void procesarRecibirError(t_paquete * unPaquete) { //supuestamente necesita un s
 
 }
 
-void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete,
-		int *client_socket) {
+void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete, int *client_socket) {
 	char * nomArchivo = recibirMensaje(unPaquete);
+	log_trace(logYama, "Recibida ruta de Archivo");
 	enviarRutaParaArrancarTransformacion(socketFS, nomArchivo);
+	log_trace(logYama, "Enviada ruta para obtener Nodos y Bloques");
 }
 
 void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
