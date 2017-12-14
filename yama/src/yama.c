@@ -31,6 +31,8 @@ int main(void) {
 		exit(EXIT_FAILURE);
 	}
 
+	pthread_join(threadServerYama, NULL);
+
 	destruirConfiguracion(configuracion);
 //	list_destroy_and_destroy_elements(tabla_de_estados, (void*) eliminarElemento() ); //TODO PREGUNTAR SI ESTA BIEN LIBERAR DESPUES DE USAR
 
