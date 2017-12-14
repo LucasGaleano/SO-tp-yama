@@ -48,7 +48,7 @@ void 							enviarSolicitudAlmacenadoFinal				(int, t_pedidoAlmacenadoFinal *);
 
 void 							enviarIndicacionTransformacion				(int, t_indicacionTransformacion *);
 void 							enviarIndicacionReduccionLocal				(int, t_indicacionReduccionLocal *);
-void 							enviarIndicacionReduccionGlobal				(int, t_indicacionReduccionGlobal *);
+void 							enviarIndicacionReduccionGlobal				(int, t_list *);
 void 							enviarIndicacionAlmacenadoFinal				(int, t_indicacionAlmacenadoFinal *);
 
 void							enviarError									(int, int);
@@ -91,7 +91,7 @@ t_pedidoAlmacenadoFinal* 		recibirSolicitudAlmacenadoFinal				(t_paquete *);
 
 t_indicacionTransformacion* 	recibirIndicacionTransformacion				(t_paquete *);
 t_indicacionReduccionLocal*	 	recibirIndicacionReduccionLocal				(t_paquete *);
-t_indicacionReduccionGlobal*	recibirIndicacionReduccionGlobal			(t_paquete *);
+t_list *						recibirIndicacionReduccionGlobal			(t_paquete *);
 t_indicacionAlmacenadoFinal* 	recibirIndicacionAlmacenadoFinal			(t_paquete *);
 
 int								recibirError								(t_paquete *);
