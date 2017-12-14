@@ -41,12 +41,12 @@ int main(void) {
 	IP_FILESYSTEM = config_get_string_value(conf, "IP_FILESYSTEM"); // traigo los datos del archivo nodo.cfg
 	PUERTO_FILESYSTEM = config_get_string_value(conf, "PUERTO_FILESYSTEM");
 
-	signal(SIGFPE,signal_capturer);
-	signal(SIGSEGV,signal_capturer);
-	signal(16,signal_capturer);
-	signal(SIGCHLD, SIG_IGN);
+	signal(SIGFPE, signal_capturer);
+	signal(SIGSEGV, signal_capturer);
+	signal(16, signal_capturer);
+	signal(SIGCHLD,SIG_IGN);
 
-	iniciarServer(PUERTO_WORKER, (void *) procesarPaquete);
+  iniciarServer(PUERTO_WORKER, (void *) procesarPaquete);
 
 	config_destroy(conf);
 	log_destroy(logger);
@@ -65,14 +65,14 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	switch (unPaquete->codigoOperacion) {
 	case HANDSHAKE:
 		recibirHandshakeLocal(unPaquete, client_socket);
-		log_info(logger, "Saludo de Master recibido");
+		//log_info(logger, "Saludo de Master recibido");
 		break;
 	case ENVIAR_SOLICITUD_TRANSFORMACION:
 		pid = fork();
 		if (pid < 0) {
-			//enviarError(*client_socket, ERROR_TRANSFORMACION);
+			enviarError(*client_socket, ERROR_TRANSFORMACION);
 			log_error(logger,
-					"No pudo crearse proceso hijo para antender operacion");
+					"No pudo crearse proceso hijo para atender operacion");
 			_Exit(EXIT_FAILURE);
 		}
 		if (pid == 0) {
@@ -93,7 +93,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		if (pid < 0) {
 			enviarError(*client_socket, ERROR_REDUCCION_LOCAL);
 			log_error(logger,
-					"No pudo crearse proceso hijo para antender operacion");
+					"No pudo crearse proceso hijo para atender operacion");
 			_Exit(EXIT_FAILURE);
 		}
 		if (pid == 0) {
@@ -114,7 +114,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		if (pid < 0) {
 			enviarError(*client_socket, ERROR_REDUCCION_GLOBAL);
 			log_error(logger,
-					"No pudo crearse proceso hijo para antender operacion");
+					"No pudo crearse proceso hijo para atender operacion");
 			_Exit(EXIT_FAILURE);
 		}
 		if (pid == 0) {
@@ -148,7 +148,8 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		if (pid == 0) {
 			int s = conectarCliente(IP_FILESYSTEM, PUERTO_FILESYSTEM, WORKER);
 			auxPedF = recibirSolicitudAlmacenadoFinal(unPaquete);
-			enviarRutaArchivoRutaDestino(s, auxPedF->archivoReduccionGlobal, auxPedF->rutaAlmacenadoFinal);
+			enviarRutaArchivoRutaDestino(s, auxPedF->archivoReduccionGlobal,
+					auxPedF->rutaAlmacenadoFinal);
 			enviarTareaCompletada(*client_socket, 1);
 		}
 		break;
@@ -171,31 +172,31 @@ void recibirHandshakeLocal(t_paquete * unPaquete, int * client_socket) {
 	}
 }
 
-void signal_capturer(int numeroSenial){
+void signal_capturer(int numeroSenial) {
 
-	switch (numeroSenial)
-	{
+	switch (numeroSenial) {
 
-		case 8:
-			enviarError(socketMaster,ERROR_MASTER);
-			log_error(logger, "Error de coma flotante");
-			_Exit(EXIT_FAILURE);
-			break;
-		case 11:
-			enviarError(socketMaster,ERROR_MASTER);
-			log_error(logger, "Se cierra por violacion al segmento");
-			_Exit(EXIT_FAILURE);
-			break;
-		case 16:
-			enviarError(socketMaster,ERROR_MASTER);
-			log_error(logger, "Se cierra por desbordamiento de pila");
-			_Exit(EXIT_FAILURE);
-			break;
-		default:
-			enviarError(socketMaster,ERROR_MASTER);
-			log_error(logger, "PROCESO WORKER CIERRA POR NUMERO DE SEÑAL %d", numeroSenial);
-			_Exit(EXIT_FAILURE);
-			break;
+	case 8:
+		enviarError(socketMaster, ERROR_MASTER);
+		log_error(logger, "Error de coma flotante");
+		_Exit(EXIT_FAILURE);
+		break;
+	case 11:
+		enviarError(socketMaster, ERROR_MASTER);
+		log_error(logger, "Se cierra por violacion al segmento");
+		_Exit(EXIT_FAILURE);
+		break;
+	case 16:
+		enviarError(socketMaster, ERROR_MASTER);
+		log_error(logger, "Se cierra por desbordamiento de pila");
+		_Exit(EXIT_FAILURE);
+		break;
+	default:
+		enviarError(socketMaster, ERROR_MASTER);
+		log_error(logger, "PROCESO WORKER CIERRA POR NUMERO DE SEÑAL %d",
+				numeroSenial);
+		_Exit(EXIT_FAILURE);
+		break;
 
 	}
 
@@ -231,7 +232,6 @@ char* getBloque(int numBloque) {
 	return bloque;
 }
 
-
 void transformacion(unsigned int bloque, unsigned int bytes, char* rutaArchivo,
 		char* rutaScript) {
 
@@ -241,9 +241,9 @@ void transformacion(unsigned int bloque, unsigned int bytes, char* rutaArchivo,
 
 	//"echo hola pepe | ./script_transformacion.py > /tmp/resultado"
 
-	char* comando = (char*) malloc(
-			(strlen(rutaScript) + strlen(rutaArchivo) + strlen(traido) + 25)
-					* sizeof(char));
+	char* comando = (char*) calloc(
+			(strlen(rutaScript) + strlen(rutaArchivo) + strlen(traido) + 25),
+					sizeof(char));
 
 	strcpy(comando, "cat ");
 	strcat(comando, traido);
@@ -255,6 +255,7 @@ void transformacion(unsigned int bloque, unsigned int bytes, char* rutaArchivo,
 	system(comando);
 
 	free(comando);
+	free(traido);
 }
 
 inline int sonTodosVerdaderos(int *fdt, int cant) {
@@ -268,7 +269,8 @@ inline int sonTodosVerdaderos(int *fdt, int cant) {
 
 void reduccionLocal(char** rutas, int cant, char* rutaFinal, char* rutaScript) {
 	FILE** loc = (FILE**) calloc(cant, sizeof(FILE*));
-	FILE* apareado = fopen(rutaFinal, "w");
+	char* rutaAux = "ApareadoLocal.txt";
+	FILE* apareado = fopen(rutaAux, "w");
 	char* comando;
 	if (apareado == NULL) {
 		log_error(logger, "El archivo de salida no puede crearse");
@@ -309,15 +311,20 @@ void reduccionLocal(char** rutas, int cant, char* rutaFinal, char* rutaScript) {
 		esPrimero = 0;
 	}
 
-	comando = calloc((strlen(rutaScript) + strlen(rutaFinal) + 1),
+	comando = calloc(
+			(strlen(rutaScript) + strlen(rutaAux) + strlen(rutaFinal) + 25),
 			sizeof(char));
 
-	strcpy(comando, rutaScript);
-	strcat(comando, " ");
+	strcpy(comando, "cat ");
+	strcat(comando, rutaAux);
+	strcat(comando, " | ./");
+	strcat(comando, rutaScript);
+	strcat(comando, "  > ");
 	strcat(comando, rutaFinal);
 	system(comando);
 
 	free(comando);
+	remove(rutaAux);
 
 	for (i = 0; i < cant; i++) {
 		fclose(loc[i]);
@@ -333,8 +340,9 @@ void reduccionLocal(char** rutas, int cant, char* rutaFinal, char* rutaScript) {
 void reduccionGlobal(void) {
 	int i = 0, j = 0, esPrimero = 0;
 	char* comando;
+	char* rutaAux = "apareadoGlobal.txt";
 	paquete_esclavo *fijo, *compar;
-	FILE* apareoGlobal = fopen(rutaFinalGlobal, "w");
+	FILE* apareoGlobal = fopen(rutaAux, "w");
 	for (i = 0; cantidadWorker > 0; i++) {
 		fijo = (paquete_esclavo*) list_get(paquetesEsclavos,
 				i % cantidadWorker);
@@ -370,13 +378,19 @@ void reduccionGlobal(void) {
 	fclose(apareoGlobal);
 
 	comando = calloc(
-			(strlen(rutaScriptReduccion) + strlen(rutaFinalGlobal) + 5),
-			sizeof(char));
-	strcpy(comando, rutaScriptReduccion);
-	strcat(comando, " ");
+			(strlen(rutaScriptReduccion) + strlen(rutaAux)
+					+ strlen(rutaFinalGlobal) + 25), sizeof(char));
+
+	strcpy(comando, "cat ");
+	strcat(comando, rutaAux);
+	strcat(comando, " | ./");
+	strcat(comando, rutaScriptReduccion);
+	strcat(comando, "  > ");
 	strcat(comando, rutaFinalGlobal);
 	system(comando);
+
 	free(comando);
+	remove(rutaAux);
 }
 
 void recibirDatos(t_paquete * unPaquete, int * client_socket) {
@@ -392,8 +406,7 @@ void recibirDatos(t_paquete * unPaquete, int * client_socket) {
 		p->socket_cliente = *client_socket;
 		p->palabra = recibirMensaje(unPaquete);
 		list_add(paquetesEsclavos, p);
-		if (paquetesEsclavos->elements_count == cantidadWorker)
-		{
+		if (paquetesEsclavos->elements_count == cantidadWorker) {
 			reduccionGlobal();
 			list_destroy(paquetesEsclavos);
 			enviarTareaCompletada(socketMaster, 1);
@@ -411,7 +424,8 @@ void recibirDatos(t_paquete * unPaquete, int * client_socket) {
 }
 
 void iniciarEncargado() {
-	iniciarServer(PUERTO_REDUCCION_GLOBAL, (void*)recibirDatos);
+	enviarHandshake(socketMaster, WORKER);
+	iniciarServer(PUERTO_REDUCCION_GLOBAL, (void*) recibirDatos);
 }
 
 void iniciarEsclavo(char* ip, char* puerto) {
