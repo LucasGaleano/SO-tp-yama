@@ -68,7 +68,7 @@ t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 
 /*-------------------------Manejo de conexiones-------------------------*/
 void iniciarServidor(char* unPuerto) {
-	iniciarServer(unPuerto, (void *) procesarPaquete);
+	iniciarServer(unPuerto, (void *) procesarPaquete, logYama);
 	log_trace(logYama, "Inicia Yama como servidor esperando un master");
 }
 
