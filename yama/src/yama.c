@@ -172,7 +172,7 @@ void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete, int *client_so
 }
 
 void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
-
+	log_trace(logYama, "Recibida lista de bloques y nodos de File System");
 	int idJob = generarJob();
 
 	t_nodos_bloques * nodosBloques = recibirListaNodoBloques(unPaquete); //RECIBO UN STRUCT CON 2 LISTAS ANIDADAS
