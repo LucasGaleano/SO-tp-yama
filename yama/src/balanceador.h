@@ -33,4 +33,6 @@ void planificador(char* algoritmo, t_list * listaDeBloques, t_list* tablaPlanifi
 void planificador_sumarWLWorker(t_list* tablaPlanificador, int numWorkerId, int WL);
 int extraerIddelNodo(char* nodo);
 
+char* obtenerEncargadoReduccionGlobal();
+
 #endif /* BALANCEADOR_H_ */

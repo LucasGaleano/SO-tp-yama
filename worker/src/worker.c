@@ -46,7 +46,7 @@ int main(void) {
 	signal(16, signal_capturer);
 	signal(SIGCHLD,SIG_IGN);
 
-	iniciarServer(PUERTO_WORKER, (void *) procesarPaquete);
+  iniciarServer(PUERTO_WORKER, (void *) procesarPaquete);
 
 	config_destroy(conf);
 	log_destroy(logger);
@@ -457,4 +457,5 @@ void recibirPedido(t_paquete* unPaquete, int* socket_server) {
 	default:
 		break;
 	}
+	destruirPaquete(unPaquete);
 }
