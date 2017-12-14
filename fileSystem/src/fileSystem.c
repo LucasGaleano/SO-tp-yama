@@ -66,7 +66,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_BLOQUE_GENERAR_COPIA:
 		procesarBloqueGenerarCopia(unPaquete);
 		break;
-	case ENVIAR_RUTA_ARCHIVO:
+	case ENVIAR_RUTA_PARA_ARRANCAR_TRANSFORMACION:
 		procesarEnviarRutaArchivo(unPaquete, *client_socket);
 		break;
 	case ENVIAR_RUTA_ARCHIVO_RUTA_DESTINO:
