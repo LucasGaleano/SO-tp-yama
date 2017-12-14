@@ -8,12 +8,15 @@ static void SumarDisponibilidad(t_registro_Tabla_Planificador* registroWorker, i
 static void SumarDisponibilidadTodos(t_list* tablaPlanificador, int n);
 static bool estaBloqueEnWorker(t_nodos_por_bloque* bloque, int worker);  //check
 static void insertarBloqueEnRegistroWorker(t_list* tablaPlanificador,int Worker,int numBloque);
+static t_registro_Tabla_Planificador* sacarRegistroPorIdWorker(t_list* tablaPlanificador,int Worker);
 
 
 
 void planificador(char* algoritmo, t_list * listaDeBloques,
 		t_list* tablaPlanificador, int DispBase) {
 
+	logLevel  = LOG_LEVEL_ERROR;
+	logger = log_create("Planificador.log", "Yama", true, logLevel); //creo archivo log
 	t_registro_Tabla_Planificador* RegistroWorker;
 	int cantBloques = list_size(listaDeBloques);
 	int cantRegistros = list_size(tablaPlanificador);
@@ -27,7 +30,6 @@ void planificador(char* algoritmo, t_list * listaDeBloques,
 	if(string_equals_ignore_case(algoritmo, "W-CLOCK")){
 		CalcularDisponibilidadCadaWorkerW_Clock(tablaPlanificador, DispBase);
 	}
-	else(printf("El algoritmo: %s que fue configurado no existe \n", algoritmo));
 
 	//Se posicionará el Clock en el Worker de mayor disponibilidad, desempatando por el primer worker que tenga menor cantidad de tareas realizadas históricamente.
 	int punteroClock = PosicionarClockMayorDisp(tablaPlanificador);
@@ -68,8 +70,8 @@ void planificador(char* algoritmo, t_list * listaDeBloques,
 			while (proximoWorker != punteroClock) {
 				RegistroWorker = list_get(tablaPlanificador, proximoWorker);
 
-				if (estaBloqueEnWorker(bloqueAsignar, proximoWorker) && RegistroWorker->disponibilidad > 0) {
-					insertarBloqueEnRegistroWorker(tablaPlanificador,proximoWorker,numBloque);
+				if (estaBloqueEnWorker(bloqueAsignar, RegistroWorker->id) && RegistroWorker->disponibilidad > 0) {
+					insertarBloqueEnRegistroWorker(tablaPlanificador,RegistroWorker->id,numBloque);
 					EstaNodo=true;
 					break;
 
@@ -85,13 +87,13 @@ void planificador(char* algoritmo, t_list * listaDeBloques,
 
 				if(EstaNodo==true){
 					numBloque--; //vuelvo a probar el mismo bloque}
-
 				}
-				if(!EstaNodo){
-					char* msg = malloc(100);
-					sprintf(msg,"imposible ubicar el nodo que contiene al bloque: %d, terminando proceso\n",numBloque);
-					perror(msg);
-					free(msg);
+				if(EstaNodo==false){
+
+
+					log_error(logger,"imposible ubicar bloque: %d en el nodo %d, terminando proceso\n",numBloque,RegistroWorker->id);
+
+
 					exit(EXIT_FAILURE);
 				}
 				EstaNodo=false;
@@ -107,7 +109,7 @@ void planificador(char* algoritmo, t_list * listaDeBloques,
 
 static void insertarBloqueEnRegistroWorker(t_list* tablaPlanificador,int Worker,int numBloque){
 
-	t_registro_Tabla_Planificador* registro = list_get(tablaPlanificador,Worker);
+	t_registro_Tabla_Planificador* registro = sacarRegistroPorIdWorker(tablaPlanificador,Worker);
 	list_add(registro->listaBloques,numBloque);
 	registro->WL_actual++;
 	registro->WL_Total++;
@@ -115,6 +117,23 @@ static void insertarBloqueEnRegistroWorker(t_list* tablaPlanificador,int Worker,
 
 
 }
+
+static t_registro_Tabla_Planificador* sacarRegistroPorIdWorker(t_list* tablaPlanificador,int Worker){
+
+
+	bool esRegistroDelId(t_registro_Tabla_Planificador* registro){
+		if(registro->id== Worker)
+			return true;
+		return false;
+	}
+
+	t_registro_Tabla_Planificador* registro = list_find(tablaPlanificador,(void*)esRegistroDelId);
+
+	return registro;
+
+	}
+
+
 
 static void SumarDisponibilidadTodos(t_list* tablaPlanificador, int n) {
 
