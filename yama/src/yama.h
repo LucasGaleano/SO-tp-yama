@@ -24,8 +24,8 @@ typedef struct {
 	char * puerto;
 	int retardo;
 	char * algoritmo;
-	char * puerto_yama;
 	int disponibilidad_base;
+	char* puerto_yama;
 } t_configuracion;
 
 /*----------------------------------Variables globales----------------------------------*/

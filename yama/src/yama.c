@@ -2,22 +2,21 @@
 
 int main(void) {
 
-
-	listaDireccionesNodos = list_create();
-
 	//Levanto el archivo de configuracion
 	char* path_config_yama =
 			"/home/utnso/workspace/tp-2017-2c-NULL/configuraciones/yama.cfg";
+
 	logYama = log_create("yama.log", "Yama", true, LOG_LEVEL_TRACE);
 
-	log_trace(logYama, "Arranca proceso Yama");
-
 	configuracion = leerArchivoDeConfiguracionYAMA(path_config_yama);
+
+	log_trace(logYama, "Arranca proceso Yama");
 
 	//Me conecto con el file system
 	socketFS = conectarCliente(configuracion->ip, configuracion->puerto, YAMA); //todo VERIFICAR CONEXION CON FS ROMPER
 
 	//Creo estructuras administrativas
+	listaDireccionesNodos = list_create();
 	idJob = 0;
 	tabla_de_estados = list_create();
 	tablaPlanificador = Planificador_create();
@@ -59,9 +58,12 @@ t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 
 	printf(
 			"Se levanto el proceso YAMA con: YAMA_PUERTO: %s  FS_IP: %s - FS_PUERTO: %s - RETARDO: %d - ALGORITMO: %s - DISPONIBILIDAD BASE: %d \n",
-			configuracion->puerto_yama, configuracion->ip,
-			configuracion->puerto, configuracion->retardo,
-			configuracion->algoritmo, configuracion->disponibilidad_base);
+			configuracion->puerto_yama,
+			configuracion->ip,
+			configuracion->puerto,
+			configuracion->retardo,
+			configuracion->algoritmo,
+			configuracion->disponibilidad_base);
 
 	config_destroy(config);
 
@@ -71,7 +73,6 @@ t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 /*-------------------------Manejo de conexiones-------------------------*/
 void iniciarServidor(char* unPuerto) {
 	iniciarServer(unPuerto, (void *) procesarPaquete, logYama);
-	log_trace(logYama, "Inicia Yama como servidor esperando un master");
 }
 
 /*-------------------------Procesamiento paquetes-------------------------*/
