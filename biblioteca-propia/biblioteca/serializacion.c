@@ -507,7 +507,9 @@ void serializarIndicacionReduccionGlobal(t_paquete * unPaquete,
 		desplazamiento += tamArchivoLocal;
 
 		memcpy(unPaquete->buffer->data + desplazamiento,
-				&indicacionDeReduccionGlobal->encargado, tamEncargado);
+
+		&indicacionDeReduccionGlobal->encargado, tamEncargado);
+
 		desplazamiento += tamEncargado;
 	}
 

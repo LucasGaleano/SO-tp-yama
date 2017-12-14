@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
 
 	while (!finDeSolicitudes && !dejarDeRecibirSolicitudes) {
 
-		gestionarSolicitudes(conexionYama, (void *) procesarPaquete);
+		gestionarSolicitudes(conexionYama, (void *) procesarPaquete, logMaster);
 
 	}
 	int i = 0;
@@ -190,7 +190,7 @@ void mandarDatosTransformacion(t_indicacionTransformacion * transformacion) {
 
 	errorTransformacion = false;
 
-	gestionarSolicitudes(conexionWorker, (void *) procesarPaquete);
+	gestionarSolicitudes(conexionWorker, (void *) procesarPaquete, logMaster);
 
 	if (errorTransformacion || errorWorker || dejarDeRecibirSolicitudes) {
 		tablaMetricas.cantidadFallosTransformacion++;
@@ -270,7 +270,7 @@ void mandarDatosReduccionLocal(t_indicacionReduccionLocal * reduccion) {
 
 	errorReduLocal = false;
 
-	gestionarSolicitudes(worker, (void*) procesarPaquete);
+	gestionarSolicitudes(worker, (void*) procesarPaquete, logMaster);
 
 	if (errorReduLocal || errorWorker || dejarDeRecibirSolicitudes) {
 		tablaMetricas.cantidadFallosReduccionLocal++;
@@ -320,7 +320,7 @@ void gestionarReduccionGlobal() {
 	gettimeofday(&t0, NULL);
 	int cantidadSolicitudes = list_size(indicacionesDeReduccionGlobal);
 	int posActual = 0;
-	t_pedidoReduccionGlobal * pedidos = calloc(cantidadSolicitudes - 1,
+	t_pedidoReduccionGlobal ** pedidos = calloc(cantidadSolicitudes - 1,
 			sizeof(t_pedidoReduccionGlobal));
 	int conexionWorker;
 	while (posActual < (cantidadSolicitudes - 1)) // no sumo posActual si encuentro al encargado
@@ -365,7 +365,7 @@ void gestionarReduccionGlobal() {
 		}
 	}
 
-	gestionarSolicitudes(conexionWorker, (void*) neutro);
+	gestionarSolicitudes(conexionWorker, (void*) neutro, logMaster);
 
 	posActual = 0;
 	while (posActual < (cantidadSolicitudes - 1)) {
@@ -377,10 +377,11 @@ void gestionarReduccionGlobal() {
 		free(pedidos[posActual]->archivoReduccionPorWorker);
 		free(pedidos[posActual]->ip);
 		free(pedidos[posActual]->puerto);
+		free(pedidos[posActual]);
 		posActual++;
 	}
 
-	gestionarSolicitudes(conexionWorker, (void *) procesarPaquete);
+	gestionarSolicitudes(conexionWorker, (void *) procesarPaquete, logMaster);
 
 	if (errorReduGlobal || errorWorker || dejarDeRecibirSolicitudes) {
 		tablaMetricas.cantidadFallosReduccionGlobal++;
@@ -420,7 +421,7 @@ void gestionarAlmacenadoFinal(t_indicacionAlmacenadoFinal * indicacion) {
 			MASTER);
 	enviarSolicitudAlmacenadoFinal(conexionWorker, solicitud);
 
-	gestionarSolicitudes(conexionWorker, (void *) procesarPaquete);
+	gestionarSolicitudes(conexionWorker, (void *) procesarPaquete, logMaster);
 
 	if (errorAlmacenamiento || errorWorker || dejarDeRecibirSolicitudes) {
 		tablaMetricas.cantidadFallosAlmacenamiento++;

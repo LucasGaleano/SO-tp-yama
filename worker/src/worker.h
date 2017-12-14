@@ -43,8 +43,6 @@ void recibirDatos(t_paquete *, int *);
 
 void transformacion (unsigned int, unsigned int, char*, char*);
 
-inline int sonTodosVerdaderos(int *, int);
-
 void reduccionLocal(char**, int, char*, char*);
 
 FILE* aparear(FILE *[], int);
@@ -54,5 +52,7 @@ void iniciarEncargado();
 void iniciarEsclavo(char *, char *);
 
 void reduccionGlobal();
+
+int sonTodosVerdaderos(int*, int);
 
 #endif WORKER_H_

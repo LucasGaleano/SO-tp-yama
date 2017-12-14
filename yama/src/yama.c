@@ -45,15 +45,17 @@ t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 
 	configuracion = malloc(sizeof(t_configuracion));
 
-	configuracion->ip = config_get_string_value(config, "FS_IP");
-	configuracion->puerto = config_get_string_value(config, "FS_PUERTO");
-	configuracion->retardo = config_get_int_value(config,
-			"RETARDO_PLANIFICACION");
-	configuracion->algoritmo = config_get_string_value(config,
-			"ALGORITMO_BALANCEO");
-	configuracion->puerto_yama = config_get_string_value(config, "PUERTO_YAMA");
-	configuracion->disponibilidad_base = config_get_int_value(config,
-			"DISPONIBILIDAD_BASE");
+	configuracion->ip = strdup(config_get_string_value(config, "FS_IP"));
+
+	configuracion->puerto = strdup(config_get_string_value(config, "FS_PUERTO"));
+
+	configuracion->retardo = config_get_int_value(config, "RETARDO_PLANIFICACION");
+
+	configuracion->algoritmo = strdup(config_get_string_value(config,"ALGORITMO_BALANCEO"));
+
+	configuracion->disponibilidad_base = config_get_int_value(config,"DISPONIBILIDAD_BASE");
+
+	configuracion->puerto_yama = strdup(config_get_string_value(config, "PUERTO_YAMA"));
 
 	printf(
 			"Se levanto el proceso YAMA con: YAMA_PUERTO: %s  FS_IP: %s - FS_PUERTO: %s - RETARDO: %d - ALGORITMO: %s - DISPONIBILIDAD BASE: %d \n",
@@ -68,7 +70,7 @@ t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 
 /*-------------------------Manejo de conexiones-------------------------*/
 void iniciarServidor(char* unPuerto) {
-	iniciarServer(unPuerto, (void *) procesarPaquete);
+	iniciarServer(unPuerto, (void *) procesarPaquete, logYama);
 	log_trace(logYama, "Inicia Yama como servidor esperando un master");
 }
 

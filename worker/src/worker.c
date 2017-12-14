@@ -46,7 +46,7 @@ int main(void) {
 	signal(16, signal_capturer);
 	signal(SIGCHLD,SIG_IGN);
 
-  iniciarServer(PUERTO_WORKER, (void *) procesarPaquete);
+  iniciarServer(PUERTO_WORKER, (void *) procesarPaquete, logger);
 
 	config_destroy(conf);
 	log_destroy(logger);
@@ -365,7 +365,7 @@ void reduccionGlobal(void) {
 				aux = fijo;
 				enviarMensaje(fijo->socket_cliente, " ");
 				gestionarSolicitudes(fijo->socket_cliente,
-						(void*) recibirDatos);
+						(void*) recibirDatos, logger);
 				if (fijo->palabra[0] == '\0') {
 					list_remove_and_destroy_element(paquetesEsclavos,
 							i % cantidadWorker, (void*) free);
@@ -426,13 +426,13 @@ void recibirDatos(t_paquete * unPaquete, int * client_socket) {
 
 void iniciarEncargado() {
 	enviarHandshake(socketMaster, WORKER);
-	iniciarServer(PUERTO_REDUCCION_GLOBAL, (void*) recibirDatos);
+	iniciarServer(PUERTO_REDUCCION_GLOBAL, (void*) recibirDatos, logger);
 }
 
 void iniciarEsclavo(char* ip, char* puerto) {
 	int s = conectarCliente(ip, PUERTO_REDUCCION_GLOBAL, WORKER);
 	while (1) {
-		gestionarSolicitudes(s, (void*) recibirPedido);
+		gestionarSolicitudes(s, (void*) recibirPedido, logger);
 	}
 }
 
