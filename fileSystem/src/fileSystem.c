@@ -179,13 +179,7 @@ void procesarBloqueGenerarCopia(t_paquete * unPaquete) {
 	posicion -= 1;
 
 	//Busco index del padre
-	int indexPadre;
-
-	if (posicion == 0) {
-		indexPadre = obtenerIndex("root");
-	} else {
-		indexPadre = obtenerIndex(separado[posicion - 1]);
-	}
+	int indexPadre = obtenerIndexPadre(bloqueGenerarCopia->rutaArchivo);
 
 	//Creo el config del archivo
 	char * rutaFS = string_new();
@@ -263,13 +257,7 @@ void procesarEnviarRutaArchivo(t_paquete * unPaquete, int client_socket) {
 	posicion -= 1;
 
 	//Busco el index del padre
-	int indexPadre;
-
-	if (posicion == 0) {
-		indexPadre = obtenerIndex("root");
-	} else {
-		indexPadre = obtenerIndex(separado[posicion - 1]);
-	}
+	int indexPadre = obtenerIndexPadre(archivoPedido->rutaArchivo);
 
 	//Busco la configuracion del archivo
 	char * rutaFS = string_new();

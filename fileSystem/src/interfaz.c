@@ -259,13 +259,7 @@ char * leerArchivo(char * rutaArchivo) {
 	posicion -= 1;
 
 	//Busco el index del padre
-	int indexPadre;
-
-	if (posicion == 0) {
-		indexPadre = obtenerIndex("root");
-	} else {
-		indexPadre = obtenerIndex(separado[posicion - 1]);
-	}
+	int indexPadre = obtenerIndexPadre(rutaArchivo);
 
 	//Busco la configuracion del archivo
 	char * rutaFS = string_new();
