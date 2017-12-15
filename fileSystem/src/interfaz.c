@@ -22,6 +22,7 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 		log_error(logFileSystem, "No se puede almacenar el archivo porque no tengo los bloques libres suficientes \n");
 		munmap(archivo, tamArch);
 		fclose(archivofd);
+		return;
 	}
 
 	int desplazamiento = 0;
