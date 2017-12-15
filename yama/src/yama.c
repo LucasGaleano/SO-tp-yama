@@ -185,8 +185,6 @@ void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete, int *client_so
 
 void MostrarLIstaNodoBloque(t_nodos_bloques* listaBloquesConNodos){
 
-		void imprimir(t_nodos_bloques* listaBloquesConNodos){
-
 			log_trace(logYama,"-----BLOQUE------SOLIITADO POR MASTER: %i", listaBloquesConNodos->masterSolicitante);
 
 			void imprimirListaDeNodosYBloques(t_nodo_bloque* nodoBloque){
@@ -205,8 +203,6 @@ void MostrarLIstaNodoBloque(t_nodos_bloques* listaBloquesConNodos){
 			}
 
 			list_iterate(listaBloquesConNodos->puertoIP, (void*)imprimirListaDeDirecciones);
-		}
-
 	}
 
 void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
@@ -286,6 +282,8 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 	}
 
 	list_iterate(indicacionesDeTransformacionParaMaster, (void*) registrarYEnviarAMaster);
+
+
 }
 
 void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
