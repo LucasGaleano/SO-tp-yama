@@ -12,7 +12,9 @@ static t_registro_Tabla_Planificador* sacarRegistroPorIdWorker(t_list* tablaPlan
 
 
 
-void planificador(char* algoritmo, t_list * listaDeBloques,
+
+
+bool planificador(char* algoritmo, t_list * listaDeBloques,
 		t_list* tablaPlanificador, int DispBase) {
 
 	t_log_level logLevel; //elijo enum de log
@@ -95,8 +97,8 @@ void planificador(char* algoritmo, t_list * listaDeBloques,
 
 					log_error(logger,"imposible ubicar bloque: %d en el nodo %d, terminando proceso\n",numBloque,RegistroWorker->id);
 
-
-					exit(EXIT_FAILURE);
+					return false;
+					//exit(EXIT_FAILURE);
 				}
 				EstaNodo=false;
 
@@ -109,6 +111,8 @@ void planificador(char* algoritmo, t_list * listaDeBloques,
 
 
 log_destroy(logger);
+
+return true;
 } //END
 
 
