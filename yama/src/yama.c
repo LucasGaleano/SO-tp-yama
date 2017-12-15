@@ -170,7 +170,9 @@ void procesarRecibirError(t_paquete * unPaquete, int *socket_client) { //supuest
 void procesarEnviarMensaje(t_paquete * unPaquete, int client_socket) {
 	char * nomArchivo = recibirMensaje(unPaquete);
 	log_trace(logYama, "Recibida ruta de Archivo:  %s %d \n", nomArchivo, client_socket);
-	enviarRutaParaArrancarTransformacion(socketFS, nomArchivo, client_socket);
+	int * master = malloc(sizeof(int));
+	memcpy(master,&client_socket,sizeof(int));
+	enviarRutaParaArrancarTransformacion(socketFS, nomArchivo, *master);
 	log_trace(logYama, "Enviada ruta para obtener Nodos y Bloques a: %d",
 			socketFS);
 	log_trace(logYama, "esperando respuesta de File systems");
