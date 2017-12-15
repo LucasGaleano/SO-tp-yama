@@ -428,10 +428,33 @@ void procesarResultadoReduccionLocal(t_paquete* unPaquete, int *client_socket) {
 
 void procesarTareaCompletada(t_paquete* unPaquete, int* client_socket) {
 
-//	switch (unPaquete){
-//	case REDUCCION_COMPLETADA:
-//		procesarAlmacenamientoFinal(unPaquete);
-//	}
+	int tareaCompletada = recibirTareaCompletada(unPaquete);
+
+		switch (tareaCompletada){
+		case REDUCCION_COMPLETADA:
+
+			//actualiza tabla de estado para reduccion global
+
+
+			t_elemento_tabla_estado* registro = buscarRegistro(-1,client_socket,NULL,-1,REDUCCION_GLOBAL,PROCESANDO);
+			modificarEstadoDeRegistro(-1,*client_socket,NULL,-1,REDUCCION_GLOBAL,FINALIZADO_OK);
+
+			t_indicacionAlmacenadoFinal* tIndicacionAlmacenadoFinal = malloc(t_indicacionAlmacenadoFinal);
+			t_puerto_ip* PeIp = buscarIpYPuertoConNombreNodo(registro->nodo,listaDireccionesNodos);
+
+			tIndicacionAlmacenadoFinal->ip = PeIp->ip;
+			tIndicacionAlmacenadoFinal->puerto = malloc(string_length(PeIp->puerto));
+			tIndicacionAlmacenadoFinal->puerto = PeIp->puerto;
+
+			tIndicacionAlmacenadoFinal->nodo = malloc(string_length(PeIp->nomNodo));
+			tIndicacionAlmacenadoFinal->nodo = PeIp->nomNodo;
+			tIndicacionAlmacenadoFinal->rutaArchivoReduccionGlobal = malloc(string_length(registro->nombreArchivoTemporal));
+			tIndicacionAlmacenadoFinal->rutaArchivoReduccionGlobal = registro->nombreArchivoTemporal;
+
+			enviarIndicacionAlmacenadoFinal(client_socket, tIndicacionAlmacenadoFinal);
+
+
+		}
 
 }
 
