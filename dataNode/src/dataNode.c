@@ -73,6 +73,12 @@ char* getBloque(int numBloque) {
 }
 
 int setBloque(int numBloque, char* bloque) {
+	//Compruebo que tengo espacio en el data.bin
+	if(numBloque > cantidadBloques){
+		log_error(logger, "No hay mas espacio de almacenamiento en este nodo");
+		return -1;
+	}
+
 	struct stat sb;
 	char *map;
 	int fd = open(rutaDatabin, O_RDWR); //abrir archivo data.bin
