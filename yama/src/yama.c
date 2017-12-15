@@ -196,29 +196,28 @@ void MostrarLIstaNodoBloque(t_nodos_bloques* listaBloquesConNodos) {
 
 	} else {
 
-		log_trace(logYama, "-----BLOQUE------SOLIITADO POR MASTER: %i",
+		log_trace(logYama, "-----BLOQUE------\n SOLICITADO POR MASTER: %i",
 				listaBloquesConNodos->masterSolicitante);
 
 		void imprimirListaDeNodosYBloques(t_nodo_bloque* nodoBloque) {
-			log_trace(logYama, "NOMBRE NODO: %s", nodoBloque->nomNodo);
-			log_trace(logYama, "numero bloque archivo: %i",
-					nodoBloque->bloqueArchivo);
-			log_trace(logYama, "numero bloque nodo: %i",
-					nodoBloque->bloqueNodo);
-			log_trace(logYama, "tamanio: %i", nodoBloque->tamanio);
-		}
+					log_trace(logYama, "NOMBRE NODO: %s", nodoBloque->nomNodo);
+					log_trace(logYama, "numero bloque archivo: %i",
+							nodoBloque->bloqueArchivo);
+					log_trace(logYama, "numero bloque nodo: %i",
+							nodoBloque->bloqueNodo);
+					log_trace(logYama, "tamanio: %i", nodoBloque->tamanio);
+				}
 
-		list_iterate(listaBloquesConNodos->nodoBloque,
-				(void*) imprimirListaDeNodosYBloques);
+				list_iterate(listaBloquesConNodos->nodoBloque,
+						(void*) imprimirListaDeNodosYBloques);
 
-		void imprimirListaDeDirecciones(t_puerto_ip* direccionNodo) {
-			log_trace(logYama, "NOMBRE NODO: %s", direccionNodo->nomNodo);
-			log_trace(logYama, "ip nodo: %s", direccionNodo->ip);
-			log_trace(logYama, "puerto nodo: %s", direccionNodo->puerto);
-		}
+				void imprimirListaDeDirecciones(t_puerto_ip* direccionNodo) {
+					log_trace(logYama, "NOMBRE NODO: %s", direccionNodo->nomNodo);
+					log_trace(logYama, "ip nodo: %s", direccionNodo->ip);
+					log_trace(logYama, "puerto nodo: %s", direccionNodo->puerto);
+				}
 
-		list_iterate(listaBloquesConNodos->puertoIP,
-				(void*) imprimirListaDeDirecciones);
+				list_iterate(listaBloquesConNodos->puertoIP, (void*) imprimirListaDeDirecciones);
 
 	}
 }
@@ -235,8 +234,7 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 
 	log_trace(logYama, "Recibido %d nodos-bloques de FilesSystem",
 			listaNodoBloque->elements_count);
-	listaDireccionesNodos = list_take(nodosBloques->puertoIP,
-			nodosBloques->puertoIP->elements_count);
+	listaDireccionesNodos = list_take(nodosBloques->puertoIP, nodosBloques->puertoIP->elements_count);
 
 	t_list* listaBloquesConNodos = agruparNodosPorBloque(listaNodoBloque); // LISTA DE BLOQUES CON LOS NODOS DONDE ESTA
 	t_list* nodosSinRepetidos = extraerNodosSinRepetidos(listaNodoBloque); //SOLO LOS NOMBRE NODOS SIN REPETIDOS
