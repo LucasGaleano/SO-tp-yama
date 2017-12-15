@@ -86,7 +86,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		procesarRecibirHandshake(unPaquete, client_socket);
 		break;
 	case ENVIAR_MENSAJE:
-		procesarEnviarMensaje(unPaquete,client_socket);
+		procesarEnviarMensaje(unPaquete,*client_socket);
 		break;
 	case ENVIAR_ARCHIVO:
 		procesarRecibirArchivo(unPaquete);
@@ -167,10 +167,10 @@ void procesarRecibirError(t_paquete * unPaquete, int *socket_client) { //supuest
 
 }
 
-void procesarEnviarMensaje(t_paquete * unPaquete, int *client_socket) {
+void procesarEnviarMensaje(t_paquete * unPaquete, int client_socket) {
 	char * nomArchivo = recibirMensaje(unPaquete);
 	log_trace(logYama, "Recibida ruta de Archivo:  %s", nomArchivo);
-	enviarRutaParaArrancarTransformacion(socketFS, nomArchivo, *client_socket);
+	enviarRutaParaArrancarTransformacion(socketFS, nomArchivo, client_socket);
 	log_trace(logYama, "Enviada ruta para obtener Nodos y Bloques a: %d",
 			socketFS);
 	log_trace(logYama, "esperando respuesta de File systems");
