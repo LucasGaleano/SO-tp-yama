@@ -358,10 +358,9 @@ void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete,
 			nodoBloque->bloqueArchivo = numeroBloque;
 			nodoBloque->tamanio = tamanioBloque;
 
-			list_add(listaBloques, bloque);
+			list_add(listaBloques, nodoBloque);
 			numeroTotal++;
 			numeroCopia++;
-			destruirSubstring(bloque);
 			bloque = buscarBloqueCopia(configArchivo, numeroBloque,
 					numeroCopia);
 		}
