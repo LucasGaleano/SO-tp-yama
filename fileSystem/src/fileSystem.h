@@ -44,5 +44,7 @@ t_list * 			buscarTodosArchivos					(void);
 void 				iniciarServidor						(char*);
 void 				listarArchivosDeMismaCarpeta		(char *, t_list *);
 void 				listarCarpetasDeArchivos			(char *, t_list *);
+void 				borrarArchivos						(void);
+void 				borrarBitmaps						(void);
 
 #endif /* FILESYSTEM_H_ */
