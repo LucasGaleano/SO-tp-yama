@@ -70,45 +70,69 @@ bool almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 
 		//Genero el bloque original
 		char * nodoElegido = buscarNodoMenosCargado();
-		int socketNodoElegido = buscarSocketPorNombre(nodoElegido);
-		int bloqueAEscribir = buscarBloqueAEscribir(nodoElegido);
 
-		agregarRegistroTablaArchivos(nodoElegido, bloqueAEscribir, numeroBloque,
-				0, configTablaArchivo);
+		if (nodoElegido != NULL) {
 
-		enviarSolicitudEscrituraBloque(socketNodoElegido, bloqueAEscribir,
-				tamBuffer, buffer);
+			int socketNodoElegido = buscarSocketPorNombre(nodoElegido);
+			int bloqueAEscribir = buscarBloqueAEscribir(nodoElegido);
+
+			if (nodoDisponible(nodoElegido)) {
+				agregarRegistroTablaArchivos(nodoElegido, bloqueAEscribir,
+						numeroBloque, 0, configTablaArchivo);
+
+				if (nodoDisponible(nodoElegido)) {
+					enviarSolicitudEscrituraBloque(socketNodoElegido,
+							bloqueAEscribir, tamBuffer, buffer);
+				}
+			}
+			free(nodoElegido);
+		}
 
 		//Genero la copia
 		char * nodoElegidoCopia = buscarNodoMenosCargado();
-		int socketNodoElegidoCopia = buscarSocketPorNombre(nodoElegidoCopia);
-		int bloqueAEscribirCopia = buscarBloqueAEscribir(nodoElegidoCopia);
 
-		agregarRegistroTablaArchivos(nodoElegidoCopia, bloqueAEscribirCopia,
-				numeroBloque, 1, configTablaArchivo);
+		if (nodoElegidoCopia != NULL) {
 
-		enviarSolicitudEscrituraBloque(socketNodoElegidoCopia,
-				bloqueAEscribirCopia, tamBuffer, buffer);
+			int socketNodoElegidoCopia = buscarSocketPorNombre(
+					nodoElegidoCopia);
+			int bloqueAEscribirCopia = buscarBloqueAEscribir(nodoElegidoCopia);
 
-		//Bytes guardados en un bloque
-		guardoBytesPorBloque(numeroBloque, tamBuffer, configTablaArchivo);
+			if (nodoDisponible(nodoElegidoCopia)) {
+				agregarRegistroTablaArchivos(nodoElegidoCopia,
+						bloqueAEscribirCopia, numeroBloque, 1,
+						configTablaArchivo);
 
-		//Lo agrego a la cantidad de bloques totales
-		int totalesAnterior = config_get_int_value(configTablaArchivo,
-				"CANTIDAD_BLOQUES");
-		totalesAnterior++;
-		char * totalesActualesChar = string_itoa(totalesAnterior);
-		config_set_value(configTablaArchivo, "CANTIDAD_BLOQUES",
-				totalesActualesChar);
+				if (nodoDisponible(nodoElegidoCopia)) {
+					enviarSolicitudEscrituraBloque(socketNodoElegidoCopia,
+							bloqueAEscribirCopia, tamBuffer, buffer);
+				}
+			}
+			free(nodoElegidoCopia);
+
+		}
+
+		if (nodoElegido != NULL || nodoElegidoCopia != NULL) {
+			//Bytes guardados en un bloque
+			guardoBytesPorBloque(numeroBloque, tamBuffer, configTablaArchivo);
+
+			//Lo agrego a la cantidad de bloques totales
+			int totalesAnterior = config_get_int_value(configTablaArchivo,
+					"CANTIDAD_BLOQUES");
+			totalesAnterior++;
+
+			char * totalesActualesChar = string_itoa(totalesAnterior);
+
+			config_set_value(configTablaArchivo, "CANTIDAD_BLOQUES",
+					totalesActualesChar);
+
+			free(totalesActualesChar);
+		}
 
 		//Actualizo el numero de bloques
 		numeroBloque++;
 
 		//Libero memoria
 		free(buffer);
-		free(nodoElegido);
-		free(nodoElegidoCopia);
-		free(totalesActualesChar);
 	}
 
 	printf("Se termino de almacenar el archivo \n");
@@ -195,6 +219,9 @@ char * buscarNodoMenosCargado() {
 
 	t_list * disponibles = list_filter(tablaNodos->infoDeNodo,
 			(void*) estaDisponible);
+
+	if (disponibles == NULL)
+		return NULL;
 
 	bool nodoMenosCargado(t_nodo_info * cargado, t_nodo_info * menosCargado) {
 		int cargadoNum = cargado->total - cargado->libre;

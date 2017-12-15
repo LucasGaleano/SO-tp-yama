@@ -387,8 +387,6 @@ void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete,
 
 	list_destroy_and_destroy_elements(nodosBloques->puertoIP,(void*)destruirIp);
 
-
-
 	//Libero memoria
 	free(nodosBloques);
 	destruirSubstring(separado);
