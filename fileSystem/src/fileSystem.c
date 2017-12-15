@@ -338,6 +338,8 @@ void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete,
 	for (i = 0; i < cantidadDeBloques; i++) {
 		t_list * listaPorBloque = buscarBloqueParaYama(configArchivo, i);
 
+		list_add_all(nodosBloques->nodoBloque, listaPorBloque);
+
 		void imprimirListaDeNodosYBloques(t_nodo_bloque* nodoBloque){
 			log_trace(logFileSystem,"NOMBRE NODO: %s", nodoBloque->nomNodo);
 			log_trace(logFileSystem,"numero bloque archivo: %i", nodoBloque->bloqueArchivo);
@@ -345,9 +347,7 @@ void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete,
 			log_trace(logFileSystem,"tamanio: %i", nodoBloque->tamanio);
 		}
 
-		list_iterate(listaPorBloque, (void*)imprimirListaDeNodosYBloques);
-
-		list_add_all(nodosBloques->nodoBloque, listaPorBloque);
+		list_iterate(nodosBloques->nodoBloque, (void*)imprimirListaDeNodosYBloques);
 	}
 
 	//Armo con los disponibles los puerto y ip
