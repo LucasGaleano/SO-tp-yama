@@ -379,47 +379,32 @@ long generarJob() {
 }
 
 t_list* agruparNodosPorBloque(t_list* listaDeNodoBloque) {
-	t_list* bloquesSinRepetidos = list_create(); //TODO LIBERAR LISTA
 
-	bool existeNodoEnLaLista(int numeroBloque) {
-		bool booleano = false;
-		int x = 0;
-		for (; x < bloquesSinRepetidos->elements_count; x++) {
-			if (list_get(bloquesSinRepetidos, x), numeroBloque) {
-				booleano = true;
-				break;
-			}
+	t_list* listaTNodoPorBLoque = list_create(); //lista a devolver
+
+	int i=0;
+	for(;i<listaDeNodoBloque->elements_count;i++){
+			t_nodo_bloque* tNodoBloque = list_get(listaDeNodoBloque,i);
+		bool estaElNumArchivo(t_nodos_por_bloque* tNodosPorBloque){
+			if(tNodoBloque->bloqueArchivo == tNodosPorBloque->bloqueArchivo)
+				return true;
+			return false;
 		}
-		return booleano;
-	}
 
-	void tomarBloquesSinRepetidos(t_nodo_bloque* t_nodo_bloque) {
-		if (!existeNodoEnLaLista(t_nodo_bloque->bloqueArchivo)) {
-			list_add(bloquesSinRepetidos, &t_nodo_bloque->bloqueArchivo);
+		t_nodos_por_bloque* tNodoPorBloque = list_find(listaTNodoPorBLoque,(void*)estaElNumArchivo);
+		if(tNodoPorBloque==NULL){    //si no esta en la lista, lo crea
+			tNodoPorBloque = malloc(sizeof(t_nodos_por_bloque));
+			tNodoPorBloque->bloqueArchivo = tNodoBloque->bloqueArchivo;
+			tNodoPorBloque->nodosEnLosQueEsta = list_create();
+			list_add(tNodoPorBloque->nodosEnLosQueEsta,tNodoBloque->nomNodo);
+			list_add(listaTNodoPorBLoque,tNodoPorBloque);
+
+		}
+		else{
+			list_add(tNodoPorBloque->nodosEnLosQueEsta,tNodoBloque->nomNodo);
 		}
 	}
-
-	list_iterate(listaDeNodoBloque, (void*) tomarBloquesSinRepetidos);
-
-	t_list* listaBloquesConListaDeNodos = list_create(); //TODO LIBERAR MEMORIA
-
-	void obtenerNodosDeBloque(int numeroBloque) {
-		t_nodos_por_bloque* bloqueConListaNodos = malloc(sizeof(t_nodos_por_bloque)); //TODO LIBERAR MEMORIA
-		bloqueConListaNodos->nodosEnLosQueEsta = list_create();
-		int y = 0;
-		for (; y < listaDeNodoBloque->elements_count; y++) {
-			t_nodo_bloque* nodoBloque = list_get(listaDeNodoBloque, y);
-			if (numeroBloque == nodoBloque->bloqueArchivo) {
-				list_add(bloqueConListaNodos->nodosEnLosQueEsta,
-						nodoBloque->nomNodo);
-			}
-		}
-		list_add(listaBloquesConListaDeNodos, bloqueConListaNodos);
-	}
-
-	list_iterate(bloquesSinRepetidos, (void*) obtenerNodosDeBloque);
-
-	return listaBloquesConListaDeNodos;
+	return listaTNodoPorBLoque;
 }
 
 t_list* extraerNodosSinRepetidos(t_list* listaDeNodoBloque) {
@@ -460,6 +445,7 @@ void destruirConfiguracion(t_configuracion * configuracion) {
 
 char* obtenerNombreNodoDesdeId(int idNodo) {
 	char* prefijoNodo = string_new();
+	prefijoNodo = string_duplicate("Nodo");
 	char* numeroNodo = string_itoa(idNodo);
 	string_append(&prefijoNodo, numeroNodo);
 	free(numeroNodo);
