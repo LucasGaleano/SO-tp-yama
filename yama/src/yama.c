@@ -86,16 +86,13 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		procesarRecibirHandshake(unPaquete, client_socket);
 		break;
 	case ENVIAR_MENSAJE:
-		procesarRecibirMensaje(unPaquete);
+		procesarEnviarMensaje(unPaquete,client_socket);
 		break;
 	case ENVIAR_ARCHIVO:
 		procesarRecibirArchivo(unPaquete);
 		break;
 	case ENVIAR_ERROR:
 		procesarRecibirError(unPaquete, client_socket);
-		break;
-	case ENVIAR_RUTA_PARA_ARRANCAR_TRANSFORMACION: //RECIBO SOLICITUD DE TRANSFORMACION CON PATH DE ARCHIVO
-		procesarEnviarSolicitudTransformacion(unPaquete, client_socket); //ENVIO A FS PATH DE ARCHIVO
 		break;
 	case ENVIAR_LISTA_NODO_BLOQUES: //RECIBO LISTA DE ARCHIVOS DE FS CON UBICACIONES Y BLOQUES
 		log_trace(logYama, "Llego una solicitud de transformacion");
@@ -175,8 +172,7 @@ void procesarRecibirError(t_paquete * unPaquete, int *socket_client) { //supuest
 
 }
 
-void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete,
-		int *client_socket) {
+void procesarEnviarMensaje(t_paquete * unPaquete, int *client_socket) {
 	char * nomArchivo = recibirMensaje(unPaquete);
 	log_trace(logYama, "Recibida ruta de Archivo:  %s", nomArchivo);
 	enviarRutaParaArrancarTransformacion(socketFS, nomArchivo, *client_socket);

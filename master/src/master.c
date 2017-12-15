@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
 	signal(SIGPIPE, signal_capturer);
 	signal(SIGSEGV, signal_capturer);
 
-	enviarRutaParaArrancarTransformacion(conexionYama,rutaArchivoParaArrancar,MASTER );
+	enviarMensaje(conexionYama,rutaArchivoParaArrancar);
 
 	while (!finDeSolicitudes && !dejarDeRecibirSolicitudes) {
 		log_trace(logMaster, "Esperando solicitud de Yama");
