@@ -15,6 +15,15 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 		return;
 	}
 
+	//Verifico que el archivo no sea mas grande de los bloques que tenga
+	int cantBloquesArchivo = tamArch / TAM_BLOQUE;
+
+	if(tablaNodos->libres < cantBloquesArchivo){
+		log_error(logFileSystem, "No se puede almacenar el archivo porque no tengo los bloques libres suficientes \n");
+		munmap(archivo, tamArch);
+		fclose(archivofd);
+	}
+
 	int desplazamiento = 0;
 
 	int numeroBloque = 0;
