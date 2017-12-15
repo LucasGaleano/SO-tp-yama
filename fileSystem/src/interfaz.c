@@ -333,9 +333,6 @@ char * leerArchivo(char * rutaArchivo) {
 
 		bloque++;
 
-		if (!estadoEstable) {
-			return NULL;
-		}
 		listaNodoBloque = buscarBloque(configArchivo, bloque);
 	}
 

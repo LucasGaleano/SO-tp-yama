@@ -360,6 +360,68 @@ t_list * buscarBloque(t_config * configArchivo, int bloque) {
 	return lista;
 }
 
+t_list * buscarBloqueParaYama(t_config * configArchivo, int bloque) {
+	t_list * lista = list_create();
+
+	char * keyOriginal = string_new();
+	string_append(&keyOriginal, "BLOQUE");
+	char * bloqueChar = string_itoa(bloque);
+	string_append(&keyOriginal, bloqueChar);
+	string_append(&keyOriginal, "COPIA");
+
+	int copia = 0;
+
+	char * key = string_new();
+	string_append(&key, keyOriginal);
+	char * copiaChar = string_itoa(copia);
+	string_append(&key, copiaChar);
+
+	char * bloqueBuscado = config_get_string_value(configArchivo, key);
+
+	char * aux = string_new();
+	string_append(&aux, "BLOQUE");
+	string_append(&aux, bloqueChar);
+	string_append(&aux, "BYTES");
+
+	int tamanioBloque = config_get_int_value(configArchivo, aux);
+
+	free(aux);
+
+	while (bloqueBuscado != NULL) {
+		char ** bloqueEncontrado = config_get_array_value(configArchivo, key);
+		if (!bloqueNodoVacio(bloqueEncontrado)
+				&& nodoDisponible(bloqueEncontrado[0])) {
+			t_nodo_bloque * nodoBloque = malloc(sizeof(t_nodo_bloque));
+
+			nodoBloque->nomNodo = strdup(bloqueEncontrado[0]);
+			nodoBloque->bloqueNodo = atoi((char*) bloqueEncontrado[1]);
+			nodoBloque->originalidad = copia;
+			nodoBloque->bloqueArchivo = bloque;
+			nodoBloque->tamanio = tamanioBloque;
+
+			list_add(lista, nodoBloque);
+		}
+
+		destruirSubstring(bloqueEncontrado);
+		free(key);
+		free(copiaChar);
+
+		copia++;
+		key = string_new();
+		string_append(&key, keyOriginal);
+		copiaChar = string_itoa(copia);
+		string_append(&key, copiaChar);
+		bloqueBuscado = config_get_string_value(configArchivo, key);
+	}
+
+	free(key);
+	free(keyOriginal);
+	free(bloqueChar);
+	free(copiaChar);
+
+	return lista;
+}
+
 char ** buscarBloqueCopia(t_config * configArchivo, int bloque, int copia) {
 	char * key = string_new();
 	string_append(&key, "BLOQUE");
@@ -1020,7 +1082,8 @@ int buscarIndexLibre() {
 
 int obtenerIndex(char ** separado, int posicion) {
 	bool esPadreBuscado(t_directory * registro) {
-		return string_equals_ignore_case(registro->nombre, "root") && -1 == registro->padre;
+		return string_equals_ignore_case(registro->nombre, "root")
+				&& -1 == registro->padre;
 	}
 
 	t_directory *registro = list_find(tablaDirectorios, (void*) esPadreBuscado);
@@ -1037,7 +1100,7 @@ int obtenerIndex(char ** separado, int posicion) {
 		t_directory * registro = list_find(tablaDirectorios,
 				(void*) esPadreBuscado);
 
-		if(registro == NULL){
+		if (registro == NULL) {
 			return -2;
 		}
 
@@ -1054,7 +1117,7 @@ int obtenerIndexDirectorio(char * rutaDirectorio) {
 	for (posicion = 0; separado[posicion] != NULL; ++posicion)
 		;
 
-	int index = obtenerIndex(separado,posicion);
+	int index = obtenerIndex(separado, posicion);
 
 	destruirSubstring(separado);
 
@@ -1069,15 +1132,14 @@ int obtenerIndexPadre(char * rutaDirectorio) {
 	for (posicion = 0; separado[posicion] != NULL; ++posicion)
 		;
 
-	posicion --;
+	posicion--;
 
-	int index = obtenerIndex(separado,posicion);
+	int index = obtenerIndex(separado, posicion);
 
 	destruirSubstring(separado);
 
 	return index;
 }
-
 
 void destruirSubstring(char ** sub) {
 	int i;

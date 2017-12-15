@@ -78,6 +78,7 @@ t_config *					crearArchivoTablaArchivo		(char *, char *, char *, int);
 void 						agregarRegistroTablaArchivos	(char *, int,int, int, t_config *);
 void 						guardoBytesPorBloque			(int, int, t_config *);
 t_list *					buscarBloque					(t_config *, int);
+t_list * 					buscarBloqueParaYama			(t_config *, int);
 char **						buscarBloqueCopia				(t_config *, int, int);
 int 						buscarTamBloque					(t_config *, int);
 bool						soyEstable						(char *);

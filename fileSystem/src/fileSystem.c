@@ -282,8 +282,7 @@ void procesarBloqueGenerarCopia(t_paquete * unPaquete) {
 	free(bloqueGenerarCopia);
 }
 
-void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete,
-		int client_socket) {
+void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete, int client_socket) {
 	t_solicitudArchivo * archivoPedido = recibirRutaParaArrancarTransformacion(
 			unPaquete);
 
@@ -325,83 +324,34 @@ void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete,
 		return;
 	}
 
-	//Busco los bloques
-	int cantidadDeBloques = config_get_int_value(configArchivo,
-			"CANTIDAD_BLOQUES");
-
-	int numeroBloque = 0;
-	int numeroCopia;
-	int numeroTotal;
-
-	char ** bloque;
-
-	t_list * listaBloques = list_create();
-
-	for (numeroTotal = 0; numeroTotal < cantidadDeBloques; ++numeroTotal) {
-
-		bloque = buscarBloqueCopia(configArchivo, numeroBloque, 0);
-
-		char * key = string_new();
-		string_append(&key, "BLOQUE");
-		char * bloqueChar = string_itoa(numeroBloque);
-		string_append(&key, bloqueChar);
-		string_append(&key, "BYTES");
-
-		int tamanioBloque = config_get_int_value(configArchivo, key);
-
-		while (bloque != NULL) {
-			t_nodo_bloque * nodoBloque = malloc(sizeof(t_nodo_bloque));
-
-			nodoBloque->nomNodo = strdup(bloque[0]);
-			nodoBloque->bloqueNodo = atoi((char*) bloque[1]);
-			nodoBloque->originalidad = numeroCopia;
-			nodoBloque->bloqueArchivo = numeroBloque;
-			nodoBloque->tamanio = tamanioBloque;
-
-			list_add(listaBloques, nodoBloque);
-			numeroTotal++;
-			numeroCopia++;
-			bloque = buscarBloqueCopia(configArchivo, numeroBloque,
-					numeroCopia);
-		}
-		numeroBloque++;
-	}
-
-	//Busco nodos disponibles
-	bool estoyDisponible(t_nodo_info * nodo) {
-		return nodo->disponible;
-	}
-
-	t_list * nodosDisponibles = list_filter(tablaNodos->infoDeNodo,
-			(void*) estoyDisponible);
-
 	//Armo la lista final de los nodos
 	t_nodos_bloques * nodosBloques = malloc(sizeof(nodosBloques));
 	nodosBloques->nodoBloque = list_create();
 
+	//Busco los bloques
+	int cantidadDeBloques = config_get_int_value(configArchivo,
+			"CANTIDAD_BLOQUES");
+
 	int i;
-	for (i = 0; i < nodosDisponibles->elements_count; i++) {
-		t_nodo_info * nodoDisponible = list_get(nodosDisponibles, i);
 
-		void agregarSiEstaDisponible(t_nodo_bloque * nodo) {
-			if (string_equals_ignore_case(nodoDisponible->nombre,
-					nodo->nomNodo))
-				list_add(nodosBloques->nodoBloque, nodo);
-		}
-
-		list_iterate(listaBloques, (void*) agregarSiEstaDisponible);
+	for (i = 0; i < cantidadDeBloques; i++) {
+		t_list * listaPorBloque = buscarBloqueParaYama(configArchivo, i);
+		list_add_all(nodosBloques->nodoBloque, listaPorBloque);
 	}
 
 	//Armo con los disponibles los puerto y ip
 	nodosBloques->puertoIP = list_create();
 
-	void agregoAListaIpPuerto(t_nodo_info * nodoDisponble) {
+	t_list * nodosDisponibles = list_filter(tablaNodos->nomNodos,
+			(void*) nodoDisponible);
+
+	void agregoAListaIpPuerto(char * nodoDisponble) {
 		t_tabla_sockets_ip_puerto * ipPuerto = buscarIpPuertoPorNombre(
-				nodoDisponble->nombre);
+				nodoDisponble);
 		t_puerto_ip * puertoIpFinal = malloc(sizeof(t_puerto_ip));
 		puertoIpFinal->ip = strdup(ipPuerto->ip);
 		puertoIpFinal->puerto = strdup(ipPuerto->puerto);
-		puertoIpFinal->nomNodo = strdup(nodoDisponble->nombre);
+		puertoIpFinal->nomNodo = strdup(nodoDisponble);
 
 		list_add(nodosBloques->puertoIP, puertoIpFinal);
 	}
