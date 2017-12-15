@@ -1,7 +1,7 @@
 #include "interfaz.h"
 
 /*-------------------------Almacenar archivo-------------------------*/
-void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
+bool almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 		int tipoArchivo) {
 	size_t tamArch;
 
@@ -12,7 +12,17 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 	if (archivo == NULL) {
 		log_warning(logFileSystem, "%s: No existe el archivo o el directorio",
 				rutaArchivo);
-		return;
+		return false;
+	}
+
+	//Verifico que el archivo no sea mas grande de los bloques que tenga
+	int cantBloquesArchivo = (tamArch / TAM_BLOQUE) * 2;
+
+	if(tablaNodos->libres < cantBloquesArchivo){
+		printf("No se puede almacenar el archivo porque no tengo los bloques libres suficientes \n");
+		munmap(archivo, tamArch);
+		fclose(archivofd);
+		return false;
 	}
 
 	int desplazamiento = 0;
@@ -53,7 +63,7 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 		default:
 			log_warning(logFileSystem,
 					"No puedo enviar el archivo xq no conosco su tipo de dato");
-			return;
+			return false;
 			break;
 		}
 
@@ -100,9 +110,13 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 		free(totalesActualesChar);
 	}
 
+	printf("Se termino de almacenar el archivo \n");
+
 	config_destroy(configTablaArchivo);
 	munmap(archivo, tamArch);
 	fclose(archivofd);
+
+	return true;
 }
 
 void * dividirBloqueArchivoBinario(void * archivo, size_t tamArch,

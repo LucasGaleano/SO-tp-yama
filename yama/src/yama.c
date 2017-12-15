@@ -2,22 +2,21 @@
 
 int main(void) {
 
-
-	listaDireccionesNodos = list_create();
-
 	//Levanto el archivo de configuracion
 	char* path_config_yama =
 			"/home/utnso/workspace/tp-2017-2c-NULL/configuraciones/yama.cfg";
+
 	logYama = log_create("yama.log", "Yama", true, LOG_LEVEL_TRACE);
 
-	log_trace(logYama, "Arranca proceso Yama");
-
 	configuracion = leerArchivoDeConfiguracionYAMA(path_config_yama);
+
+	log_trace(logYama, "Arranca proceso Yama");
 
 	//Me conecto con el file system
 	socketFS = conectarCliente(configuracion->ip, configuracion->puerto, YAMA); //todo VERIFICAR CONEXION CON FS ROMPER
 
 	//Creo estructuras administrativas
+	listaDireccionesNodos = list_create();
 	idJob = 0;
 	tabla_de_estados = list_create();
 	tablaPlanificador = Planificador_create();
@@ -32,6 +31,8 @@ int main(void) {
 		exit(EXIT_FAILURE);
 	}
 
+	pthread_join(threadServerYama, NULL);
+
 	destruirConfiguracion(configuracion);
 //	list_destroy_and_destroy_elements(tabla_de_estados, (void*) eliminarElemento() ); //TODO PREGUNTAR SI ESTA BIEN LIBERAR DESPUES DE USAR
 
@@ -45,21 +46,26 @@ t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 
 	configuracion = malloc(sizeof(t_configuracion));
 
-	configuracion->ip = config_get_string_value(config, "FS_IP");
-	configuracion->puerto = config_get_string_value(config, "FS_PUERTO");
-	configuracion->retardo = config_get_int_value(config,
-			"RETARDO_PLANIFICACION");
-	configuracion->algoritmo = config_get_string_value(config,
-			"ALGORITMO_BALANCEO");
-	configuracion->puerto_yama = config_get_string_value(config, "PUERTO_YAMA");
-	configuracion->disponibilidad_base = config_get_int_value(config,
-			"DISPONIBILIDAD_BASE");
+	configuracion->ip = strdup(config_get_string_value(config, "FS_IP"));
+
+	configuracion->puerto = strdup(config_get_string_value(config, "FS_PUERTO"));
+
+	configuracion->retardo = config_get_int_value(config, "RETARDO_PLANIFICACION");
+
+	configuracion->algoritmo = strdup(config_get_string_value(config,"ALGORITMO_BALANCEO"));
+
+	configuracion->disponibilidad_base = config_get_int_value(config,"DISPONIBILIDAD_BASE");
+
+	configuracion->puerto_yama = strdup(config_get_string_value(config, "PUERTO_YAMA"));
 
 	printf(
 			"Se levanto el proceso YAMA con: YAMA_PUERTO: %s  FS_IP: %s - FS_PUERTO: %s - RETARDO: %d - ALGORITMO: %s - DISPONIBILIDAD BASE: %d \n",
-			configuracion->puerto_yama, configuracion->ip,
-			configuracion->puerto, configuracion->retardo,
-			configuracion->algoritmo, configuracion->disponibilidad_base);
+			configuracion->puerto_yama,
+			configuracion->ip,
+			configuracion->puerto,
+			configuracion->retardo,
+			configuracion->algoritmo,
+			configuracion->disponibilidad_base);
 
 	config_destroy(config);
 
@@ -68,8 +74,7 @@ t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 
 /*-------------------------Manejo de conexiones-------------------------*/
 void iniciarServidor(char* unPuerto) {
-	iniciarServer(unPuerto, (void *) procesarPaquete);
-	log_trace(logYama, "Inicia Yama como servidor esperando un master");
+	iniciarServer(unPuerto, (void *) procesarPaquete, logYama);
 }
 
 /*-------------------------Procesamiento paquetes-------------------------*/
@@ -118,7 +123,6 @@ void procesarRecibirHandshake(t_paquete * unPaquete, int * client_socket) {
 		int * a = malloc(sizeof(int));
 		memcpy(a, client_socket, sizeof(int));
 		//TODO CHECKEAR HANDSHAKE
-		list_add(masterConectados, a); // una lista de master conectados para distribuir job
 		break;
 	default:
 		*client_socket = -1;
@@ -160,19 +164,21 @@ void procesarRecibirError(t_paquete * unPaquete) { //supuestamente necesita un s
 
 }
 
-void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete,
-		int *client_socket) {
+void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete, int *client_socket) {
 	char * nomArchivo = recibirMensaje(unPaquete);
-	enviarRutaParaArrancarTransformacion(socketFS, nomArchivo);
+	log_trace(logYama, "Recibida ruta de Archivo:  %s", nomArchivo);
+	enviarRutaParaArrancarTransformacion(socketFS, nomArchivo, client_socket);
+	log_trace(logYama, "Enviada ruta para obtener Nodos y Bloques a: %d", socketFS);
 }
 
 void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
-
+	log_trace(logYama, "Recibida lista de bloques y nodos de File System");
 	int idJob = generarJob();
 
 	t_nodos_bloques * nodosBloques = recibirListaNodoBloques(unPaquete); //RECIBO UN STRUCT CON 2 LISTAS ANIDADAS
 
 	t_list* listaNodoBloque = nodosBloques->nodoBloque;
+	log_trace(logYama, "Recibido %d nodos-bloques de FilesSystem", listaNodoBloque->elements_count);
 	listaDireccionesNodos = list_take(nodosBloques->puertoIP,nodosBloques->puertoIP->elements_count);
 
 	t_list* listaBloquesConNodos = agruparNodosPorBloque(listaNodoBloque); // LISTA DE BLOQUES CON LOS NODOS DONDE ESTA
@@ -373,47 +379,32 @@ long generarJob() {
 }
 
 t_list* agruparNodosPorBloque(t_list* listaDeNodoBloque) {
-	t_list* bloquesSinRepetidos = list_create(); //TODO LIBERAR LISTA
 
-	bool existeNodoEnLaLista(int numeroBloque) {
-		bool booleano = false;
-		int x = 0;
-		for (; x < bloquesSinRepetidos->elements_count; x++) {
-			if (list_get(bloquesSinRepetidos, x), numeroBloque) {
-				booleano = true;
-				break;
-			}
+	t_list* listaTNodoPorBLoque = list_create(); //lista a devolver
+
+	int i=0;
+	for(;i<listaDeNodoBloque->elements_count;i++){
+			t_nodo_bloque* tNodoBloque = list_get(listaDeNodoBloque,i);
+		bool estaElNumArchivo(t_nodos_por_bloque* tNodosPorBloque){
+			if(tNodoBloque->bloqueArchivo == tNodosPorBloque->bloqueArchivo)
+				return true;
+			return false;
 		}
-		return booleano;
-	}
 
-	void tomarBloquesSinRepetidos(t_nodo_bloque* t_nodo_bloque) {
-		if (!existeNodoEnLaLista(t_nodo_bloque->bloqueArchivo)) {
-			list_add(bloquesSinRepetidos, &t_nodo_bloque->bloqueArchivo);
+		t_nodos_por_bloque* tNodoPorBloque = list_find(listaTNodoPorBLoque,(void*)estaElNumArchivo);
+		if(tNodoPorBloque==NULL){    //si no esta en la lista, lo crea
+			tNodoPorBloque = malloc(sizeof(t_nodos_por_bloque));
+			tNodoPorBloque->bloqueArchivo = tNodoBloque->bloqueArchivo;
+			tNodoPorBloque->nodosEnLosQueEsta = list_create();
+			list_add(tNodoPorBloque->nodosEnLosQueEsta,tNodoBloque->nomNodo);
+			list_add(listaTNodoPorBLoque,tNodoPorBloque);
+
+		}
+		else{
+			list_add(tNodoPorBloque->nodosEnLosQueEsta,tNodoBloque->nomNodo);
 		}
 	}
-
-	list_iterate(listaDeNodoBloque, (void*) tomarBloquesSinRepetidos);
-
-	t_list* listaBloquesConListaDeNodos = list_create(); //TODO LIBERAR MEMORIA
-
-	void obtenerNodosDeBloque(int numeroBloque) {
-		t_nodos_por_bloque* bloqueConListaNodos = malloc(sizeof(t_nodos_por_bloque)); //TODO LIBERAR MEMORIA
-		bloqueConListaNodos->nodosEnLosQueEsta = list_create();
-		int y = 0;
-		for (; y < listaDeNodoBloque->elements_count; y++) {
-			t_nodo_bloque* nodoBloque = list_get(listaDeNodoBloque, y);
-			if (numeroBloque == nodoBloque->bloqueArchivo) {
-				list_add(bloqueConListaNodos->nodosEnLosQueEsta,
-						nodoBloque->nomNodo);
-			}
-		}
-		list_add(listaBloquesConListaDeNodos, bloqueConListaNodos);
-	}
-
-	list_iterate(bloquesSinRepetidos, (void*) obtenerNodosDeBloque);
-
-	return listaBloquesConListaDeNodos;
+	return listaTNodoPorBLoque;
 }
 
 t_list* extraerNodosSinRepetidos(t_list* listaDeNodoBloque) {
@@ -454,6 +445,7 @@ void destruirConfiguracion(t_configuracion * configuracion) {
 
 char* obtenerNombreNodoDesdeId(int idNodo) {
 	char* prefijoNodo = string_new();
+	prefijoNodo = string_duplicate("Nodo");
 	char* numeroNodo = string_itoa(idNodo);
 	string_append(&prefijoNodo, numeroNodo);
 	free(numeroNodo);

@@ -27,7 +27,7 @@ void 				procesarError						(t_paquete *, int *);
 void 				procesarBloqueArchivoTemporal		(t_paquete *);
 void				procesarRespuestaEscrituraBloque	(t_paquete *, int);
 void 				procesarBloqueGenerarCopia			(t_paquete *);
-void 				procesarEnviarRutaArchivo			(t_paquete *, int);
+void 				procesarEnviarRutaParaArrancarTransformacion			(t_paquete *, int);
 void 				procesarNombre						(t_paquete *, int *);
 void 				procesarEnviarRutaArchivoRutaDestino(t_paquete *, int);
 

@@ -6,7 +6,7 @@
 t_list * listaTemporal;
 
 /*-------------------------Almacenar archivo-------------------------*/
-void				almacenarArchivo				(char *, char *, char *, int);
+bool				almacenarArchivo				(char *, char *, char *, int);
 void * 				dividirBloqueArchivoBinario		(void *, size_t, int *, int *);
 t_stream *			dividirBloqueArchivoTexto		(void *, int *,int);
 char * 				buscarNodoMenosCargado			(void);

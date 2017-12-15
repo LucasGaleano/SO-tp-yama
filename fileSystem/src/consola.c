@@ -121,30 +121,6 @@ void ejecutarComando(char * linea, bool * ejecutar) {
 		return;
 	}
 
-	//PRUEBAS
-	if (string_starts_with(linea, "pruebaT")) {
-		almacenarArchivo("/home/utnso/Escritorio/nombres.csv", "base", "prueba",
-				TEXTO);
-		printf("Termine de almacenar el archivo \n");
-
-		return;
-	}
-
-	if (string_starts_with(linea, "pruebaB")) {
-		almacenarArchivo("/home/utnso/Escritorio/Feraligatr4sotw-1.png", "base",
-				"prueba", BINARIO);
-		printf("Termine de almacenar el archivo \n");
-
-		return;
-	}
-
-	if (string_starts_with(linea, "pruebaD")) {
-		char * path_archivo = obtenerParametro(linea, 1);
-		int index = obtenerIndexDirectorio(path_archivo);
-		printf("%d \n", index);
-		return;
-	}
-
 	//NO RECONOZCO EL COMANDO
 	printf("No se ha encontrado el comando %s \n", linea);
 }
@@ -984,7 +960,7 @@ void solicitarHash(char * linea) {
 	posicion -= 1;
 
 	//Busco el index del padre
-	int indexPadre = obtenerIndexPadre(path_archivo_yamafs);
+	int indexPadre = obtenerIndexDirectorio(path_archivo_yamafs);
 
 	//Abro el archivo de config
 	char * ruta = string_new();
@@ -1073,7 +1049,7 @@ void listarArchivos(char * linea) {
 		return;
 
 	//Busco el index del direc
-	int indexDir = obtenerIndexPadre(path_directorio);
+	int indexDir = obtenerIndexDirectorio(path_directorio);
 
 	if (indexDir <= 0) {
 		printf("%s: No existe el directorio \n", path_directorio);

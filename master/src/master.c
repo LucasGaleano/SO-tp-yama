@@ -29,8 +29,8 @@ int main(int argc, char **argv) {
 	enviarRutaParaArrancarTransformacion(conexionYama, rutaArchivoParaArrancar);
 
 	while (!finDeSolicitudes && !dejarDeRecibirSolicitudes) {
-
-		gestionarSolicitudes(conexionYama, (void *) procesarPaquete);
+		log_trace(logMaster, "Esperando solicitud de Yama");
+		gestionarSolicitudes(conexionYama, (void *) procesarPaquete, logMaster);
 
 	}
 	int i = 0;
@@ -190,7 +190,7 @@ void mandarDatosTransformacion(t_indicacionTransformacion * transformacion) {
 
 	errorTransformacion = false;
 
-	gestionarSolicitudes(conexionWorker, (void *) procesarPaquete);
+	gestionarSolicitudes(conexionWorker, (void *) procesarPaquete, logMaster);
 
 	if (errorTransformacion || errorWorker || dejarDeRecibirSolicitudes) {
 		tablaMetricas.cantidadFallosTransformacion++;
@@ -270,7 +270,7 @@ void mandarDatosReduccionLocal(t_indicacionReduccionLocal * reduccion) {
 
 	errorReduLocal = false;
 
-	gestionarSolicitudes(worker, (void*) procesarPaquete);
+	gestionarSolicitudes(worker, (void*) procesarPaquete, logMaster);
 
 	if (errorReduLocal || errorWorker || dejarDeRecibirSolicitudes) {
 		tablaMetricas.cantidadFallosReduccionLocal++;
@@ -365,7 +365,7 @@ void gestionarReduccionGlobal() {
 		}
 	}
 
-	gestionarSolicitudes(conexionWorker, (void*) neutro);
+	gestionarSolicitudes(conexionWorker, (void*) neutro, logMaster);
 
 	posActual = 0;
 	while (posActual < (cantidadSolicitudes - 1)) {
@@ -381,7 +381,7 @@ void gestionarReduccionGlobal() {
 		posActual++;
 	}
 
-	gestionarSolicitudes(conexionWorker, (void *) procesarPaquete);
+	gestionarSolicitudes(conexionWorker, (void *) procesarPaquete, logMaster);
 
 	if (errorReduGlobal || errorWorker || dejarDeRecibirSolicitudes) {
 		tablaMetricas.cantidadFallosReduccionGlobal++;
@@ -421,7 +421,7 @@ void gestionarAlmacenadoFinal(t_indicacionAlmacenadoFinal * indicacion) {
 			MASTER);
 	enviarSolicitudAlmacenadoFinal(conexionWorker, solicitud);
 
-	gestionarSolicitudes(conexionWorker, (void *) procesarPaquete);
+	gestionarSolicitudes(conexionWorker, (void *) procesarPaquete, logMaster);
 
 	if (errorAlmacenamiento || errorWorker || dejarDeRecibirSolicitudes) {
 		tablaMetricas.cantidadFallosAlmacenamiento++;
