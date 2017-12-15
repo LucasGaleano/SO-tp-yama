@@ -66,8 +66,8 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 	case ENVIAR_BLOQUE_GENERAR_COPIA:
 		procesarBloqueGenerarCopia(unPaquete);
 		break;
-	case ENVIAR_RUTA_ARCHIVO:
-		procesarEnviarRutaArchivo(unPaquete, *client_socket);
+	case ENVIAR_RUTA_PARA_ARRANCAR_TRANSFORMACION:
+		procesarEnviarRutaParaArrancarTransformacion(unPaquete, *client_socket);
 		break;
 	case ENVIAR_RUTA_ARCHIVO_RUTA_DESTINO:
 		procesarEnviarRutaArchivoRutaDestino(unPaquete, *client_socket);
@@ -243,8 +243,10 @@ void procesarBloqueGenerarCopia(t_paquete * unPaquete) {
 	free(bloqueGenerarCopia);
 }
 
-void procesarEnviarRutaArchivo(t_paquete * unPaquete, int client_socket) {
+void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete, int client_socket) {
 	t_solicitudArchivo * archivoPedido = recibirRutaArchivo(unPaquete);
+
+	log_trace(logFileSystem, "Me llego una solicitud de ruta para arrancar transformacion \n");
 
 	//Busco el nombre del directorio
 	char ** separado = string_split(archivoPedido->rutaArchivo, "/");
@@ -372,6 +374,8 @@ void procesarEnviarRutaArchivo(t_paquete * unPaquete, int client_socket) {
 	free(rutaFS);
 	free(indexPadreChar);
 	config_destroy(configArchivo);
+
+	log_trace(logFileSystem, "Envio lista de nodos para arrancar transformacion \n");
 }
 
 void procesarNombre(t_paquete * unPaquete, int * client_socket) {
