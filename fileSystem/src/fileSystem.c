@@ -326,7 +326,7 @@ void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete,
 	}
 
 	//Armo la lista final de los nodos
-	t_nodos_bloques * nodosBloques = malloc(sizeof(nodosBloques));
+	t_nodos_bloques * nodosBloques = malloc(sizeof(t_nodos_bloques));
 	nodosBloques->nodoBloque = list_create();
 
 	//Busco los bloques
