@@ -177,7 +177,7 @@ void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete, int *client_so
 }
 
 
-	void MostrarLIstaNodoBloque(t_list* listaBloquesConNodos){
+	void MostrarLIstaNodoBloque(t_nodos_bloques* listaBloquesConNodos){
 
 		void imprimir(t_nodos_por_bloque* elemento){
 			log_trace(logYama,"numero bloque: %i",elemento->bloqueArchivo);
