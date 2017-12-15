@@ -187,16 +187,15 @@ void MostrarLIstaNodoBloque(t_nodos_bloques* listaBloquesConNodos) {
 
 	} else {
 
-		log_trace(logYama, "-----BLOQUE------\n SOLICITADO POR MASTER: %i",
-				listaBloquesConNodos->masterSolicitante);
+		log_trace(logYama, "-----BLOQUE------\n SOLICITADO POR MASTER: %d", listaBloquesConNodos->masterSolicitante);
 
 		void imprimirListaDeNodosYBloques(t_nodo_bloque* nodoBloque) {
 					log_trace(logYama, "NOMBRE NODO: %s", nodoBloque->nomNodo);
-					log_trace(logYama, "numero bloque archivo: %i",
+					log_trace(logYama, "numero bloque archivo: %d",
 							nodoBloque->bloqueArchivo);
-					log_trace(logYama, "numero bloque nodo: %i",
+					log_trace(logYama, "numero bloque nodo: %d",
 							nodoBloque->bloqueNodo);
-					log_trace(logYama, "tamanio: %i", nodoBloque->tamanio);
+					log_trace(logYama, "tamanio: %d", nodoBloque->tamanio);
 				}
 
 				list_iterate(listaBloquesConNodos->nodoBloque,
@@ -236,8 +235,28 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 
 	list_iterate(nodosSinRepetidos, (void*) agregarATablaPlanificador);
 
+	//PLANIFICAMOS
+	log_trace(logYama, "Entra a planificar");
 	planificador(configuracion->algoritmo, listaBloquesConNodos,
 			tablaPlanificador, configuracion->disponibilidad_base);
+	log_trace(logYama, "Finaliza planificacion con los siguientes resultados: ");
+	void imprimirPlanificador(void* item) {
+
+		t_registro_Tabla_Planificador* registro = item;
+		printf("disp: %d   w: %d   WL actual: %d  WL total: %d   bloque \n",
+				registro->disponibilidad, registro->id, registro->WL_actual,
+				registro->WL_Total);
+		int i = 0;
+		int cant = list_size(registro->listaBloques);
+		for (; i < cant; i++) {
+			printf("%d ", list_get(registro->listaBloques, i));
+
+		}
+		printf("\n");
+
+	}
+
+	list_iterate(tablaPlanificador, (void*)imprimirPlanificador);
 
 	t_list* indicacionesDeTransformacionParaMaster = list_create();
 
@@ -343,7 +362,7 @@ void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
 							indReducLocal->nodo, reg->bloque, REDUCCION_LOCAL,
 							indReducLocal->archivoTemporalReduccionLocal,
 							PROCESANDO);
-
+					log_trace(logYama, "Intentando enviar Indicaciones de reduccion local");
 					enviarIndicacionReduccionLocal(*client_socket,
 							indReducLocal);
 					IndicReducLocal_destroy(indReducLocal);
@@ -358,7 +377,7 @@ void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
 }
 
 void procesarResultadoReduccionLocal(t_paquete* unPaquete, int *client_socket) {
-
+	log_trace(logYama, "Llega resultado de reduccion local");
 	t_indicacionReduccionLocal * indicReduLocal =
 			recibirIndicacionReduccionLocal(unPaquete);
 
@@ -410,13 +429,13 @@ void procesarResultadoReduccionLocal(t_paquete* unPaquete, int *client_socket) {
 				list_add(listaDeIndicacionesReduccionGlobal,
 						indicacionReduccionGlobal);
 			}
+			log_trace(logYama, "Preparo Reduccion Local lista para Reduccion Global");
 		}
 
 		list_iterate(tabla_de_estados,
 				(void*) siCumpleCondicionArmarIndicacionDeReduccionGlobal);
 
-		enviarIndicacionReduccionGlobal(*client_socket,
-				listaDeIndicacionesReduccionGlobal);
+		enviarIndicacionReduccionGlobal(*client_socket, listaDeIndicacionesReduccionGlobal);
 	}
 
 }
