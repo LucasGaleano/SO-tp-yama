@@ -12,6 +12,8 @@ static t_registro_Tabla_Planificador* sacarRegistroPorIdWorker(t_list* tablaPlan
 
 
 
+
+
 bool planificador(char* algoritmo, t_list * listaDeBloques,
 		t_list* tablaPlanificador, int DispBase) {
 

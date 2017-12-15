@@ -28,6 +28,8 @@ typedef struct {
 
 //-------------------------------------Funciones balanceador--------------------------------------//
 
+
+
 void Planificador_destroy(t_list* planificador);
 t_list* Planificador_create(); //check
 void planificador_agregarWorker(t_list* tablaPlanificador, char* numWorkerId); //check
