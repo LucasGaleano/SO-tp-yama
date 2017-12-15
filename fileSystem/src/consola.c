@@ -960,7 +960,7 @@ void solicitarHash(char * linea) {
 	posicion -= 1;
 
 	//Busco el index del padre
-	int indexPadre = obtenerIndexDirectorio(path_archivo_yamafs);
+	int indexPadre = obtenerIndexPadre(path_archivo_yamafs);
 
 	//Abro el archivo de config
 	char * ruta = string_new();
