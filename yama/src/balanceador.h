@@ -9,6 +9,7 @@
 #include <commons/string.h>
 #include "string.h"
 #include <stdint.h>
+#include <commons/log.h>
 
 typedef struct{
 	int bloqueArchivo;
@@ -22,6 +23,8 @@ typedef struct {
 	uint32_t WL_Total;
 	t_list* listaBloques; //lista de int.
 } t_registro_Tabla_Planificador;
+
+
 
 //-------------------------------------Funciones balanceador--------------------------------------//
 
