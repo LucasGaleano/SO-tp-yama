@@ -48,24 +48,26 @@ t_configuracion * leerArchivoDeConfiguracionYAMA(char* path) {
 
 	configuracion->ip = strdup(config_get_string_value(config, "FS_IP"));
 
-	configuracion->puerto = strdup(config_get_string_value(config, "FS_PUERTO"));
+	configuracion->puerto = strdup(
+			config_get_string_value(config, "FS_PUERTO"));
 
-	configuracion->retardo = config_get_int_value(config, "RETARDO_PLANIFICACION");
+	configuracion->retardo = config_get_int_value(config,
+			"RETARDO_PLANIFICACION");
 
-	configuracion->algoritmo = strdup(config_get_string_value(config,"ALGORITMO_BALANCEO"));
+	configuracion->algoritmo = strdup(
+			config_get_string_value(config, "ALGORITMO_BALANCEO"));
 
-	configuracion->disponibilidad_base = config_get_int_value(config,"DISPONIBILIDAD_BASE");
+	configuracion->disponibilidad_base = config_get_int_value(config,
+			"DISPONIBILIDAD_BASE");
 
-	configuracion->puerto_yama = strdup(config_get_string_value(config, "PUERTO_YAMA"));
+	configuracion->puerto_yama = strdup(
+			config_get_string_value(config, "PUERTO_YAMA"));
 
 	printf(
 			"Se levanto el proceso YAMA con: YAMA_PUERTO: %s  FS_IP: %s - FS_PUERTO: %s - RETARDO: %d - ALGORITMO: %s - DISPONIBILIDAD BASE: %d \n",
-			configuracion->puerto_yama,
-			configuracion->ip,
-			configuracion->puerto,
-			configuracion->retardo,
-			configuracion->algoritmo,
-			configuracion->disponibilidad_base);
+			configuracion->puerto_yama, configuracion->ip,
+			configuracion->puerto, configuracion->retardo,
+			configuracion->algoritmo, configuracion->disponibilidad_base);
 
 	config_destroy(config);
 
@@ -90,7 +92,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		procesarRecibirArchivo(unPaquete);
 		break;
 	case ENVIAR_ERROR:
-		procesarRecibirError(unPaquete,client_socket);
+		procesarRecibirError(unPaquete, client_socket);
 		break;
 	case ENVIAR_RUTA_PARA_ARRANCAR_TRANSFORMACION: //RECIBO SOLICITUD DE TRANSFORMACION CON PATH DE ARCHIVO
 		procesarEnviarSolicitudTransformacion(unPaquete, client_socket); //ENVIO A FS PATH DE ARCHIVO
@@ -162,7 +164,9 @@ void procesarRecibirError(t_paquete * unPaquete, int *socket_client) { //supuest
 
 	case ERROR_MASTER:
 
-		log_trace(logYama,"Master se ha desconectado, no se puede continuar %i", *socket_client);
+		log_trace(logYama,
+				"Master se ha desconectado, no se puede continuar %i",
+				*socket_client);
 		break;
 	default:
 
@@ -171,39 +175,53 @@ void procesarRecibirError(t_paquete * unPaquete, int *socket_client) { //supuest
 
 }
 
-void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete, int *client_socket) {
+void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete,
+		int *client_socket) {
 	char * nomArchivo = recibirMensaje(unPaquete);
 	log_trace(logYama, "Recibida ruta de Archivo:  %s", nomArchivo);
 	enviarRutaParaArrancarTransformacion(socketFS, nomArchivo, *client_socket);
-	log_trace(logYama, "Enviada ruta para obtener Nodos y Bloques a: %d", socketFS);
+	log_trace(logYama, "Enviada ruta para obtener Nodos y Bloques a: %d",
+			socketFS);
 	log_trace(logYama, "esperando respuesta de File systems");
 
-	gestionarSolicitudes(socketFS,(void*)procesarPaquete,logYama);
-
+	gestionarSolicitudes(socketFS, (void*) procesarPaquete, logYama);
 
 }
 
-void MostrarLIstaNodoBloque(t_nodos_bloques* listaBloquesConNodos){
+void MostrarLIstaNodoBloque(t_nodos_bloques* listaBloquesConNodos) {
 
-			log_trace(logYama,"-----BLOQUE------SOLIITADO POR MASTER: %i", listaBloquesConNodos->masterSolicitante);
+	if (listaBloquesConNodos == NULL) {
 
-			void imprimirListaDeNodosYBloques(t_nodo_bloque* nodoBloque){
-				log_trace(logYama,"NOMBRE NODO: %s", nodoBloque->nomNodo);
-				log_trace(logYama,"numero bloque archivo: %i", nodoBloque->bloqueArchivo);
-				log_trace(logYama,"numero bloque nodo: %i", nodoBloque->bloqueNodo);
-				log_trace(logYama,"tamanio: %i", nodoBloque->tamanio);
-			}
+		log_error(logYama, "ME LLEGO UNA LISTA NULL");
 
-			list_iterate(listaBloquesConNodos->nodoBloque, (void*)imprimirListaDeNodosYBloques);
+	} else {
 
-			void imprimirListaDeDirecciones(t_puerto_ip* direccionNodo){
-				log_trace(logYama,"NOMBRE NODO: %s", direccionNodo->nomNodo);
-				log_trace(logYama,"ip nodo: %s", direccionNodo->ip);
-				log_trace(logYama,"puerto nodo: %s", direccionNodo->puerto);
-			}
+		log_trace(logYama, "-----BLOQUE------SOLIITADO POR MASTER: %i",
+				listaBloquesConNodos->masterSolicitante);
 
-			list_iterate(listaBloquesConNodos->puertoIP, (void*)imprimirListaDeDirecciones);
+		void imprimirListaDeNodosYBloques(t_nodo_bloque* nodoBloque) {
+			log_trace(logYama, "NOMBRE NODO: %s", nodoBloque->nomNodo);
+			log_trace(logYama, "numero bloque archivo: %i",
+					nodoBloque->bloqueArchivo);
+			log_trace(logYama, "numero bloque nodo: %i",
+					nodoBloque->bloqueNodo);
+			log_trace(logYama, "tamanio: %i", nodoBloque->tamanio);
+		}
+
+		list_iterate(listaBloquesConNodos->nodoBloque,
+				(void*) imprimirListaDeNodosYBloques);
+
+		void imprimirListaDeDirecciones(t_puerto_ip* direccionNodo) {
+			log_trace(logYama, "NOMBRE NODO: %s", direccionNodo->nomNodo);
+			log_trace(logYama, "ip nodo: %s", direccionNodo->ip);
+			log_trace(logYama, "puerto nodo: %s", direccionNodo->puerto);
+		}
+
+		list_iterate(listaBloquesConNodos->puertoIP,
+				(void*) imprimirListaDeDirecciones);
+
 	}
+}
 
 void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 	log_trace(logYama, "Recibida lista de bloques y nodos de File System");
@@ -215,8 +233,10 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 
 	t_list* listaNodoBloque = nodosBloques->nodoBloque;
 
-	log_trace(logYama, "Recibido %d nodos-bloques de FilesSystem", listaNodoBloque->elements_count);
-	listaDireccionesNodos = list_take(nodosBloques->puertoIP,nodosBloques->puertoIP->elements_count);
+	log_trace(logYama, "Recibido %d nodos-bloques de FilesSystem",
+			listaNodoBloque->elements_count);
+	listaDireccionesNodos = list_take(nodosBloques->puertoIP,
+			nodosBloques->puertoIP->elements_count);
 
 	t_list* listaBloquesConNodos = agruparNodosPorBloque(listaNodoBloque); // LISTA DE BLOQUES CON LOS NODOS DONDE ESTA
 	t_list* nodosSinRepetidos = extraerNodosSinRepetidos(listaNodoBloque); //SOLO LOS NOMBRE NODOS SIN REPETIDOS
@@ -281,8 +301,8 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 				indicacionDeTransformacion);
 	}
 
-	list_iterate(indicacionesDeTransformacionParaMaster, (void*) registrarYEnviarAMaster);
-
+	list_iterate(indicacionesDeTransformacionParaMaster,
+			(void*) registrarYEnviarAMaster);
 
 }
 
@@ -305,7 +325,7 @@ void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
 
 		if (buscarRegistro(-1, -1, resultado->nodo, -1, TRANSFORMACION,
 				PROCESANDO, NULL) == NULL) {
-				//TODO POR QUE UN MISMO NODO ????
+			//TODO POR QUE UN MISMO NODO ????
 			//SI -> MANDAR A HACER TODAS LAS REDUCCIONES LOCALES DE ESE NODO
 
 			//recorrer la tabla registros y enviar paquete reduccion local por cada nodo terminado
@@ -350,51 +370,69 @@ void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
 
 void procesarResultadoReduccionLocal(t_paquete* unPaquete, int *client_socket) {
 
-	t_indicacionReduccionLocal * indicReduLocal = recibirIndicacionReduccionLocal(unPaquete);
+	t_indicacionReduccionLocal * indicReduLocal =
+			recibirIndicacionReduccionLocal(unPaquete);
 
-	modificarEstadoDeRegistro(-1, -1, indicReduLocal->nodo, -1, REDUCCION_LOCAL, FINALIZADO_OK);
+	modificarEstadoDeRegistro(-1, -1, indicReduLocal->nodo, -1, REDUCCION_LOCAL,
+			FINALIZADO_OK);
 
-	t_elemento_tabla_estado* registro = buscarRegistro(-1, -1, NULL, -1, -1, -1, indicReduLocal->archivoTemporalTransformacion);
+	t_elemento_tabla_estado* registro = buscarRegistro(-1, -1, NULL, -1, -1, -1,
+			indicReduLocal->archivoTemporalTransformacion);
 
-	if (buscarRegistro(registro->job, -1, indicReduLocal->nodo, -1,REDUCCION_LOCAL, PROCESANDO, NULL) == NULL) {
+	if (buscarRegistro(registro->job, -1, indicReduLocal->nodo, -1,
+			REDUCCION_LOCAL, PROCESANDO, NULL) == NULL) {
 
 		enviarTareaCompletada(*client_socket, NO_CONTINUA);
 
 		t_list* listaDeIndicacionesReduccionGlobal = list_create();
 
-		char* nombreArchivoReduccionGlobal = nombreArchivoTemp(prefijoArchivosTemporalesReduGlobal);
+		char* nombreArchivoReduccionGlobal = nombreArchivoTemp(
+				prefijoArchivosTemporalesReduGlobal);
 
-		void siCumpleCondicionArmarIndicacionDeReduccionGlobal(t_elemento_tabla_estado* elemento){
-			if(elemento->job == registro->job && elemento->etapa == REDUCCION_LOCAL && elemento->estado == FINALIZADO_OK){
-				t_indicacionReduccionGlobal* indicacionReduccionGlobal = malloc(sizeof(t_indicacionReduccionGlobal));//TODO LIBERAR MEMORIA
+		void siCumpleCondicionArmarIndicacionDeReduccionGlobal(
+				t_elemento_tabla_estado* elemento) {
+			if (elemento->job == registro->job
+					&& elemento->etapa == REDUCCION_LOCAL
+					&& elemento->estado == FINALIZADO_OK) {
+				t_indicacionReduccionGlobal* indicacionReduccionGlobal = malloc(
+						sizeof(t_indicacionReduccionGlobal));//TODO LIBERAR MEMORIA
 				//todo ver lo del encargado
 
-				int esEncargadoReduccionGlobal(char* nodo){
+				int esEncargadoReduccionGlobal(char* nodo) {
 					char* nodoEncargado = obtenerEncargadoReduccionGlobal();
 					return string_equals_ignore_case(nodo, nodoEncargado);
 				}
 
-				indicacionReduccionGlobal->encargado = esEncargadoReduccionGlobal(elemento->nodo);
-				indicacionReduccionGlobal->archivoDeReduccionGlobal = string_duplicate(nombreArchivoReduccionGlobal);
-				indicacionReduccionGlobal->archivoDeReduccionLocal = string_duplicate(elemento->nombreArchivoTemporal);
-				indicacionReduccionGlobal->nodo = string_duplicate(elemento->nodo);
-				t_puerto_ip* PyIP = buscarIpYPuertoConNombreNodo(elemento->nodo, listaDireccionesNodos);
+				indicacionReduccionGlobal->encargado =
+						esEncargadoReduccionGlobal(elemento->nodo);
+				indicacionReduccionGlobal->archivoDeReduccionGlobal =
+						string_duplicate(nombreArchivoReduccionGlobal);
+				indicacionReduccionGlobal->archivoDeReduccionLocal =
+						string_duplicate(elemento->nombreArchivoTemporal);
+				indicacionReduccionGlobal->nodo = string_duplicate(
+						elemento->nodo);
+				t_puerto_ip* PyIP = buscarIpYPuertoConNombreNodo(elemento->nodo,
+						listaDireccionesNodos);
 				indicacionReduccionGlobal->ip = string_duplicate(PyIP->ip);
-				indicacionReduccionGlobal->puerto = string_duplicate(PyIP->puerto);
+				indicacionReduccionGlobal->puerto = string_duplicate(
+						PyIP->puerto);
 				//todo liberar
 
-				list_add(listaDeIndicacionesReduccionGlobal,indicacionReduccionGlobal);
+				list_add(listaDeIndicacionesReduccionGlobal,
+						indicacionReduccionGlobal);
 			}
 		}
 
-		list_iterate(tabla_de_estados, (void*)siCumpleCondicionArmarIndicacionDeReduccionGlobal);
+		list_iterate(tabla_de_estados,
+				(void*) siCumpleCondicionArmarIndicacionDeReduccionGlobal);
 
-		enviarIndicacionReduccionGlobal(*client_socket , listaDeIndicacionesReduccionGlobal);
+		enviarIndicacionReduccionGlobal(*client_socket,
+				listaDeIndicacionesReduccionGlobal);
 	}
 
 }
 
-void procesarTareaCompletada(t_paquete* unPaquete,int* client_socket) {
+void procesarTareaCompletada(t_paquete* unPaquete, int* client_socket) {
 
 //	switch (unPaquete){
 //	case REDUCCION_COMPLETADA:
@@ -405,7 +443,8 @@ void procesarTareaCompletada(t_paquete* unPaquete,int* client_socket) {
 
 /*-------------------------Funciones auxiliares-------------------------*/
 
-void destruirIndicacionDeTransformacion(t_indicacionTransformacion* indTransform) {
+void destruirIndicacionDeTransformacion(
+		t_indicacionTransformacion* indTransform) {
 	free(indTransform->nodo);
 	free(indTransform->ip);
 	free(indTransform->puerto);
@@ -425,26 +464,26 @@ t_list* agruparNodosPorBloque(t_list* listaDeNodoBloque) {
 
 	t_list* listaTNodoPorBLoque = list_create(); //lista a devolver
 
-	int i=0;
-	for(;i<listaDeNodoBloque->elements_count;i++){
-			t_nodo_bloque* tNodoBloque = list_get(listaDeNodoBloque,i);
-		bool estaElNumArchivo(t_nodos_por_bloque* tNodosPorBloque){
-			if(tNodoBloque->bloqueArchivo == tNodosPorBloque->bloqueArchivo)
+	int i = 0;
+	for (; i < listaDeNodoBloque->elements_count; i++) {
+		t_nodo_bloque* tNodoBloque = list_get(listaDeNodoBloque, i);
+		bool estaElNumArchivo(t_nodos_por_bloque* tNodosPorBloque) {
+			if (tNodoBloque->bloqueArchivo == tNodosPorBloque->bloqueArchivo)
 				return true;
 			return false;
 		}
 
-		t_nodos_por_bloque* tNodoPorBloque = list_find(listaTNodoPorBLoque,(void*)estaElNumArchivo);
-		if(tNodoPorBloque==NULL){    //si no esta en la lista, lo crea
+		t_nodos_por_bloque* tNodoPorBloque = list_find(listaTNodoPorBLoque,
+				(void*) estaElNumArchivo);
+		if (tNodoPorBloque == NULL) {    //si no esta en la lista, lo crea
 			tNodoPorBloque = malloc(sizeof(t_nodos_por_bloque));
 			tNodoPorBloque->bloqueArchivo = tNodoBloque->bloqueArchivo;
 			tNodoPorBloque->nodosEnLosQueEsta = list_create();
-			list_add(tNodoPorBloque->nodosEnLosQueEsta,tNodoBloque->nomNodo);
-			list_add(listaTNodoPorBLoque,tNodoPorBloque);
+			list_add(tNodoPorBloque->nodosEnLosQueEsta, tNodoBloque->nomNodo);
+			list_add(listaTNodoPorBLoque, tNodoPorBloque);
 
-		}
-		else{
-			list_add(tNodoPorBloque->nodosEnLosQueEsta,tNodoBloque->nomNodo);
+		} else {
+			list_add(tNodoPorBloque->nodosEnLosQueEsta, tNodoBloque->nomNodo);
 		}
 	}
 	return listaTNodoPorBLoque;
