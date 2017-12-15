@@ -321,6 +321,7 @@ void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete,
 		destruirSubstring(separado);
 		free(rutaFS);
 		free(indexPadreChar);
+		free(archivoPedido->rutaArchivo);
 		free(archivoPedido);
 		return;
 	}
@@ -338,6 +339,13 @@ void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete,
 	for (i = 0; i < cantidadDeBloques; i++) {
 		t_list * listaPorBloque = buscarBloqueParaYama(configArchivo, i);
 		list_add_all(nodosBloques->nodoBloque, listaPorBloque);
+
+		void destruirNodoBloque(t_nodo_bloque * nb){
+			free(nb->nomNodo);
+			free(nb);
+		}
+
+		list_destroy_and_destroy_elements(listaPorBloque,(void*)destruirNodoBloque);
 	}
 
 	//Armo con los disponibles los puerto y ip
@@ -361,11 +369,35 @@ void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete,
 
 	enviarListaNodoBloques(client_socket, nodosBloques);
 
-	free(archivoPedido);
+	//Destruyo listas
+	list_destroy_and_destroy_elements(nodosDisponibles,(void*)free);
+
+	void destruirNodoBloque(t_nodo_bloque * nb){
+		free(nb->nomNodo);
+		free(nb);
+	}
+
+	list_destroy_and_destroy_elements(nodosBloques->nodoBloque,(void*)destruirNodoBloque);
+
+	void destruirIp(t_puerto_ip * ip){
+		free(ip->ip);
+		free(ip->nomNodo);
+		free(ip->puerto);
+		free(ip);
+	}
+
+	list_destroy_and_destroy_elements(nodosBloques->puertoIP,(void*)destruirIp);
+
+
+
+	//Libero memoria
+	free(nodosBloques);
 	destruirSubstring(separado);
 	free(rutaFS);
 	free(indexPadreChar);
 	config_destroy(configArchivo);
+	free(archivoPedido->rutaArchivo);
+	free(archivoPedido);
 
 	log_trace(logFileSystem,
 			"Envio lista de nodos para arrancar transformacion \n");
