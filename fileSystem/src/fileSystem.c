@@ -358,6 +358,10 @@ void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete,
 		puertoIpFinal->nomNodo = strdup(nodoDisponble);
 
 		list_add(nodosBloques->puertoIP, puertoIpFinal);
+
+		free(ipPuerto->ip);
+		free(ipPuerto->puerto);
+		free(ipPuerto);
 	}
 
 	list_iterate(nodosDisponibles, (void*) agregoAListaIpPuerto);
