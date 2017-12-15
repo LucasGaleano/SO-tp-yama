@@ -675,10 +675,8 @@ void borrarBitmaps() {
 
 void MostrarLIstaNodoBloque(t_nodos_bloques* listaBloquesConNodos) {
 
-	void imprimir(t_nodos_bloques* elemento) {
-
 		log_trace(logFileSystem, "-----BLOQUE------SOLIITADO POR MASTER: %i",
-				elemento->masterSolicitante);
+				listaBloquesConNodos->masterSolicitante);
 
 		void imprimirListaDeNodosYBloques(t_nodo_bloque* nodoBloque) {
 			log_trace(logFileSystem, "NOMBRE NODO: %s", nodoBloque->nomNodo);
@@ -689,7 +687,7 @@ void MostrarLIstaNodoBloque(t_nodos_bloques* listaBloquesConNodos) {
 			log_trace(logFileSystem, "tamanio: %i", nodoBloque->tamanio);
 		}
 
-		list_iterate(elemento->nodoBloque,
+		list_iterate(listaBloquesConNodos->nodoBloque,
 				(void*) imprimirListaDeNodosYBloques);
 
 		void imprimirListaDeDirecciones(t_puerto_ip* direccionNodo) {
@@ -698,6 +696,5 @@ void MostrarLIstaNodoBloque(t_nodos_bloques* listaBloquesConNodos) {
 			log_trace(logFileSystem, "puerto nodo: %s", direccionNodo->puerto);
 		}
 
-		list_iterate(elemento->puertoIP, (void*) imprimirListaDeDirecciones);
-	}
+		list_iterate(listaBloquesConNodos->puertoIP, (void*) imprimirListaDeDirecciones);
 }
