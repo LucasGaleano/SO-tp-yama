@@ -19,7 +19,7 @@
 #include <signal.h>
 
 #define PATHLOG "worker.log"
-#define PATHCONFIG "configuraciones/nodo.cfg"
+#define PATHCONFIG "/home/utnso/configuraciones/nodo.cfg"
 #define TAM_MAX 100
 #define PUERTO_REDUCCION_GLOBAL "3405"
 
