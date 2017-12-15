@@ -39,7 +39,7 @@ void 							serializarIndicacionReduccionLocal				(t_paquete *, t_indicacionRedu
 void 							serializarIndicacionReduccionGlobal				(t_paquete *, t_list *);
 void 							serializarIndicacionAlmacenadoFinal				(t_paquete *, t_indicacionAlmacenadoFinal *);
 
-void 							serializarListaNodoBloques						(t_paquete *, t_nodos_bloques *, int);
+void 							serializarListaNodoBloques						(t_paquete *, t_nodos_bloques *);
 
 void							serializarNombreIPPuerto						(t_paquete *, char *, char *, char *);
 

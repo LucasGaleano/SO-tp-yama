@@ -553,7 +553,7 @@ void serializarIndicacionAlmacenadoFinal(t_paquete * unPaquete,
 }
 
 void serializarListaNodoBloques(t_paquete * unPaquete,
-		t_nodos_bloques * listaNodoBloque, int masterSolicitante) {
+		t_nodos_bloques * listaNodoBloque) {
 
 	unPaquete->buffer = malloc(sizeof(t_stream));
 	unPaquete->buffer->size = 0;
@@ -647,7 +647,7 @@ void serializarListaNodoBloques(t_paquete * unPaquete,
 	unPaquete->buffer->data = realloc(unPaquete->buffer->data,
 			unPaquete->buffer->size);
 
-	memcpy(unPaquete->buffer->data + desplazamiento, &masterSolicitante,
+	memcpy(unPaquete->buffer->data + desplazamiento, &listaNodoBloque->masterSolicitante,
 			sizeof(int));
 
 }

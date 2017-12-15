@@ -459,12 +459,12 @@ void enviarTareaCompletada(int server_socket, int cod_tarea) {
 }
 
 void enviarListaNodoBloques(int server_socket,
-		t_nodos_bloques * listaNodoBloque, int masterSolicitante) {
+		t_nodos_bloques * listaNodoBloque) {
 	t_paquete* unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_LISTA_NODO_BLOQUES;
 
-	serializarListaNodoBloques(unPaquete, listaNodoBloque, masterSolicitante);
+	serializarListaNodoBloques(unPaquete, listaNodoBloque);
 
 	enviarPaquetes(server_socket, unPaquete);
 }

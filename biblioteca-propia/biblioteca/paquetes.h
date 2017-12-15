@@ -52,7 +52,7 @@ void 							enviarIndicacionAlmacenadoFinal				(int, t_indicacionAlmacenadoFinal
 void							enviarError									(int, int);
 void							enviarTareaCompletada						(int, int);
 
-void							enviarListaNodoBloques						(int, t_nodos_bloques *, int);
+void							enviarListaNodoBloques						(int, t_nodos_bloques *);
 
 void 							enviarRutaParaArrancarTransformacion		(int, char *, int);
 
