@@ -143,13 +143,14 @@ void procesarError(t_paquete * unPaquete, int * client_socket) {
 
 	log_warning(logFileSystem, "Se desconecto el nodo: %s \n", nomNodo);
 
-	//Marco como no disponible en tabla de sockets
-	bool esNodo(t_nodo_info * infoNodo) {
-		return string_equals_ignore_case(infoNodo->nombre, nomNodo);
-	}
+		//Marco como no disponible en tabla de sockets
+		bool esNodo(t_nodo_info * infoNodo) {
+			return string_equals_ignore_case(infoNodo->nombre, nomNodo);
+		}
 
-	t_nodo_info * nodo = list_find(tablaNodos->infoDeNodo, (void*) esNodo);
-	nodo->disponible = false;
+		t_nodo_info * nodo = list_find(tablaNodos->infoDeNodo, (void*) esNodo);
+
+		nodo->disponible = false;
 
 	//Verifico si el FS queda en estado estable
 	if (verificarEstadoEstable() && formateado) {
@@ -328,6 +329,7 @@ void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete,
 
 	//Armo la lista final de los nodos
 	t_nodos_bloques * nodosBloques = malloc(sizeof(t_nodos_bloques));
+	nodosBloques->masterSolicitante = archivoPedido->masterSolicitante;
 	nodosBloques->nodoBloque = list_create();
 
 	//Busco los bloques
@@ -369,23 +371,25 @@ void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete,
 	enviarListaNodoBloques(client_socket, nodosBloques);
 
 	//Destruyo listas
-	list_destroy_and_destroy_elements(nodosDisponibles,(void*)free);
+	list_destroy_and_destroy_elements(nodosDisponibles, (void*) free);
 
-	void destruirNodoBloque(t_nodo_bloque * nb){
+	void destruirNodoBloque(t_nodo_bloque * nb) {
 		free(nb->nomNodo);
 		free(nb);
 	}
 
-	list_destroy_and_destroy_elements(nodosBloques->nodoBloque,(void*)destruirNodoBloque);
+	list_destroy_and_destroy_elements(nodosBloques->nodoBloque,
+			(void*) destruirNodoBloque);
 
-	void destruirIp(t_puerto_ip * ip){
+	void destruirIp(t_puerto_ip * ip) {
 		free(ip->ip);
 		free(ip->nomNodo);
 		free(ip->puerto);
 		free(ip);
 	}
 
-	list_destroy_and_destroy_elements(nodosBloques->puertoIP,(void*)destruirIp);
+	list_destroy_and_destroy_elements(nodosBloques->puertoIP,
+			(void*) destruirIp);
 
 	//Libero memoria
 	free(nodosBloques);
@@ -622,6 +626,43 @@ t_list * buscarTodosArchivos() {
 	return listaArchivos;
 }
 
+/*-------------------------Borrar carpetas-------------------------*/
+void borrarArchivos() {
+	char * ruta = string_new();
+	string_append(&ruta, RUTA_METADATA);
+	string_append(&ruta, "metadata/archivos");
+
+	if (mkdir(ruta, 0777) == -1) {
+		t_list * listaCarpetas = list_create();
+
+		listarCarpetasDeArchivos(ruta, listaCarpetas);
+
+		list_iterate(listaCarpetas, (void *) borrarArchivosDirectorios);
+
+		list_iterate(listaCarpetas, (void *) remove);
+
+		list_destroy_and_destroy_elements(listaCarpetas, free);
+	}
+
+	remove(ruta);
+
+	free(ruta);
+}
+
+void borrarBitmaps() {
+	char * ruta = string_new();
+	string_append(&ruta, RUTA_METADATA);
+	string_append(&ruta, "metadata/bitmaps");
+
+	if (mkdir(ruta, 0777) == -1) {
+		borrarArchivosDirectorios(ruta);
+	}
+
+	remove(ruta);
+
+	free(ruta);
+}
+
 /*-------------------------Funciones auxiliares-------------------------*/
 void iniciarServidor(char* unPuerto) {
 	iniciarServer(unPuerto, (void *) procesarPaquete, logFileSystem);
@@ -666,62 +707,4 @@ void listarCarpetasDeArchivos(char * ruta, t_list * lista) {
 
 }
 
-void borrarArchivos() {
-	char * ruta = string_new();
-	string_append(&ruta, RUTA_METADATA);
-	string_append(&ruta, "metadata/archivos");
 
-	if (mkdir(ruta, 0777) == -1) {
-		t_list * listaCarpetas = list_create();
-
-		listarCarpetasDeArchivos(ruta, listaCarpetas);
-
-		list_iterate(listaCarpetas, (void *) borrarArchivosDirectorios);
-
-		list_destroy_and_destroy_elements(listaCarpetas, free);
-	}
-
-	remove(ruta);
-
-	free(ruta);
-}
-
-void borrarBitmaps() {
-	char * ruta = string_new();
-	string_append(&ruta, RUTA_METADATA);
-	string_append(&ruta, "metadata/bitmaps");
-
-	if (mkdir(ruta, 0777) == -1) {
-		borrarArchivosDirectorios(ruta);
-	}
-
-	remove(ruta);
-
-	free(ruta);
-}
-
-void MostrarLIstaNodoBloque(t_nodos_bloques* listaBloquesConNodos) {
-
-		log_trace(logFileSystem, "-----BLOQUE------SOLIITADO POR MASTER: %i",
-				listaBloquesConNodos->masterSolicitante);
-
-		void imprimirListaDeNodosYBloques(t_nodo_bloque* nodoBloque) {
-			log_trace(logFileSystem, "NOMBRE NODO: %s", nodoBloque->nomNodo);
-			log_trace(logFileSystem, "numero bloque archivo: %i",
-					nodoBloque->bloqueArchivo);
-			log_trace(logFileSystem, "numero bloque nodo: %i",
-					nodoBloque->bloqueNodo);
-			log_trace(logFileSystem, "tamanio: %i", nodoBloque->tamanio);
-		}
-
-		list_iterate(listaBloquesConNodos->nodoBloque,
-				(void*) imprimirListaDeNodosYBloques);
-
-		void imprimirListaDeDirecciones(t_puerto_ip* direccionNodo) {
-			log_trace(logFileSystem, "NOMBRE NODO: %s", direccionNodo->nomNodo);
-			log_trace(logFileSystem, "ip nodo: %s", direccionNodo->ip);
-			log_trace(logFileSystem, "puerto nodo: %s", direccionNodo->puerto);
-		}
-
-		list_iterate(listaBloquesConNodos->puertoIP, (void*) imprimirListaDeDirecciones);
-}
