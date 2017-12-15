@@ -314,6 +314,16 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 	list_iterate(indicacionesDeTransformacionParaMaster,
 			(void*) registrarYEnviarAMaster);
 
+	bool seguirEscuchando = true;
+	imposibilidadDeReplanificar = false;
+
+	while(seguirEscuchando && !imposibilidadDeReplanificar){
+		gestionarSolicitudes(nodosBloques->masterSolicitante,(void*)procesarPaquete,logYama);
+
+		if (buscarRegistro(idJob,nodosBloques->masterSolicitante,NULL,-1,-1,PROCESANDO,NULL) == NULL && buscarRegistro(idJob,nodosBloques->masterSolicitante,NULL,-1,-1,ERROR,NULL) == NULL){
+			seguirEscuchando = false;
+		}
+	}
 }
 
 void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
@@ -322,60 +332,74 @@ void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
 
 	//ACTUALIZAR REGISTRO Y CONTINUAR O REPLANIFICAR ALGUN BLOQUE (VER REPLANIFICACION)
 	//todo FIJARSE QUE PASA CON LA TABLA DE ESTADO EN EL CASO DE QUE FALLE ALGUNA ETAPA
+	modificarEstadoDeRegistro(-1, *client_socket, resultado->nodo,resultado->bloque, TRANSFORMACION, resultado->estado);
 
-	if (resultado->estado == FINALIZADO_OK) {
+		planificador_sumarWLWorker(tablaPlanificador,extraerIddelNodo(resultado->nodo), -1); //le saco carga de trabaja al nodo
 
-		planificador_sumarWLWorker(tablaPlanificador,
-				extraerIddelNodo(resultado->nodo), -1); //le saco carga de trabaja al nodo
-
-		modificarEstadoDeRegistro(-1, *client_socket, resultado->nodo,
-				resultado->bloque, TRANSFORMACION, FINALIZADO_OK);
 
 		//MIRAR SI PARA UN MISMO NODO, TERMINARON TODAS LAS TRANSFORMACIONES
 
-		if (buscarRegistro(-1, -1, resultado->nodo, -1, TRANSFORMACION,
-				PROCESANDO, NULL) == NULL) {
-			//TODO POR QUE UN MISMO NODO ????
-			//SI -> MANDAR A HACER TODAS LAS REDUCCIONES LOCALES DE ESE NODO
+		if (buscarRegistro(-1, -1, resultado->nodo, -1, TRANSFORMACION, PROCESANDO, NULL) == NULL) {
+
+			//chequear si hay error en alguna transformacion
+			if (buscarRegistro(-1, -1, resultado->nodo, -1, TRANSFORMACION, ERROR, NULL) == NULL){
+
+				int i = 0;
+				int tam = list_size(tabla_de_estados);
+				while (tam > i) {
+
+					t_elemento_tabla_estado * reg = list_get(tabla_de_estados, i);
+
+					if (string_equals_ignore_case(reg->nodo, resultado->nodo)) {
+						t_indicacionReduccionLocal* indReducLocal = malloc(
+								sizeof(t_indicacionReduccionLocal));
+						indReducLocal->nodo = string_duplicate(resultado->nodo);
+						indReducLocal->ip = string_duplicate(resultado->ip);
+						indReducLocal->puerto = string_duplicate(resultado->puerto);
+						indReducLocal->archivoTemporalTransformacion =
+								string_duplicate(resultado->rutaArchivoTemporal);
+						indReducLocal->archivoTemporalReduccionLocal =
+								nombreArchivoTemp(
+										prefijoArchivosTemporalesReduLocal);
+
+						//ACTUALIZAR TABLA DE ESTADO AVANZANDO LA ETAPA
+
+						agregarRegistro(reg->job, *client_socket,
+								indReducLocal->nodo, reg->bloque, REDUCCION_LOCAL,
+								indReducLocal->archivoTemporalReduccionLocal,
+								PROCESANDO);
+
+						enviarIndicacionReduccionLocal(*client_socket,
+								indReducLocal);
+						IndicReducLocal_destroy(indReducLocal);
+
+					}
+					i++;
+				}
+
+			}else{     //hay alguno con error
+
+
+				typedef struct{
+					int bloqueArchivo;
+					t_list* nodosEnLosQueEsta;
+				} t_nodos_por_bloque;
+
+				//imposibilidadDeReplanificar = !planificador();
+
+				planificador_sacarWorker(tablaPlanificador, resultado->nodo);
+
+
+
+			}
 
 			//recorrer la tabla registros y enviar paquete reduccion local por cada nodo terminado
 
-			int i = 0;
-			int tam = list_size(tabla_de_estados);
-			while (tam > i) {
 
-				t_elemento_tabla_estado * reg = list_get(tabla_de_estados, i);
-
-				if (string_equals_ignore_case(reg->nodo, resultado->nodo)) {
-					t_indicacionReduccionLocal* indReducLocal = malloc(
-							sizeof(t_indicacionReduccionLocal));
-					indReducLocal->nodo = string_duplicate(resultado->nodo);
-					indReducLocal->ip = string_duplicate(resultado->ip);
-					indReducLocal->puerto = string_duplicate(resultado->puerto);
-					indReducLocal->archivoTemporalTransformacion =
-							string_duplicate(resultado->rutaArchivoTemporal);
-					indReducLocal->archivoTemporalReduccionLocal =
-							nombreArchivoTemp(
-									prefijoArchivosTemporalesReduLocal);
-
-					//ACTUALIZAR TABLA DE ESTADO AVANZANDO LA ETAPA
-
-					agregarRegistro(reg->job, *client_socket,
-							indReducLocal->nodo, reg->bloque, REDUCCION_LOCAL,
-							indReducLocal->archivoTemporalReduccionLocal,
-							PROCESANDO);
-					log_trace(logYama, "Intentando enviar Indicaciones de reduccion local");
-					enviarIndicacionReduccionLocal(*client_socket,
-							indReducLocal);
-					IndicReducLocal_destroy(indReducLocal);
-
-				}
-				i++;
-			}
 
 		}
 
-	}
+
 }
 
 void procesarResultadoReduccionLocal(t_paquete* unPaquete, int *client_socket) {

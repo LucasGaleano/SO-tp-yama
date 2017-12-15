@@ -12,6 +12,7 @@
 #include <pthread.h>
 #include <commons/log.h>
 
+
 #include "tablas.h"
 #include <biblioteca/paquetes.h>
 #include "balanceador.h"
@@ -42,7 +43,7 @@ long idJob;
 char* prefijoArchivosTemporalesTranformacion = "/temp/transf:";
 char* prefijoArchivosTemporalesReduLocal= "/temp/local:";
 char* prefijoArchivosTemporalesReduGlobal= "/temp/global:";
-
+bool imposibilidadDeReplanificar;
 t_list* masterConectados;
 
 int socketFS;
