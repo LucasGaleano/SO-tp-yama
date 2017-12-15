@@ -176,11 +176,25 @@ void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete, int *client_so
 	log_trace(logYama, "Enviada ruta para obtener Nodos y Bloques a: %d", socketFS);
 }
 
+
+	void MostrarLIstaNodoBloque(t_list* listaBloquesConNodos){
+
+		void imprimir(t_nodos_por_bloque* elemento){
+			log_trace(logYama,"numero bloque: %i",elemento->bloqueArchivo);
+			void imprimir1(char* nodo){
+				log_trace(logYama,"nodo: %s",nodo);
+			}
+			list_iterate(elemento->nodosEnLosQueEsta,(void*)imprimir1);
+		}
+		list_iterate(listaBloquesConNodos, (void*)imprimir);
+	}
+
 void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 	log_trace(logYama, "Recibida lista de bloques y nodos de File System");
 	int idJob = generarJob();
 
 	t_nodos_bloques * nodosBloques = recibirListaNodoBloques(unPaquete); //RECIBO UN STRUCT CON 2 LISTAS ANIDADAS
+	MostrarLIstaNodoBloque(nodosBloques);
 
 	t_list* listaNodoBloque = nodosBloques->nodoBloque;
 	log_trace(logYama, "Recibido %d nodos-bloques de FilesSystem", listaNodoBloque->elements_count);
