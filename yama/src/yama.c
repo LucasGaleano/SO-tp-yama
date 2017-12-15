@@ -387,6 +387,7 @@ void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
 
 				//imposibilidadDeReplanificar = !planificador();
 
+
 				planificador_sacarWorker(tablaPlanificador, resultado->nodo);
 
 
