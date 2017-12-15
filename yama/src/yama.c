@@ -95,7 +95,6 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		procesarRecibirError(unPaquete, client_socket);
 		break;
 	case ENVIAR_LISTA_NODO_BLOQUES: //RECIBO LISTA DE ARCHIVOS DE FS CON UBICACIONES Y BLOQUES
-		log_trace(logYama, "Llego una solicitud de transformacion");
 		procesarEnviarListaNodoBloques(unPaquete); //
 		break;
 	case ENVIAR_INDICACION_TRANSFORMACION:
@@ -303,10 +302,13 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 				indicacionDeTransformacion->nodo,
 				indicacionDeTransformacion->bloque, TRANSFORMACION,
 				indicacionDeTransformacion->rutaArchivoTemporal, PROCESANDO);
+		log_trace(logYama, "Registro en tabla de estado");
 
 		//ENVIAR A MASTER LA INDICACION
 		enviarIndicacionTransformacion(nodosBloques->masterSolicitante,
 				indicacionDeTransformacion);
+		log_trace(logYama, "Envio indicacion transformacion al master solicitante %d ",
+				nodosBloques->masterSolicitante);
 	}
 
 	list_iterate(indicacionesDeTransformacionParaMaster,
