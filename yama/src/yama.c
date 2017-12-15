@@ -96,9 +96,11 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		procesarEnviarSolicitudTransformacion(unPaquete, client_socket); //ENVIO A FS PATH DE ARCHIVO
 		break;
 	case ENVIAR_LISTA_NODO_BLOQUES: //RECIBO LISTA DE ARCHIVOS DE FS CON UBICACIONES Y BLOQUES
+		log_trace(logYama, "Llego una solicitud de transformacion");
 		procesarEnviarListaNodoBloques(unPaquete); //
 		break;
 	case ENVIAR_INDICACION_TRANSFORMACION:
+
 		procesarResultadoTranformacion(unPaquete, client_socket);
 		break;
 	case ENVIAR_INDICACION_REDUCCION_LOCAL:
@@ -172,15 +174,34 @@ void procesarRecibirError(t_paquete * unPaquete, int *socket_client) { //supuest
 void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete, int *client_socket) {
 	char * nomArchivo = recibirMensaje(unPaquete);
 	log_trace(logYama, "Recibida ruta de Archivo:  %s", nomArchivo);
-	enviarRutaParaArrancarTransformacion(socketFS, nomArchivo, client_socket);
+	enviarRutaParaArrancarTransformacion(socketFS, nomArchivo, *client_socket);
 	log_trace(logYama, "Enviada ruta para obtener Nodos y Bloques a: %d", socketFS);
+	log_trace(logYama, "esperando respuesta de File systems");
+
+	gestionarSolicitudes(socketFS,(void*)procesarPaquete,logYama);
+
+
 }
+
+
+	void MostrarLIstaNodoBloque(t_nodos_bloques* listaBloquesConNodos){
+
+		void imprimir(t_nodos_por_bloque* elemento){
+			log_trace(logYama,"numero bloque: %i",elemento->bloqueArchivo);
+			void imprimir1(char* nodo){
+				log_trace(logYama,"nodo: %s",nodo);
+			}
+			list_iterate(elemento->nodosEnLosQueEsta,(void*)imprimir1);
+		}
+		list_iterate(listaBloquesConNodos, (void*)imprimir);
+	}
 
 void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 	log_trace(logYama, "Recibida lista de bloques y nodos de File System");
 	int idJob = generarJob();
 
 	t_nodos_bloques * nodosBloques = recibirListaNodoBloques(unPaquete); //RECIBO UN STRUCT CON 2 LISTAS ANIDADAS
+	MostrarLIstaNodoBloque(nodosBloques);
 
 	t_list* listaNodoBloque = nodosBloques->nodoBloque;
 	log_trace(logYama, "Recibido %d nodos-bloques de FilesSystem", listaNodoBloque->elements_count);
