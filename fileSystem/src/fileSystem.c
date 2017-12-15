@@ -340,12 +340,7 @@ void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete,
 		t_list * listaPorBloque = buscarBloqueParaYama(configArchivo, i);
 		list_add_all(nodosBloques->nodoBloque, listaPorBloque);
 
-		void destruirNodoBloque(t_nodo_bloque * nb){
-			free(nb->nomNodo);
-			free(nb);
-		}
-
-		list_destroy_and_destroy_elements(listaPorBloque,(void*)destruirNodoBloque);
+		list_destroy(listaPorBloque);
 	}
 
 	//Armo con los disponibles los puerto y ip
