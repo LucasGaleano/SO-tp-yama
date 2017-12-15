@@ -68,9 +68,9 @@ void 							procesarRecibirError					(t_paquete * unPaquete, int * client_socket
 void 							procesarEnviarSolicitudTransformacion	(t_paquete * unPaquete, int * client_socket);
 void 							procesarEnviarListaNodoBloques			(t_paquete * unPaquete);
 void							procesarEnviarIndicacionTransformacion	(t_paquete * unPaquete);
-void							procesarTareaCompleta					(t_paquete * unPaquete, int *client_socket);
 void 							procesarResultadoTranformacion			(t_paquete * unPaquete, int *client_socket);
 void 							procesarResultadoReduccionLocal			(t_paquete* unPaquete, int *client_socket);
+void							procesarTareaCompletada					(t_paquete * unPaquete, int *client_socket);
 
 /*----------------------------------Procesamiento de nodos y bloques-----------------------------------*/
 t_list* 						agruparNodosPorBloque					(t_list*);
@@ -80,8 +80,9 @@ t_list* 						extraerNodosSinRepetidos				(t_list*);
 long 							generarJob								(void);
 void 							destruirConfiguracion					(t_configuracion * configuracion);
 char* 							obtenerNombreNodoDesdeId				(int idNodo);
-void							MostrarLIstaNodoBloque					(t_nodos_bloques* listaBloquesConNodos);
+void 							MostrarLIstaNodoBloque					(t_list* listaBloquesConNodos);
 t_indicacionReduccionLocal* 	IndicReducLocal_create					(void);
 void 							IndicReducLocal_destroy					(t_indicacionReduccionLocal* indReducLocal);
+void 							destruirIndicacionDeTransformacion		(t_indicacionTransformacion* indTransform);
 
 #endif /* YAMA_H_ */

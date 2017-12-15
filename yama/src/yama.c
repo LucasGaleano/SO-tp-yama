@@ -183,16 +183,30 @@ void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete, int *client_so
 
 }
 
+void MostrarLIstaNodoBloque(t_nodos_bloques* listaBloquesConNodos){
 
-	void MostrarLIstaNodoBloque(t_nodos_bloques* listaBloquesConNodos){
+		void imprimir(t_nodos_bloques* elemento){
 
-		void imprimir(t_nodos_por_bloque* elemento){
-			log_trace(logYama,"numero bloque: %i",elemento->bloqueArchivo);
-			void imprimir1(char* nodo){
-				log_trace(logYama,"nodo: %s",nodo);
+			log_trace(logYama,"-----BLOQUE------SOLIITADO POR MASTER: %i", elemento->masterSolicitante);
+
+			void imprimirListaDeNodosYBloques(t_nodo_bloque* nodoBloque){
+				log_trace(logYama,"NOMBRE NODO: %s", nodoBloque->nomNodo);
+				log_trace(logYama,"numero bloque archivo: %i", nodoBloque->bloqueArchivo);
+				log_trace(logYama,"numero bloque nodo: %i", nodoBloque->bloqueNodo);
+				log_trace(logYama,"tamanio: %i", nodoBloque->tamanio);
 			}
-			list_iterate(elemento->nodosEnLosQueEsta,(void*)imprimir1);
+
+			list_iterate(elemento->nodoBloque, (void*)imprimirListaDeNodosYBloques);
+
+			void imprimirListaDeDirecciones(t_puerto_ip* direccionNodo){
+				log_trace(logYama,"NOMBRE NODO: %s", direccionNodo->nomNodo);
+				log_trace(logYama,"ip nodo: %s", direccionNodo->ip);
+				log_trace(logYama,"puerto nodo: %s", direccionNodo->puerto);
+			}
+
+			list_iterate(elemento->puertoIP, (void*)imprimirListaDeDirecciones);
 		}
+
 		list_iterate(listaBloquesConNodos, (void*)imprimir);
 	}
 
@@ -201,9 +215,11 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 	int idJob = generarJob();
 
 	t_nodos_bloques * nodosBloques = recibirListaNodoBloques(unPaquete); //RECIBO UN STRUCT CON 2 LISTAS ANIDADAS
+
 	MostrarLIstaNodoBloque(nodosBloques);
 
 	t_list* listaNodoBloque = nodosBloques->nodoBloque;
+
 	log_trace(logYama, "Recibido %d nodos-bloques de FilesSystem", listaNodoBloque->elements_count);
 	listaDireccionesNodos = list_take(nodosBloques->puertoIP,nodosBloques->puertoIP->elements_count);
 
@@ -381,14 +397,18 @@ void procesarResultadoReduccionLocal(t_paquete* unPaquete, int *client_socket) {
 
 }
 
-void procesarTareaCompletada( unPaquete, client_socket) {
+void procesarTareaCompletada(t_paquete* unPaquete,int* client_socket) {
+
+//	switch (unPaquete){
+//	case REDUCCION_COMPLETADA:
+//		procesarAlmacenamientoFinal(unPaquete);
+//	}
 
 }
 
 /*-------------------------Funciones auxiliares-------------------------*/
 
-void destruirIndicacionDeTransformacion(
-		t_indicacionTransformacion* indTransform) {
+void destruirIndicacionDeTransformacion(t_indicacionTransformacion* indTransform) {
 	free(indTransform->nodo);
 	free(indTransform->ip);
 	free(indTransform->puerto);
