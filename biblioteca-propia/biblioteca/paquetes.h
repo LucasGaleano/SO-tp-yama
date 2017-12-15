@@ -19,8 +19,6 @@ void 							enviarHandshake								(int, int);
 void 							enviarSolicitudNombre						(int);
 void 							enviarNombre								(int, char *, char *, char *);
 
-void 							enviarRutaArchivo							(int, char *, int);
-
 void 							enviarMensaje								(int, char *);
 
 void 							enviarPalabra								(int, char *);
@@ -56,7 +54,7 @@ void							enviarTareaCompletada						(int, int);
 
 void							enviarListaNodoBloques						(int, t_nodos_bloques *, int);
 
-void 							enviarRutaParaArrancarTransformacion		(int, char *);
+void 							enviarRutaParaArrancarTransformacion		(int, char *, int);
 
 void 							enviarRutaArchivoRutaDestino				(int, char *, char *);
 
@@ -66,8 +64,6 @@ int 							recibirHandshake							(t_paquete *);
 t_nodo_nombre *					recibirNombre								(t_paquete *);
 
 char * 							recibirMensaje								(t_paquete *);
-
-t_solicitudArchivo *			recibirRutaArchivo							(t_paquete *);
 
 void * 							recibirArchivo								(t_paquete *);
 
@@ -99,7 +95,7 @@ int								recibirTareaCompletada						(t_paquete *);
 
 t_nodos_bloques *				recibirListaNodoBloques						(t_paquete *);
 
-char * 							recibirRutaParaArrancarTransformacion		(t_paquete *);
+t_solicitudArchivo *			recibirRutaParaArrancarTransformacion		(t_paquete *);
 
 t_archivo_y_ruta * 				recibirRutaArchivoRutaDestino				(t_paquete *);
 

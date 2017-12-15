@@ -676,7 +676,7 @@ void serializarNombreIPPuerto(t_paquete * unPaquete, char * nomNodo, char * ip,
 	memcpy(unPaquete->buffer->data + desplazamiento, puerto, tamPuerto);
 }
 
-void serializarRutaArchivo(t_paquete * unPaquete, char * rutaArchivo,
+void serializarRutaParaArrancarTransformacion(t_paquete * unPaquete, char * rutaArchivo,
 		int masterSolicitante) {
 	int tamRutaArchivo = strlen(rutaArchivo) + 1;
 	int tamMasterSolicitante = sizeof(int);
@@ -1179,7 +1179,7 @@ t_nodo_nombre * deserializarNombreIPPuerto(t_stream * buffer) {
 	return nodoNombre;
 }
 
-t_solicitudArchivo * deserializarRutaArchivo(t_stream * buffer) {
+t_solicitudArchivo * deserializarRutaParaArrancarTransformacion(t_stream * buffer) {
 	t_solicitudArchivo * solicitud = malloc(sizeof(t_solicitudArchivo));
 
 	int desplazamiento = 0;

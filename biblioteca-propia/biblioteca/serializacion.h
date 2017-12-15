@@ -43,9 +43,9 @@ void 							serializarListaNodoBloques						(t_paquete *, t_nodos_bloques *, int
 
 void							serializarNombreIPPuerto						(t_paquete *, char *, char *, char *);
 
-void 							serializarRutaArchivo							(t_paquete *, char *, int);
-
 void 							serializarRutaArchivoRutaDestino				(t_paquete *, void *, char *);
+
+void							serializarRutaParaArrancarTransformacion		(t_paquete *, char *, int);
 
 /*----------------------------------------Deserializacion----------------------------------------*/
 int 							deserializarNumero								(t_stream *);
@@ -85,7 +85,7 @@ t_nodos_bloques *				deserializarListaNodoBloques					(t_stream *);
 
 t_nodo_nombre *					deserializarNombreIPPuerto						(t_stream *);
 
-t_solicitudArchivo * 			deserializarRutaArchivo							(t_stream *);
+t_solicitudArchivo * 			deserializarRutaParaArrancarTransformacion		(t_stream *);
 
 t_archivo_y_ruta * 				deserializarRutaArchivoRutaDestino				(t_stream *);
 

@@ -244,7 +244,7 @@ void procesarBloqueGenerarCopia(t_paquete * unPaquete) {
 }
 
 void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete, int client_socket) {
-	t_solicitudArchivo * archivoPedido = recibirRutaArchivo(unPaquete);
+	t_solicitudArchivo * archivoPedido = recibirRutaParaArrancarTransformacion(unPaquete);
 
 	log_trace(logFileSystem, "Me llego una solicitud de ruta para arrancar transformacion \n");
 

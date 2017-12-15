@@ -189,17 +189,6 @@ void enviarNombre(int server_socket, char * nombre, char* ip, char * puerto) {
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarRutaArchivo(int server_socket, char * rutaArchivo,
-		int masterSolicitante) {
-	t_paquete * unPaquete = malloc(sizeof(t_paquete));
-
-	unPaquete->codigoOperacion = ENVIAR_RUTA_ARCHIVO;
-
-	serializarRutaArchivo(unPaquete, rutaArchivo, masterSolicitante);
-
-	enviarPaquetes(server_socket, unPaquete);
-}
-
 void enviarPalabra(int server_socket, char * mensaje) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
@@ -437,12 +426,12 @@ void enviarIndicacionAlmacenadoFinal(int server_socket,
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarRutaParaArrancarTransformacion(int server_socket, char * ruta) {
+void enviarRutaParaArrancarTransformacion(int server_socket, char * rutaArchivo, int masterSolicitante) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_RUTA_PARA_ARRANCAR_TRANSFORMACION;
 
-	serializarMensaje(unPaquete, ruta);
+	serializarRutaParaArrancarTransformacion(unPaquete, rutaArchivo, masterSolicitante);
 
 	enviarPaquetes(server_socket, unPaquete);
 }
@@ -492,10 +481,6 @@ void enviarRutaArchivoRutaDestino(int server_socket, char * rutaArchivo, char * 
 
 int recibirHandshake(t_paquete * unPaquete) {
 	return deserializarHandshake(unPaquete->buffer);
-}
-
-t_solicitudArchivo * recibirRutaArchivo(t_paquete * unPaquete) {
-	return deserializarRutaArchivo(unPaquete->buffer);
 }
 
 t_nodo_nombre * recibirNombre(t_paquete * unPaquete) {
@@ -583,8 +568,8 @@ t_indicacionAlmacenadoFinal * recibirIndicacionAlmacenadoFinal(
 	return deserializarIndicacionAlmacenadoFinal(unPaquete->buffer);
 }
 
-char * recibirRutaParaArrancarTransformacion(t_paquete * unPaquete) {
-	return deserializarMensaje(unPaquete->buffer);
+t_solicitudArchivo * recibirRutaParaArrancarTransformacion(t_paquete * unPaquete) {
+	return deserializarRutaParaArrancarTransformacion(unPaquete->buffer);
 }
 
 char * recibirRegistro(t_paquete * unPaquete) {
