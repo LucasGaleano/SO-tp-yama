@@ -282,7 +282,8 @@ void procesarBloqueGenerarCopia(t_paquete * unPaquete) {
 	free(bloqueGenerarCopia);
 }
 
-void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete, int client_socket) {
+void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete,
+		int client_socket) {
 	t_solicitudArchivo * archivoPedido = recibirRutaParaArrancarTransformacion(
 			unPaquete);
 
@@ -502,15 +503,18 @@ void ignoroEstadoAnterior() {
 	string_append(&ruta, "metadata");
 
 	if (mkdir(ruta, 0777) == -1) {
-		//Borro las estructuras administrativas existentes
-		char * comando = string_new();
-		string_append(&comando, "sudo rm -r ");
-		string_append(&comando, RUTA_METADATA);
-		string_append(&comando, "metadata");
-
-		system(comando);
-
-		free(comando);
+		borrarArchivos();
+		borrarBitmaps();
+		char * rutaDir = string_new();
+		string_append(&rutaDir, RUTA_METADATA);
+		string_append(&rutaDir, "metadata/directorios.dat");
+		remove(rutaDir);
+		free(rutaDir);
+		char * rutaNodos = string_new();
+		string_append(&rutaNodos, RUTA_METADATA);
+		string_append(&rutaNodos, "metadata/nodos.bin");
+		remove(rutaNodos);
+		free(rutaNodos);
 	}
 
 	remove(ruta);
@@ -632,4 +636,38 @@ void listarCarpetasDeArchivos(char * ruta, t_list * lista) {
 
 	closedir(dir);
 
+}
+
+void borrarArchivos() {
+	char * ruta = string_new();
+	string_append(&ruta, RUTA_METADATA);
+	string_append(&ruta, "metadata/archivos");
+
+	if (mkdir(ruta, 0777) == -1) {
+		t_list * listaCarpetas = list_create();
+
+		listarCarpetasDeArchivos(ruta, listaCarpetas);
+
+		list_iterate(listaCarpetas, (void *) borrarArchivosDirectorios);
+
+		list_destroy_and_destroy_elements(listaCarpetas, free);
+	}
+
+	remove(ruta);
+
+	free(ruta);
+}
+
+void borrarBitmaps() {
+	char * ruta = string_new();
+	string_append(&ruta, RUTA_METADATA);
+	string_append(&ruta, "metadata/bitmaps");
+
+	if (mkdir(ruta, 0777) == -1) {
+		borrarArchivosDirectorios(ruta);
+	}
+
+	remove(ruta);
+
+	free(ruta);
 }
