@@ -166,9 +166,9 @@ void procesarRecibirError(t_paquete * unPaquete) { //supuestamente necesita un s
 
 void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete, int *client_socket) {
 	char * nomArchivo = recibirMensaje(unPaquete);
-	log_trace(logYama, "Recibida ruta de Archivo");
-	enviarRutaParaArrancarTransformacion(socketFS, nomArchivo);
-	log_trace(logYama, "Enviada ruta para obtener Nodos y Bloques");
+	log_trace(logYama, "Recibida ruta de Archivo:  %s", nomArchivo);
+	enviarRutaParaArrancarTransformacion(socketFS, nomArchivo, client_socket);
+	log_trace(logYama, "Enviada ruta para obtener Nodos y Bloques a: %d", socketFS);
 }
 
 void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
@@ -178,6 +178,7 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 	t_nodos_bloques * nodosBloques = recibirListaNodoBloques(unPaquete); //RECIBO UN STRUCT CON 2 LISTAS ANIDADAS
 
 	t_list* listaNodoBloque = nodosBloques->nodoBloque;
+	log_trace(logYama, "Recibido %d nodos-bloques de FilesSystem", listaNodoBloque->elements_count);
 	listaDireccionesNodos = list_take(nodosBloques->puertoIP,nodosBloques->puertoIP->elements_count);
 
 	t_list* listaBloquesConNodos = agruparNodosPorBloque(listaNodoBloque); // LISTA DE BLOQUES CON LOS NODOS DONDE ESTA
