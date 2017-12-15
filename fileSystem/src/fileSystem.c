@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
 	iniciarConsola();
 
 	//Termina fileSystem
-	log_info(logFileSystem, "Termino el proceso fileSystem");
+	log_info(logFileSystem, "Termino el proceso fileSystem \n");
 
 	//Destruo archivo de log
 	log_destroy(logFileSystem);
@@ -81,17 +81,37 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 void procesarHandshake(t_paquete * unPaquete, int * client_socket) {
 	switch (recibirHandshake(unPaquete)) {
 	case DATANODE:
+		log_trace(logFileSystem,
+				"Me llego una solicitud de handshake del socket: %d: que es un DATANODE \n",
+				*client_socket);
 		enviarSolicitudNombre(*client_socket);
 		break;
 	case YAMA:
-		if (!estadoEstable)
+		log_trace(logFileSystem,
+				"Me llego una solicitud de handshake del socket: %d: que es un YAMA \n",
+				*client_socket);
+		if (!estadoEstable) {
 			*client_socket = -1;
+			log_warning(logFileSystem,
+					"La rechazo por no estar en estado estable \n",
+					*client_socket);
+		}
 		break;
 	case WORKER:
-		if (!estadoEstable)
+		log_trace(logFileSystem,
+				"Me llego una solicitud de handshake del socket: %d: que es un WORKER \n",
+				*client_socket);
+		if (!estadoEstable) {
 			*client_socket = -1;
+			log_warning(logFileSystem,
+					"La rechazo por no estar en estado estable \n",
+					*client_socket);
+		}
 		break;
 	default:
+		log_warning(logFileSystem,
+				"Me llego una solicitud de handshake del socket: %d: que rechazo porque no se quien es \n",
+				*client_socket);
 		*client_socket = -1;
 		break;
 	}
@@ -101,6 +121,8 @@ void procesarInfoNodo(t_paquete * unPaquete, int client_socket) {
 	//Recibo info
 	t_nodo_info * info = recibirInfoDataNode(unPaquete);
 	info->disponible = true;
+
+	log_trace(logFileSystem, "Me llego informacion del nodo: %s NODOS_TOTALES: %d NODOS_LIBRES: %d \n", info->nombre, info->total, info->libre);
 
 	//Agrego elemento a la tabla de nodos
 	agregarNodoTablaNodos(info);
@@ -116,6 +138,8 @@ void procesarError(t_paquete * unPaquete, int * client_socket) {
 
 	if (nomNodo == NULL)
 		return;
+
+	log_warning(logFileSystem, "Se desconecto el nodo: %s \n",nomNodo);
 
 	//Marco como no disponible en tabla de sockets
 	bool esNodo(t_nodo_info * infoNodo) {
@@ -142,6 +166,9 @@ void procesarError(t_paquete * unPaquete, int * client_socket) {
 void procesarBloqueArchivoTemporal(t_paquete * unPaquete) {
 	t_respuestaLecturaArchTemp * bloqueArchTem = recibirBloqueArchTemp(
 			unPaquete);
+
+	log_trace(logFileSystem, "Me llego del archivo pedido el bloque: %d: \n", bloqueArchTem->orden);
+
 	list_add(listaTemporal, bloqueArchTem);
 }
 
@@ -167,6 +194,10 @@ void procesarRespuestaEscrituraBloque(t_paquete * unPaquete, int client_socket) 
 void procesarBloqueGenerarCopia(t_paquete * unPaquete) {
 	t_respuestaLecturaGenerarCopia * bloqueGenerarCopia =
 			recibirBloqueGenerarCopia(unPaquete);
+
+	log_trace(logFileSystem,
+				"Me llego la lectura del bloque: %d que quiero generar una copia en el nodo: %s \n",
+				bloqueGenerarCopia->numBloqueArchivo,bloqueGenerarCopia->nomNodoAEscribir);
 
 	//Busco el nombre del directorio
 	char ** separado = string_split(bloqueGenerarCopia->rutaArchivo, "/");
@@ -229,6 +260,10 @@ void procesarBloqueGenerarCopia(t_paquete * unPaquete) {
 	enviarSolicitudEscrituraBloque(socketNodo, bloqueAEscribir, TAM_BLOQUE,
 			bloqueGenerarCopia->data);
 
+	log_trace(logFileSystem,
+				"Le envio al nodo: %s el bloque que quiero generar una copia en el bloque: %d n",
+				bloqueGenerarCopia->nomNodoAEscribir, bloqueAEscribir);
+
 	//Libero memoria
 	destruirSubstring(separado);
 	free(rutaFS);
@@ -243,10 +278,13 @@ void procesarBloqueGenerarCopia(t_paquete * unPaquete) {
 	free(bloqueGenerarCopia);
 }
 
-void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete, int client_socket) {
-	t_solicitudArchivo * archivoPedido = recibirRutaParaArrancarTransformacion(unPaquete);
+void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete,
+		int client_socket) {
+	t_solicitudArchivo * archivoPedido = recibirRutaParaArrancarTransformacion(
+			unPaquete);
 
-	log_trace(logFileSystem, "Me llego una solicitud de ruta para arrancar transformacion \n");
+	log_trace(logFileSystem,
+			"Me llego una solicitud de ruta para arrancar transformacion del archivo: %s \n", archivoPedido->rutaArchivo);
 
 	//Busco el nombre del directorio
 	char ** separado = string_split(archivoPedido->rutaArchivo, "/");
@@ -375,7 +413,8 @@ void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete, int cli
 	free(indexPadreChar);
 	config_destroy(configArchivo);
 
-	log_trace(logFileSystem, "Envio lista de nodos para arrancar transformacion \n");
+	log_trace(logFileSystem,
+			"Envio lista de nodos para arrancar transformacion \n");
 }
 
 void procesarNombre(t_paquete * unPaquete, int * client_socket) {
@@ -427,6 +466,8 @@ void procesarEnviarRutaArchivoRutaDestino(t_paquete * unPaquete,
 	t_archivo_y_ruta * archRuta = deserializarRutaArchivoRutaDestino(
 			unPaquete->buffer);
 
+	log_trace(logFileSystem, "Me llego una solicitud para guardar el archivo resultado del almacenamiento final en: %d \n",archRuta->rutaDestino);
+
 	//Creo la carpeta temporal
 	char * rutaFS = string_new();
 	string_append(&rutaFS, RUTA_METADATA);
@@ -459,7 +500,7 @@ void procesarEnviarRutaArchivoRutaDestino(t_paquete * unPaquete,
 		string_append(&destino, separado[i]);
 	}
 
-	almacenarArchivo(rutaFS, destino, separado[posicion], BINARIO);
+	almacenarArchivo(rutaFS, destino, separado[posicion], TEXTO);
 
 	//Borro el archivo temporal
 	remove(rutaFS);
@@ -530,7 +571,7 @@ void consideroEstadoAnterior() {
 		crearTablaNodosSegunArchivo(RUTA_METADATA);
 		crearTablaDirectorioSegunArchivo(RUTA_METADATA);
 		estadoAnterior = true;
-	}else{
+	} else {
 		remove(ruta);
 	}
 
