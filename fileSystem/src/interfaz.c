@@ -18,8 +18,9 @@ bool almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 	//Verifico que el archivo no sea mas grande de los bloques que tenga
 	int cantBloquesArchivo = (tamArch / TAM_BLOQUE) * 2;
 
-	if(tablaNodos->libres < cantBloquesArchivo){
-		printf("No se puede almacenar el archivo porque no tengo los bloques libres suficientes \n");
+	if (tablaNodos->libres < cantBloquesArchivo) {
+		printf(
+				"No se puede almacenar el archivo porque no tengo los bloques libres suficientes \n");
 		munmap(archivo, tamArch);
 		fclose(archivofd);
 		return false;
@@ -305,6 +306,8 @@ char * leerArchivo(char * rutaArchivo) {
 
 	t_list * listaNodoBloque = buscarBloque(configArchivo, bloque);
 
+	t_list * listaNodos = list_create();
+
 	while (!list_is_empty(listaNodoBloque)) {
 		t_nodoBloque * nodoBloque = nodoMenosSaturado(listaNodoBloque);
 
@@ -312,15 +315,9 @@ char * leerArchivo(char * rutaArchivo) {
 		tarea->nomNodo = strdup(nodoBloque->nomNodo);
 		tarea->bloque = nodoBloque->bloque;
 
-		if (!estadoEstable) {
-			return NULL;
-		}
-
 		list_add(tablaTareas, tarea);
 
-		if (!estadoEstable) {
-			return NULL;
-		}
+		list_add(listaNodos, nodoBloque->nomNodo);
 
 		enviarSolicitudLecturaArchTemp(
 				buscarSocketPorNombre(nodoBloque->nomNodo), nodoBloque->bloque,
@@ -346,10 +343,31 @@ char * leerArchivo(char * rutaArchivo) {
 
 	//Espero que lleguen todos los bloques
 	while (list_size(listaTemporal) < bloque) {
-		if (!estadoEstable) {
+
+		bool seDesconectoNodo(char * nombreNodo) {
+			return !nodoDisponible(nombreNodo);
+		}
+
+		if (list_any_satisfy(listaNodos, (void*) seDesconectoNodo)) {
+			list_destroy_and_destroy_elements(listaNodos, free);
+			destruirSubstring(separado);
+			free(rutaFS);
+			free(indexPadreChar);
+			config_destroy(configArchivo);
+
+			void destruirLista(t_respuestaLecturaArchTemp * regitro) {
+				free(regitro->data);
+				free(regitro);
+			}
+			list_destroy_and_destroy_elements(listaTemporal,
+					(void*) destruirLista);
+
 			return NULL;
 		}
+
 	}
+
+	list_destroy_and_destroy_elements(listaNodos, (void*) free);
 
 	//Creo el archivo temporal en base a la lista
 	bool odenarArchivo(t_respuestaLecturaArchTemp *primero,
