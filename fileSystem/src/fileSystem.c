@@ -361,11 +361,36 @@ void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete,
 
 	enviarListaNodoBloques(client_socket, nodosBloques);
 
+	//Destruyo listas
+	list_destroy(nodosDisponibles);
+
+	void destruirNodoBloque(t_nodo_bloque * nb){
+		free(nb->nomNodo);
+		free(nb);
+	}
+
+	list_destroy_and_destroy_elements(nodosBloques->nodoBloque,(void*)destruirNodoBloque);
+
+	void destruirIp(t_puerto_ip * ip){
+		free(ip->ip);
+		free(ip->nomNodo);
+		free(ip->puerto);
+		free(ip);
+	}
+
+	list_destroy_and_destroy_elements(nodosBloques->puertoIP,(void*)destruirIp);
+
+
+
+	//Libero memoria
+	free(nodosBloques);
 	free(archivoPedido);
 	destruirSubstring(separado);
 	free(rutaFS);
 	free(indexPadreChar);
 	config_destroy(configArchivo);
+	free(archivoPedido->rutaArchivo);
+	free(archivoPedido);
 
 	log_trace(logFileSystem,
 			"Envio lista de nodos para arrancar transformacion \n");
