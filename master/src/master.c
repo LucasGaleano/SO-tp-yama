@@ -121,30 +121,31 @@ int leerConfiguracionYConectarYama() {
 
 	free(ip);
 	free(puerto);
-
 }
 
 void imprimirMetricas() {
-	printf("El proceso Master finalizo con las siguientes metricas:\n");
-	printf("cantidad tareas de transformacion : %d\n",
+	log_trace(logMaster,"El proceso Master finalizo con las siguientes metricas:");
+	log_trace(logMaster,"cantidad tareas de transformacion : %d",
 			tablaMetricas.cantidadTareasTotalesTransformacion);
-	printf("cantidad tareas de Reduccion Local : %d\n",
+	log_trace(logMaster,"cantidad tareas de Reduccion Local : %d",
 			tablaMetricas.cantidadTareasTotalesReduccionLocal);
-	printf("cantidad tareas de Reduccion Global : %d\n",
+	log_trace(logMaster,"cantidad tareas de Reduccion Global : %d",
 			tablaMetricas.cantidadTareasTotalesReduccionGlobal);
-	printf("cantidad maxima de tareas de transformacion en paralelo : %d\n",
+	log_trace(logMaster,"cantidad maxima de tareas de transformacion en paralelo : %d",
 			tablaMetricas.cantMaximaTareasTransformacionParalelas);
-	printf("cantidad maxima de tareas de reduccion local en paralelo : %d\n",
+	log_trace(logMaster,"cantidad maxima de tareas de reduccion local en paralelo : %d",
 			tablaMetricas.cantMaximaTareasReduccionLocalParalelas);
-	printf("tiempo total de ejecucion : %f\n", tablaMetricas.tiempoTotal);
-	printf("tiempo promedio jobs: %f\n", tablaMetricas.promedioJobs);
-	printf("cantidad de fallos en transformacion: %d\n",
+	log_trace(logMaster,"tiempo total de ejecucion : %f ms\n", tablaMetricas.tiempoTotal);
+	log_trace(logMaster,"tiempo promedio de tareas de transformacion : %f ms", tablaMetricas.promedioTransformacion);
+	log_trace(logMaster,"tiempo promedio de tareas de reduccion local : %f ms", tablaMetricas.tiempoTotal);
+	log_trace(logMaster,"tiempo promedio jobs: %f ms\n", tablaMetricas.promedioJobs);
+	log_trace(logMaster,"cantidad de fallos en transformacion: %d",
 			tablaMetricas.cantidadFallosTransformacion);
-	printf("cantidad de fallos en reduccion local: %d\n",
+	log_trace(logMaster,"cantidad de fallos en reduccion local: %d",
 			tablaMetricas.cantidadFallosReduccionLocal);
-	printf("cantidad de fallos en reduccion local: %d\n",
+	log_trace(logMaster,"cantidad de fallos en reduccion local: %d",
 			tablaMetricas.cantidadFallosReduccionGlobal);
-	printf("cantidad de fallos en almacenamiento final: %d\n",
+	log_trace(logMaster,"cantidad de fallos en almacenamiento final: %d",
 			tablaMetricas.cantidadFallosAlmacenamiento);
 
 }
@@ -587,7 +588,14 @@ void calcularTiempoTotalTransformacion() {
 		tiempoTransformacion = tiempoTransformacion + *a;
 	}
 
-	tablaMetricas.promedioTransformacion = tiempoTransformacion /list_size(tiemposTransformacion);
+	if (list_size(tiemposTransformacion) != 0){
+		tablaMetricas.promedioTransformacion = tiempoTransformacion /list_size(tiemposTransformacion);
+	}else
+	{
+		tablaMetricas.promedioTransformacion = 0;
+	}
+
+
 
 	log_trace(logMaster, "calculados tiempos de transformacion");
 }
@@ -602,8 +610,13 @@ void calcularTiempoTotalReduccionLocal() {
 		float * a = list_get(tiemposReduccionLocal, i);
 		tiempoReduccionLocal = tiempoReduccionLocal + *a;
 	}
-	tablaMetricas.promedioReduccionLocal = tiempoReduccionLocal / list_size(tiemposReduccionLocal);
 
+	if (list_size(tiemposReduccionLocal) != 0){
+	tablaMetricas.promedioReduccionLocal = tiempoReduccionLocal / list_size(tiemposReduccionLocal);
+	}else
+	{
+		tablaMetricas.promedioReduccionLocal = 0;
+	}
 
 	log_trace(logMaster, "calculados tiempos de reduccion local");
 }

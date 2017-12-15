@@ -90,7 +90,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		procesarRecibirArchivo(unPaquete);
 		break;
 	case ENVIAR_ERROR:
-		procesarRecibirError(unPaquete);
+		procesarRecibirError(unPaquete,client_socket);
 		break;
 	case ENVIAR_RUTA_PARA_ARRANCAR_TRANSFORMACION: //RECIBO SOLICITUD DE TRANSFORMACION CON PATH DE ARCHIVO
 		procesarEnviarSolicitudTransformacion(unPaquete, client_socket); //ENVIO A FS PATH DE ARCHIVO
@@ -138,7 +138,7 @@ void procesarRecibirArchivo(t_paquete * unPaquete) {
 //void * archivo = recibirArchivo(unPaquete);  todo Comento para que no tire error
 }
 
-void procesarRecibirError(t_paquete * unPaquete) { //supuestamente necesita un socket
+void procesarRecibirError(t_paquete * unPaquete, int *socket_client) { //supuestamente necesita un socket
 
 	int error = recibirError(unPaquete);
 
@@ -156,6 +156,11 @@ void procesarRecibirError(t_paquete * unPaquete) { //supuestamente necesita un s
 	case ERROR_ALMACENAMIENTO_FINAL:
 		printf("[-]fallo almacenamiento final");
 		exit(EXIT_FAILURE);
+		break;
+
+	case ERROR_MASTER:
+
+		log_trace(logYama,"Master se ha desconectado, no se puede continuar %i", *socket_client);
 		break;
 	default:
 

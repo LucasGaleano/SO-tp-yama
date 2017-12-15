@@ -64,7 +64,7 @@ void	 						procesarPaquete							(t_paquete * unPaquete, int * client_socket);
 void 							procesarRecibirHandshake				(t_paquete * unPaquete, int * client_socket);
 void 							procesarRecibirMensaje					(t_paquete * unPaquete);
 void 							procesarRecibirArchivo					(t_paquete * unPaquete);
-void 							procesarRecibirError					(t_paquete * unPaquete);
+void 							procesarRecibirError					(t_paquete * unPaquete, int * client_socket);
 void 							procesarEnviarSolicitudTransformacion	(t_paquete * unPaquete, int * client_socket);
 void 							procesarEnviarListaNodoBloques			(t_paquete * unPaquete);
 void							procesarEnviarIndicacionTransformacion	(t_paquete * unPaquete);
