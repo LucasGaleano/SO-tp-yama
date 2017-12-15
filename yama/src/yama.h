@@ -80,7 +80,7 @@ t_list* 						extraerNodosSinRepetidos				(t_list*);
 long 							generarJob								(void);
 void 							destruirConfiguracion					(t_configuracion * configuracion);
 char* 							obtenerNombreNodoDesdeId				(int idNodo);
-void 							MostrarLIstaNodoBloque					(t_list* listaBloquesConNodos);
+void 							MostrarLIstaNodoBloque					(t_nodos_bloques* listaBloquesConNodos);
 t_indicacionReduccionLocal* 	IndicReducLocal_create					(void);
 void 							IndicReducLocal_destroy					(t_indicacionReduccionLocal* indReducLocal);
 void 							destruirIndicacionDeTransformacion		(t_indicacionTransformacion* indTransform);
