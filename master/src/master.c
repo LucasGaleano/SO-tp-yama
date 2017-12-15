@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
 	signal(SIGPIPE, signal_capturer);
 	signal(SIGSEGV, signal_capturer);
 
-	enviarRutaParaArrancarTransformacion(conexionYama, rutaArchivoParaArrancar);
+	enviarRutaParaArrancarTransformacion(conexionYama,rutaArchivoParaArrancar,MASTER );
 
 	while (!finDeSolicitudes && !dejarDeRecibirSolicitudes) {
 		log_trace(logMaster, "Esperando solicitud de Yama");
@@ -579,24 +579,38 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) { // contesto a
 }
 
 void calcularTiempoTotalTransformacion() {
+
+	log_trace(logMaster, "calculando tiempos de transformacion");
 	int i = 0;
 	for (; i < list_size(tiemposTransformacion); i++) {
 		float * a = list_get(tiemposTransformacion, i);
 		tiempoTransformacion = tiempoTransformacion + *a;
 	}
+
+	tablaMetricas.promedioTransformacion = tiempoTransformacion /list_size(tiemposTransformacion);
+
+	log_trace(logMaster, "calculados tiempos de transformacion");
 }
 
 void calcularTiempoTotalReduccionLocal() {
+
+
+	log_trace(logMaster, "calculando tiempos de reduccion local");
 
 	int i = 0;
 	for (; i < list_size(tiemposReduccionLocal); i++) {
 		float * a = list_get(tiemposReduccionLocal, i);
 		tiempoReduccionLocal = tiempoReduccionLocal + *a;
 	}
+	tablaMetricas.promedioReduccionLocal = tiempoReduccionLocal / list_size(tiemposReduccionLocal);
+
+
+	log_trace(logMaster, "calculados tiempos de reduccion local");
 }
 
 void liberarMemoria() {
 
+	log_trace(logMaster, "liberando memoria");
 	list_destroy_and_destroy_elements(indicacionesDeReduccionGlobal,
 			(void *) liberarReduGlobal);
 	list_destroy_and_destroy_elements(tiemposReduccionLocal, (void *) free);
@@ -612,10 +626,13 @@ void liberarMemoria() {
 	for (; j < tareasTotalesTransformacion; j++) {
 		free(&hilosTransformacion[j]);
 	}
+	log_trace(logMaster, "memoria liberada");
 
 }
 
 void liberarReduGlobal(t_indicacionReduccionGlobal * ind) {
+
+
 	free(ind->archivoDeReduccionGlobal);
 	free(ind->archivoDeReduccionLocal);
 	free(ind->ip);

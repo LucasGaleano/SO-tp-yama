@@ -105,6 +105,8 @@ typedef struct
 {
 	float tiempoTotal;
 	float promedioJobs;
+	float promedioTransformacion;
+	float promedioReduccionLocal;
 	int cantMaximaTareasTransformacionParalelas;
 	int cantMaximaTareasReduccionLocalParalelas;
 	int cantidadTareasTotalesTransformacion;
