@@ -648,7 +648,7 @@ void borrarArchivos() {
 
 		listarCarpetasDeArchivos(ruta, listaCarpetas);
 
-		list_iterate(listaCarpetas, (void *) eliminarDirectorio);
+		list_iterate(listaCarpetas, (void *) borrarArchivosDirectorios);
 
 		list_destroy_and_destroy_elements(listaCarpetas, free);
 	}
