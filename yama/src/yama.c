@@ -96,9 +96,11 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		procesarEnviarSolicitudTransformacion(unPaquete, client_socket); //ENVIO A FS PATH DE ARCHIVO
 		break;
 	case ENVIAR_LISTA_NODO_BLOQUES: //RECIBO LISTA DE ARCHIVOS DE FS CON UBICACIONES Y BLOQUES
+		log_trace(logYama, "Llego una solicitud de transformacion");
 		procesarEnviarListaNodoBloques(unPaquete); //
 		break;
 	case ENVIAR_INDICACION_TRANSFORMACION:
+
 		procesarResultadoTranformacion(unPaquete, client_socket);
 		break;
 	case ENVIAR_INDICACION_REDUCCION_LOCAL:
@@ -174,8 +176,10 @@ void procesarEnviarSolicitudTransformacion(t_paquete * unPaquete, int *client_so
 	log_trace(logYama, "Recibida ruta de Archivo:  %s", nomArchivo);
 	enviarRutaParaArrancarTransformacion(socketFS, nomArchivo, *client_socket);
 	log_trace(logYama, "Enviada ruta para obtener Nodos y Bloques a: %d", socketFS);
+	log_trace(logYama, "esperando respuesta de File systems");
 
 	gestionarSolicitudes(socketFS,(void*)procesarPaquete,logYama);
+
 
 }
 

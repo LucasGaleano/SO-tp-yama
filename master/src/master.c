@@ -137,7 +137,7 @@ void imprimirMetricas() {
 			tablaMetricas.cantMaximaTareasReduccionLocalParalelas);
 	log_trace(logMaster,"tiempo total de ejecucion : %f ms\n", tablaMetricas.tiempoTotal);
 	log_trace(logMaster,"tiempo promedio de tareas de transformacion : %f ms", tablaMetricas.promedioTransformacion);
-	log_trace(logMaster,"tiempo promedio de tareas de reduccion local : %f ms", tablaMetricas.tiempoTotal);
+	log_trace(logMaster,"tiempo promedio de tareas de reduccion local : %f ms", tablaMetricas.promedioReduccionLocal);
 	log_trace(logMaster,"tiempo promedio jobs: %f ms\n", tablaMetricas.promedioJobs);
 	log_trace(logMaster,"cantidad de fallos en transformacion: %d",
 			tablaMetricas.cantidadFallosTransformacion);
