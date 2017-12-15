@@ -47,4 +47,6 @@ void 				listarCarpetasDeArchivos			(char *, t_list *);
 void 				borrarArchivos						(void);
 void 				borrarBitmaps						(void);
 
+void MostrarLIstaNodoBloque(t_nodos_bloques* listaBloquesConNodos);
+
 #endif /* FILESYSTEM_H_ */

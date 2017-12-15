@@ -362,6 +362,8 @@ void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete,
 	enviarListaNodoBloques(client_socket, nodosBloques,
 			archivoPedido->masterSolicitante);
 
+	MostrarLIstaNodoBloque(nodosBloques);
+
 	free(archivoPedido);
 	destruirSubstring(separado);
 	free(rutaFS);
@@ -670,4 +672,35 @@ void borrarBitmaps() {
 	remove(ruta);
 
 	free(ruta);
+}
+
+void MostrarLIstaNodoBloque(t_nodos_bloques* listaBloquesConNodos) {
+
+	void imprimir(t_nodos_bloques* elemento) {
+
+		log_trace(logFileSystem, "-----BLOQUE------SOLIITADO POR MASTER: %i",
+				elemento->masterSolicitante);
+
+		void imprimirListaDeNodosYBloques(t_nodo_bloque* nodoBloque) {
+			log_trace(logFileSystem, "NOMBRE NODO: %s", nodoBloque->nomNodo);
+			log_trace(logFileSystem, "numero bloque archivo: %i",
+					nodoBloque->bloqueArchivo);
+			log_trace(logFileSystem, "numero bloque nodo: %i",
+					nodoBloque->bloqueNodo);
+			log_trace(logFileSystem, "tamanio: %i", nodoBloque->tamanio);
+		}
+
+		list_iterate(elemento->nodoBloque,
+				(void*) imprimirListaDeNodosYBloques);
+
+		void imprimirListaDeDirecciones(t_puerto_ip* direccionNodo) {
+			log_trace(logFileSystem, "NOMBRE NODO: %s", direccionNodo->nomNodo);
+			log_trace(logFileSystem, "ip nodo: %s", direccionNodo->ip);
+			log_trace(logFileSystem, "puerto nodo: %s", direccionNodo->puerto);
+		}
+
+		list_iterate(elemento->puertoIP, (void*) imprimirListaDeDirecciones);
+	}
+
+	list_iterate(listaBloquesConNodos, (void*) imprimir);
 }
