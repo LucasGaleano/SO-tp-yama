@@ -610,7 +610,7 @@ void serializarListaNodoBloques(t_paquete * unPaquete,
 	unPaquete->buffer->data = realloc(unPaquete->buffer->data,
 			unPaquete->buffer->size + sizeof(int));
 
-	memcpy(unPaquete->buffer->data, &cantPuertoIP, sizeof(int));
+	memcpy(unPaquete->buffer->data + desplazamiento, &cantPuertoIP, sizeof(int));
 
 	desplazamiento += sizeof(int);
 	unPaquete->buffer->size += desplazamiento;

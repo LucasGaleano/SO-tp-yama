@@ -361,8 +361,6 @@ void procesarEnviarRutaParaArrancarTransformacion(t_paquete * unPaquete,
 
 	enviarListaNodoBloques(client_socket, nodosBloques);
 
-	MostrarLIstaNodoBloque(nodosBloques);
-
 	free(archivoPedido);
 	destruirSubstring(separado);
 	free(rutaFS);
