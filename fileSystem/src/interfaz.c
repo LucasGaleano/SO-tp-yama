@@ -16,7 +16,7 @@ void almacenarArchivo(char * rutaArchivo, char * rutaDestino, char * nomArchivo,
 	}
 
 	//Verifico que el archivo no sea mas grande de los bloques que tenga
-	int cantBloquesArchivo = tamArch / TAM_BLOQUE;
+	int cantBloquesArchivo = (tamArch / TAM_BLOQUE) * 2;
 
 	if(tablaNodos->libres < cantBloquesArchivo){
 		log_error(logFileSystem, "No se puede almacenar el archivo porque no tengo los bloques libres suficientes \n");
