@@ -190,7 +190,7 @@ t_stream * dividirBloqueArchivoTexto(void * archivo, int * desplazamiento,
 char * buscarNodoMenosCargado() {
 
 	bool estaDisponible(t_nodo_info * nodo) {
-		return nodo->disponible;
+		return nodo->disponible && nodo->libre > 0;
 	}
 
 	t_list * disponibles = list_filter(tablaNodos->infoDeNodo,
@@ -317,7 +317,7 @@ char * leerArchivo(char * rutaArchivo) {
 
 		list_add(tablaTareas, tarea);
 
-		list_add(listaNodos, nodoBloque->nomNodo);
+		list_add(listaNodos, tarea->nomNodo);
 
 		enviarSolicitudLecturaArchTemp(
 				buscarSocketPorNombre(nodoBloque->nomNodo), nodoBloque->bloque,
@@ -349,7 +349,7 @@ char * leerArchivo(char * rutaArchivo) {
 		}
 
 		if (list_any_satisfy(listaNodos, (void*) seDesconectoNodo)) {
-			list_destroy_and_destroy_elements(listaNodos, free);
+			list_destroy(listaNodos);
 			destruirSubstring(separado);
 			free(rutaFS);
 			free(indexPadreChar);
@@ -367,7 +367,7 @@ char * leerArchivo(char * rutaArchivo) {
 
 	}
 
-	list_destroy_and_destroy_elements(listaNodos, (void*) free);
+	list_destroy(listaNodos);
 
 	//Creo el archivo temporal en base a la lista
 	bool odenarArchivo(t_respuestaLecturaArchTemp *primero,
