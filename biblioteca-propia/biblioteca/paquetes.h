@@ -58,6 +58,8 @@ void 							enviarRutaParaArrancarTransformacion		(int, char *, int);
 
 void 							enviarRutaArchivoRutaDestino				(int, char *, char *);
 
+void 							enviarExitoAlmacenamientoFinal				(int, bool);
+
 /*-----------------------------------Recibir paquetes-----------------------------------*/
 int 							recibirHandshake							(t_paquete *);
 
@@ -98,5 +100,7 @@ t_nodos_bloques *				recibirListaNodoBloques						(t_paquete *);
 t_solicitudArchivo *			recibirRutaParaArrancarTransformacion		(t_paquete *);
 
 t_archivo_y_ruta * 				recibirRutaArchivoRutaDestino				(t_paquete *);
+
+bool 							recibirExitoAlmacenamientoFinal				(t_paquete *);
 
 #endif /* SRC_PROCESAMIENTOPAQUETES_H_ */

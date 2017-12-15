@@ -157,7 +157,6 @@ void mostrarPaquete(t_paquete * unPaquete) {
 }
 
 /*-------------------------Enviar-------------------------*/
-
 void enviarHandshake(int server_socket, int emisor) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
@@ -405,7 +404,8 @@ void enviarIndicacionReduccionLocal(int server_socket,
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarIndicacionReduccionGlobal(int server_socket, t_list * listaIndicacionGlobal) {
+void enviarIndicacionReduccionGlobal(int server_socket,
+		t_list * listaIndicacionGlobal) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_INDICACION_REDUCCION_GLOBAL;
@@ -426,12 +426,14 @@ void enviarIndicacionAlmacenadoFinal(int server_socket,
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarRutaParaArrancarTransformacion(int server_socket, char * rutaArchivo, int masterSolicitante) {
+void enviarRutaParaArrancarTransformacion(int server_socket, char * rutaArchivo,
+		int masterSolicitante) {
 	t_paquete * unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_RUTA_PARA_ARRANCAR_TRANSFORMACION;
 
-	serializarRutaParaArrancarTransformacion(unPaquete, rutaArchivo, masterSolicitante);
+	serializarRutaParaArrancarTransformacion(unPaquete, rutaArchivo,
+			masterSolicitante);
 
 	enviarPaquetes(server_socket, unPaquete);
 }
@@ -467,7 +469,8 @@ void enviarListaNodoBloques(int server_socket,
 	enviarPaquetes(server_socket, unPaquete);
 }
 
-void enviarRutaArchivoRutaDestino(int server_socket, char * rutaArchivo, char * rutaAGuardar) {
+void enviarRutaArchivoRutaDestino(int server_socket, char * rutaArchivo,
+		char * rutaAGuardar) {
 	t_paquete* unPaquete = malloc(sizeof(t_paquete));
 
 	unPaquete->codigoOperacion = ENVIAR_RUTA_ARCHIVO_RUTA_DESTINO;
@@ -475,6 +478,17 @@ void enviarRutaArchivoRutaDestino(int server_socket, char * rutaArchivo, char * 
 	serializarRutaArchivoRutaDestino(unPaquete, rutaArchivo, rutaAGuardar);
 
 	enviarPaquetes(server_socket, unPaquete);
+}
+
+void enviarExitoAlmacenamientoFinal(int server_socket, bool exito) {
+	t_paquete * unPaquete = malloc(sizeof(t_paquete));
+
+	unPaquete->codigoOperacion = ENVIAR_EXITO_ALMACENAMIENTO_FINAL;
+
+	serializarNumero(unPaquete, exito);
+
+	enviarPaquetes(server_socket, unPaquete);
+
 }
 
 /*-------------------------Recibir-------------------------*/
@@ -558,8 +572,7 @@ t_indicacionReduccionLocal * recibirIndicacionReduccionLocal(
 	return deserializarIndicacionReduccionLocal(unPaquete->buffer);
 }
 
-t_list * recibirIndicacionReduccionGlobal(
-		t_paquete * unPaquete) {
+t_list * recibirIndicacionReduccionGlobal(t_paquete * unPaquete) {
 	return deserializarIndicacionReduccionGlobal(unPaquete->buffer);
 }
 
@@ -568,7 +581,8 @@ t_indicacionAlmacenadoFinal * recibirIndicacionAlmacenadoFinal(
 	return deserializarIndicacionAlmacenadoFinal(unPaquete->buffer);
 }
 
-t_solicitudArchivo * recibirRutaParaArrancarTransformacion(t_paquete * unPaquete) {
+t_solicitudArchivo * recibirRutaParaArrancarTransformacion(
+		t_paquete * unPaquete) {
 	return deserializarRutaParaArrancarTransformacion(unPaquete->buffer);
 }
 
@@ -593,6 +607,10 @@ t_nodos_bloques * recibirListaNodoBloques(t_paquete * unPaquete) {
 //	return deserializarResultadoTransformacion(unPaquete->buffer);
 //}
 
-t_archivo_y_ruta * recibirRutaArchivoRutaDestino(t_paquete * unPaquete){
+t_archivo_y_ruta * recibirRutaArchivoRutaDestino(t_paquete * unPaquete) {
 	return deserializarRutaArchivoRutaDestino(unPaquete->buffer);
+}
+
+bool recibirExitoAlmacenamientoFinal(t_paquete * unPaquete){
+	return deserializarNumero(unPaquete->buffer);
 }
