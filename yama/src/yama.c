@@ -131,10 +131,6 @@ void procesarRecibirHandshake(t_paquete * unPaquete, int * client_socket) {
 	}
 }
 
-void procesarRecibirMensaje(t_paquete * unPaquete) {
-//char * mensaje = recibirMensaje(unPaquete); todo Comento para que no tire error
-}
-
 void procesarRecibirArchivo(t_paquete * unPaquete) {
 //void * archivo = recibirArchivo(unPaquete);  todo Comento para que no tire error
 }
@@ -181,7 +177,6 @@ void procesarEnviarMensaje(t_paquete * unPaquete, int *client_socket) {
 	log_trace(logYama, "esperando respuesta de File systems");
 
 	gestionarSolicitudes(socketFS, (void*) procesarPaquete, logYama);
-
 }
 
 void MostrarLIstaNodoBloque(t_nodos_bloques* listaBloquesConNodos) {
