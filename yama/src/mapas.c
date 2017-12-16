@@ -26,14 +26,12 @@ int buscarTamanioArchivoConNombreNodo(char* nombreNodo, t_list* listaBloquesNodo
 	return nodoBloque->tamanio;
 }
 
-int mapearBloqueArchivoABloqueNodo(t_list* listaBloquesNodos, char* nombreNodo, int bloqueArchivo){
-	bool esRegistroBuscado(t_nodo_bloque* nodoBloque){
-		if(string_equals_ignore_case(nodoBloque->nomNodo, nombreNodo) && nodoBloque->bloqueArchivo == bloqueArchivo){
-			return true;
-		}
-		return false;
-	}
-
-	t_nodo_bloque* nodoBloque = list_find(listaBloquesNodos, (void*)esRegistroBuscado);
+int mapearBloqueArchivoABloqueNodo(t_list* listaBloquesNodos, char* nombreNodo,
+		int bloqueArchivo) {
+	int i = 0;
+for(;i<listaBloquesNodos->elements_count;i++) {
+	t_nodo_bloque* nodoBloque = list_get(listaBloquesNodos,i);
+	if(string_equals_ignore_case(nodoBloque->nomNodo, nombreNodo) && nodoBloque->bloqueArchivo == bloqueArchivo)
 	return nodoBloque->bloqueNodo;
+}
 }
