@@ -143,6 +143,7 @@ void procesarError(t_paquete * unPaquete, int * client_socket) {
 
 	log_warning(logFileSystem, "Se desconecto el nodo: %s \n", nomNodo);
 
+	if (estadoAnterior) {
 		//Marco como no disponible en tabla de sockets
 		bool esNodo(t_nodo_info * infoNodo) {
 			return string_equals_ignore_case(infoNodo->nombre, nomNodo);
@@ -151,6 +152,7 @@ void procesarError(t_paquete * unPaquete, int * client_socket) {
 		t_nodo_info * nodo = list_find(tablaNodos->infoDeNodo, (void*) esNodo);
 
 		nodo->disponible = false;
+	}
 
 	//Verifico si el FS queda en estado estable
 	if (verificarEstadoEstable() && formateado) {
@@ -558,7 +560,7 @@ void ignoroEstadoAnterior() {
 void consideroEstadoAnterior() {
 	log_trace(logFileSystem, "Considero estado anterior \n");
 
-//Verifico que la carpeta metadata exista
+	//Verifico que la carpeta metadata exista
 	char * ruta = string_new();
 	string_append(&ruta, RUTA_METADATA);
 	string_append(&ruta, "metadata");
@@ -706,5 +708,3 @@ void listarCarpetasDeArchivos(char * ruta, t_list * lista) {
 	closedir(dir);
 
 }
-
-
