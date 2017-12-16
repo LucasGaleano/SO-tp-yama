@@ -86,7 +86,7 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		procesarRecibirHandshake(unPaquete, client_socket);
 		break;
 	case ENVIAR_MENSAJE:
-		procesarEnviarMensaje(unPaquete,client_socket);
+		procesarEnviarMensaje(unPaquete,*client_socket);
 		break;
 	case ENVIAR_ARCHIVO:
 		procesarRecibirArchivo(unPaquete);
@@ -166,10 +166,12 @@ void procesarRecibirError(t_paquete * unPaquete, int *socket_client) { //supuest
 
 }
 
-void procesarEnviarMensaje(t_paquete * unPaquete, int *client_socket) {
+void procesarEnviarMensaje(t_paquete * unPaquete, int client_socket) {
 	char * nomArchivo = recibirMensaje(unPaquete);
-	log_trace(logYama, "Recibida ruta de Archivo:  %s", nomArchivo);
-	enviarRutaParaArrancarTransformacion(socketFS, nomArchivo, *client_socket);
+	log_trace(logYama, "Recibida ruta de Archivo:  %s %d \n", nomArchivo, client_socket);
+	int * master = malloc(sizeof(int));
+	memcpy(master,&client_socket,sizeof(int));
+	enviarRutaParaArrancarTransformacion(socketFS, nomArchivo, *master);
 	log_trace(logYama, "Enviada ruta para obtener Nodos y Bloques a: %d",
 			socketFS);
 	log_trace(logYama, "esperando respuesta de File systems");
@@ -325,6 +327,16 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 
 	list_iterate(indicacionesDeTransformacionParaMaster,(void*) registrarYEnviarAMaster);
 
+	bool seguirEscuchando = true;
+	imposibilidadDeReplanificar = false;
+
+	while(seguirEscuchando && !imposibilidadDeReplanificar){
+		gestionarSolicitudes(nodosBloques->masterSolicitante,(void*)procesarPaquete,logYama);
+
+		if (buscarRegistro(idJob,nodosBloques->masterSolicitante,NULL,-1,-1,PROCESANDO,NULL) == NULL && buscarRegistro(idJob,nodosBloques->masterSolicitante,NULL,-1,-1,ERROR,NULL) == NULL){
+			seguirEscuchando = false;
+		}
+	}
 }
 
 void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
@@ -333,27 +345,21 @@ void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
 
 	//ACTUALIZAR REGISTRO Y CONTINUAR O REPLANIFICAR ALGUN BLOQUE (VER REPLANIFICACION)
 	//todo FIJARSE QUE PASA CON LA TABLA DE ESTADO EN EL CASO DE QUE FALLE ALGUNA ETAPA
+	modificarEstadoDeRegistro(-1, *client_socket, resultado->nodo,resultado->bloque, TRANSFORMACION, resultado->estado);
 
-	if (resultado->estado == FINALIZADO_OK) {
+		planificador_sumarWLWorker(tablaPlanificador,extraerIddelNodo(resultado->nodo), -1); //le saco carga de trabaja al nodo
 
-		planificador_sumarWLWorker(tablaPlanificador,
-				extraerIddelNodo(resultado->nodo), -1); //le saco carga de trabaja al nodo
-
-		modificarEstadoDeRegistro(-1, *client_socket, resultado->nodo,
-				resultado->bloque, TRANSFORMACION, FINALIZADO_OK);
 
 		//MIRAR SI PARA UN MISMO NODO, TERMINARON TODAS LAS TRANSFORMACIONES
 
-		if (buscarRegistro(-1, -1, resultado->nodo, -1, TRANSFORMACION,
-				PROCESANDO, NULL) == NULL) {
-			//TODO POR QUE UN MISMO NODO ????
-			//SI -> MANDAR A HACER TODAS LAS REDUCCIONES LOCALES DE ESE NODO
+		if (buscarRegistro(-1, -1, resultado->nodo, -1, TRANSFORMACION, PROCESANDO, NULL) == NULL) {
 
-			//recorrer la tabla registros y enviar paquete reduccion local por cada nodo terminado
+			//chequear si hay error en alguna transformacion
+			if (buscarRegistro(-1, -1, resultado->nodo, -1, TRANSFORMACION, ERROR, NULL) == NULL){
 
-			int i = 0;
-			int tam = list_size(tabla_de_estados);
-			while (tam > i) {
+				int i = 0;
+				int tam = list_size(tabla_de_estados);
+				while (tam > i) {
 
 				t_elemento_tabla_estado * reg = list_get(tabla_de_estados, i);
 
@@ -380,13 +386,35 @@ void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
 							indReducLocal);
 					IndicReducLocal_destroy(indReducLocal);
 
+
+					}
+					i++;
 				}
-				i++;
+
+			}else{     //hay alguno con error
+
+
+				typedef struct{
+					int bloqueArchivo;
+					t_list* nodosEnLosQueEsta;
+				} t_nodos_por_bloque;
+
+				//imposibilidadDeReplanificar = !planificador();
+
+
+				planificador_sacarWorker(tablaPlanificador, resultado->nodo);
+
+
+
 			}
+
+			//recorrer la tabla registros y enviar paquete reduccion local por cada nodo terminado
+
+
 
 		}
 
-	}
+
 }
 
 void procesarResultadoReduccionLocal(t_paquete* unPaquete, int *client_socket) {

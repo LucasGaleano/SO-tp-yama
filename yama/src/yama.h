@@ -12,6 +12,7 @@
 #include <pthread.h>
 #include <commons/log.h>
 
+
 #include "tablas.h"
 #include <biblioteca/paquetes.h>
 #include "balanceador.h"
@@ -42,7 +43,7 @@ long idJob;
 char* prefijoArchivosTemporalesTranformacion = "/temp/transf:";
 char* prefijoArchivosTemporalesReduLocal= "/temp/local:";
 char* prefijoArchivosTemporalesReduGlobal= "/temp/global:";
-
+bool imposibilidadDeReplanificar;
 t_list* masterConectados;
 
 int socketFS;
@@ -65,7 +66,7 @@ void 							procesarRecibirHandshake				(t_paquete * unPaquete, int * client_soc
 void 							procesarRecibirMensaje					(t_paquete * unPaquete);
 void 							procesarRecibirArchivo					(t_paquete * unPaquete);
 void 							procesarRecibirError					(t_paquete * unPaquete, int * client_socket);
-void 							procesarEnviarMensaje					(t_paquete * unPaquete, int * client_socket);
+void 							procesarEnviarMensaje					(t_paquete * unPaquete, int client_socket);
 void 							procesarEnviarListaNodoBloques			(t_paquete * unPaquete);
 void							procesarEnviarIndicacionTransformacion	(t_paquete * unPaquete);
 void 							procesarResultadoTranformacion			(t_paquete * unPaquete, int *client_socket);

@@ -836,6 +836,8 @@ int buscarSocketPorNombre(char * nombreNodo) {
 	t_tabla_sockets * registroSocket = list_find(tablaSockets,
 			(void*) esSocketBuscado);
 
+	if(registroSocket == NULL)return -1;
+
 	return registroSocket->socket;
 }
 
