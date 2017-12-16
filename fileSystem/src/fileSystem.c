@@ -155,13 +155,15 @@ void procesarError(t_paquete * unPaquete, int * client_socket) {
 	}
 
 	//Verifico si el FS queda en estado estable
-	if (verificarEstadoEstable() && formateado) {
-		log_warning(logFileSystem,
-				"Se desconecto un Nodo pero el FS queda en estado estable");
-	} else {
-		log_warning(logFileSystem,
-				"Se desconecto un Nodo y el FS paso a estar en estado no estable");
-		estadoEstable = false;
+	if (formateado || estadoAnterior) {
+		if (verificarEstadoEstable()) {
+			log_warning(logFileSystem,
+					"Se desconecto un Nodo pero el FS queda en estado estable");
+		} else {
+			log_warning(logFileSystem,
+					"Se desconecto un Nodo y el FS paso a estar en estado no estable");
+			estadoEstable = false;
+		}
 	}
 
 	//Libero memoria
