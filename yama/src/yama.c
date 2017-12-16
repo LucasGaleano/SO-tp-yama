@@ -228,6 +228,12 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 	t_list* listaBloquesConNodos = agruparNodosPorBloque(listaNodoBloque); // LISTA DE BLOQUES CON LOS NODOS DONDE ESTA
 	t_list* nodosSinRepetidos = extraerNodosSinRepetidos(listaNodoBloque); //SOLO LOS NOMBRE NODOS SIN REPETIDOS
 
+	bool ordenarNodo(char* nodo1, char* nodo2){
+		return (extraerIddelNodo(nodo1) < extraerIddelNodo(nodo2));
+	}
+
+	list_sort(nodosSinRepetidos, (void*)ordenarNodo);
+
 	void agregarATablaPlanificador(char* nombreNodo) {
 		planificador_agregarWorker(tablaPlanificador, nombreNodo);
 	}
