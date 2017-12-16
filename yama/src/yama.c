@@ -294,11 +294,9 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 			list_add(indicacionesDeTransformacionParaMaster,
 					indicacionTransformacion);
 		}
-		list_iterate(registroTabla->listaBloques,
-				(void*) armarIndicacionDeTransformacionPorBloque);
+		list_iterate(registroTabla->listaBloques,(void*) armarIndicacionDeTransformacionPorBloque);
 	}
-	list_iterate(tablaPlanificador,
-			(void*) armarIndicacionDeTransformacionPorRegistro);
+	list_iterate(tablaPlanificador,(void*) armarIndicacionDeTransformacionPorRegistro);
 
 	t_nodos_por_bloque* buscarNodosDeBloque(int bloque){
 
