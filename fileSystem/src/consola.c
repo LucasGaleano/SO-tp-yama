@@ -1361,14 +1361,14 @@ void modificarArchivo(char* path_original, char* path_final) {
 	}
 
 	//Busco el index del padre del nombre final
-	int indexPadreFinal = obtenerIndexPadre(path_final);
+	int indexPadreFinal = obtenerIndexDirectorio(path_final);
 
 	//Busco el nombre de lo que voy a elminir
 	char ** separadoFinal = string_split(path_final, "/");
 
 	int posicionFinal;
 
-	for (posicionFinal = 0; separadoOriginal[posicionFinal] != NULL;
+	for (posicionFinal = 0; separadoFinal[posicionFinal] != NULL;
 			++posicionFinal) {
 	}
 
@@ -1378,14 +1378,14 @@ void modificarArchivo(char* path_original, char* path_final) {
 	bool esRegistroBuscado(t_directory * registro) {
 		return string_equals_ignore_case(registro->nombre,
 				separadoFinal[posicionFinal])
-				&& registro->padre == indexPadreFinal;
+				&& registro->index == indexPadreFinal;
 	}
 
 	t_directory * registroDirectorio = list_find(tablaDirectorios,
 			(void*) esRegistroBuscado);
 
 	char * nuevaRutaFS = string_new();
-	string_append(&rutaFS, RUTA_METADATA);
+	string_append(&nuevaRutaFS, RUTA_METADATA);
 	string_append(&nuevaRutaFS, "metadata/archivos/");
 
 	if (registroDirectorio != NULL) {
@@ -1399,6 +1399,8 @@ void modificarArchivo(char* path_original, char* path_final) {
 		string_append(&nuevaRutaFS, separadoOriginal[posicionOriginal]);
 
 		free(indexPadreNuevoChar);
+
+		printf("Puto el que lee %s \n", nuevaRutaFS);
 	} else {
 		//Quiero renombrar un archivo
 		string_append(&nuevaRutaFS, indexPadreChar);
