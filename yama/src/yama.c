@@ -280,10 +280,10 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 
 		void armarIndicacionDeTransformacionPorBloque(int numeroBloque) {
 			indicacionTransformacion->estado = PROCESANDO;
-			indicacionTransformacion->ip = direccionNodo->ip;
-			indicacionTransformacion->puerto = direccionNodo->puerto;
-			indicacionTransformacion->nodo = nombreNodo; //TODO REVISAR SI HAY QUE RESERVAR MEMORIA
-			indicacionTransformacion->bytes = tamanioArchivo;
+			indicacionTransformacion->ip;// = direccionNodo->ip;
+			indicacionTransformacion->puerto;// = direccionNodo->puerto;
+			indicacionTransformacion->nodo;// = nombreNodo; //TODO REVISAR SI HAY QUE RESERVAR MEMORIA
+			indicacionTransformacion->bytes;// = tamanioArchivo;
 
 			int bloqueNodo = mapearBloqueArchivoABloqueNodo(listaNodoBloque,
 					nombreNodo, numeroBloque);
