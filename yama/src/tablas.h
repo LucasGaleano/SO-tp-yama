@@ -8,6 +8,7 @@
 #include <commons/string.h>
 #include <string.h>
 #include <commons/temporal.h>
+#include "balanceador.h"
 
 t_list* tabla_de_estados;
 
@@ -26,14 +27,15 @@ typedef struct {
 	int etapa;
 	char * nombreArchivoTemporal;
 	int estado;
+	t_nodos_por_bloque* nodosPorBloque;
 } t_elemento_tabla_estado;
 
 /*------------------------Manejo de tabla estado-------------------------*/
 #include "tablas.h"
 
-t_elemento_tabla_estado* crearRegistro(int job, int master, char * nombreNodo, int bloque, int etapa, char * nombreArchivoTemporal, int estado);
+t_elemento_tabla_estado * crearRegistro(int job, int master, char * nombreNodo, int bloque, int etapa, char * nombreArchivoTemporal, int estado, t_nodos_por_bloque* nodosPorBloque);
 
-void agregarRegistro(int job, int master, char * nombreNodo, int bloque, int etapa, char * nombreArchivoTemporal, int estado);
+void agregarRegistro(int job, int master, char * nombreNodo, int bloque, int etapa, char * nombreArchivoTemporal, int estado, t_nodos_por_bloque* nodosPorBloque);
 
 t_elemento_tabla_estado* buscarRegistro(int job, int master, char* nombreNodo, int bloque, int etapa,int estado, char* archivo);
 

@@ -1,7 +1,7 @@
 #include "tablas.h"
 
 
-t_elemento_tabla_estado * crearRegistro(int job, int master, char * nombreNodo, int bloque, int etapa, char * nombreArchivoTemporal, int estado) {
+t_elemento_tabla_estado * crearRegistro(int job, int master, char * nombreNodo, int bloque, int etapa, char * nombreArchivoTemporal, int estado, t_nodos_por_bloque* nodosPorBloque) {
 	int tamanioNombreNodo = string_length(nombreNodo) + 1;
 	int tamanioNombreArchivoTemporal = string_length(nombreArchivoTemporal) + 1;
 
@@ -14,6 +14,8 @@ t_elemento_tabla_estado * crearRegistro(int job, int master, char * nombreNodo, 
 	registro->estado = estado;
 	registro->nodo = malloc(tamanioNombreNodo);
 	registro->nombreArchivoTemporal = malloc(tamanioNombreArchivoTemporal);
+	registro->nodosPorBloque = malloc(sizeof(t_nodos_por_bloque)); //todo liberar
+	registro->nodosPorBloque->nodosEnLosQueEsta = list_create();
 
 	memcpy(registro->nodo, nombreNodo, tamanioNombreNodo);
 	memcpy(registro->nombreArchivoTemporal, nombreArchivoTemporal, tamanioNombreArchivoTemporal);
@@ -21,8 +23,8 @@ t_elemento_tabla_estado * crearRegistro(int job, int master, char * nombreNodo, 
 	return registro;
 }
 
-void agregarRegistro(int job, int master, char * nombreNodo, int bloque, int etapa, char * nombreArchivoTemporal, int estado){
-	t_elemento_tabla_estado * elemento = crearRegistro(job, master, nombreNodo, bloque, etapa, nombreArchivoTemporal, estado);
+void agregarRegistro(int job, int master, char * nombreNodo, int bloque, int etapa, char * nombreArchivoTemporal, int estado, t_nodos_por_bloque* nodosPorBloque){
+	t_elemento_tabla_estado * elemento = crearRegistro(job, master, nombreNodo, bloque, etapa, nombreArchivoTemporal, estado, nodosPorBloque);
 	list_add(tabla_de_estados, elemento);
 }
 
@@ -45,6 +47,8 @@ void eliminarRegistro(int job, int master, char* nombreNodo, int bloque, int eta
 	void liberarRegistro(t_elemento_tabla_estado* elemento){
 		free(elemento->nodo);
 		free(elemento->nombreArchivoTemporal);
+		list_destroy(elemento->nodosPorBloque->nodosEnLosQueEsta);
+		free(elemento->nodosPorBloque);
 		free(elemento);
 	}
 

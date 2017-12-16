@@ -98,7 +98,6 @@ void procesarPaquete(t_paquete * unPaquete, int * client_socket) {
 		procesarEnviarListaNodoBloques(unPaquete); //
 		break;
 	case ENVIAR_INDICACION_TRANSFORMACION:
-
 		procesarResultadoTranformacion(unPaquete, client_socket);
 		break;
 	case ENVIAR_INDICACION_REDUCCION_LOCAL:
@@ -221,8 +220,7 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 
 	t_list* listaNodoBloque = nodosBloques->nodoBloque;
 
-	log_trace(logYama, "Recibido %d nodos-bloques de FilesSystem",
-			listaNodoBloque->elements_count);
+	log_trace(logYama, "Recibido %d nodos-bloques de FilesSystem",listaNodoBloque->elements_count);
 	listaDireccionesNodos = list_take(nodosBloques->puertoIP, nodosBloques->puertoIP->elements_count);
 
 	t_list* listaBloquesConNodos = agruparNodosPorBloque(listaNodoBloque); // LISTA DE BLOQUES CON LOS NODOS DONDE ESTA
@@ -294,14 +292,28 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 	list_iterate(tablaPlanificador,
 			(void*) armarIndicacionDeTransformacionPorRegistro);
 
+	t_nodos_por_bloque* buscarNodosDeBloque(int bloque){
+
+		bool esElementoBuscado(t_nodos_por_bloque* elemento){
+			return elemento->bloqueArchivo == bloque;
+		}
+
+		return list_find(listaBloquesConNodos, (void*) esElementoBuscado);
+
+	}
+
 	void registrarYEnviarAMaster(
 			t_indicacionTransformacion* indicacionDeTransformacion) {
 
 		//REGISTRAR EN TABLA DE ESTADO EL JOB
+
+		t_nodos_por_bloque* nodosPorBloque = buscarNodosDeBloque(indicacionDeTransformacion->bloque);
+
 		agregarRegistro(idJob, nodosBloques->masterSolicitante,
 				indicacionDeTransformacion->nodo,
 				indicacionDeTransformacion->bloque, TRANSFORMACION,
-				indicacionDeTransformacion->rutaArchivoTemporal, PROCESANDO);
+				indicacionDeTransformacion->rutaArchivoTemporal, PROCESANDO, nodosPorBloque);
+
 		log_trace(logYama, "Registro en tabla de estado");
 
 		//ENVIAR A MASTER LA INDICACION
@@ -311,8 +323,7 @@ void procesarEnviarListaNodoBloques(t_paquete * unPaquete) {
 				nodosBloques->masterSolicitante);
 	}
 
-	list_iterate(indicacionesDeTransformacionParaMaster,
-			(void*) registrarYEnviarAMaster);
+	list_iterate(indicacionesDeTransformacionParaMaster,(void*) registrarYEnviarAMaster);
 
 }
 
@@ -363,7 +374,7 @@ void procesarResultadoTranformacion(t_paquete * unPaquete, int *client_socket) {
 					agregarRegistro(reg->job, *client_socket,
 							indReducLocal->nodo, reg->bloque, REDUCCION_LOCAL,
 							indReducLocal->archivoTemporalReduccionLocal,
-							PROCESANDO);
+							PROCESANDO, reg->nodosPorBloque);
 					log_trace(logYama, "Intentando enviar Indicaciones de reduccion local");
 					enviarIndicacionReduccionLocal(*client_socket,
 							indReducLocal);
